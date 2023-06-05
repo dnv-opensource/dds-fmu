@@ -1,0 +1,17 @@
+struct Trig
+{
+  double sine;
+  double other;
+};
+
+
+module Kong {
+
+  struct Fu
+  {
+    double fighter; ///< It is a fighter
+    @optional boolean looser;
+    @key string member;
+  };
+
+};
