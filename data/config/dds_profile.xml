@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+<profiles>
+  <participant profile_name="dds-fmu-default" >
+    <domainId>0</domainId>
+    <rtps>
+      <name>dds-fmu</name>
+    </rtps>
+    <!--builtin>
+      <metatrafficUnicastLocatorList/> should contain one locator with null address and null port
+      <initialPeersList>
+        <locator>
+          <udpv4>
+            <address>10.2.0.155</address>
+          </udpv4>
+        </locator>
+      </initialPeersList>
+    </builtin-->
+  </participant>
+
+  <publisher profile_name="dds-fmu-default">
+    <qos>
+      <durability>
+        <kind>TRANSIENT_LOCAL</kind>
+      </durability>
+      <reliability>
+        <kind>RELIABLE</kind>
+      </reliability>
+    </qos>
+  </publisher>
+
+  <subscriber profile_name="dds-fmu-default">
+    <qos>
+      <durability>
+        <kind>TRANSIENT_LOCAL</kind>
+      </durability>
+      <reliability>
+        <kind>RELIABLE</kind>
+      </reliability>
+    </qos>
+  </subscriber>
+
+  <data_writer profile_name="DDSDynHelloWorld">
+    <qos>
+      <reliability>
+        <kind>BEST_EFFORT</kind>
+      </reliability>
+    </qos>
+  </data_writer>
+
+
+</profiles>
+
+<types><!-- TODO: to be removed -->
+    <type>
+      <struct name="HelloWorld">
+        <member name="message" type="string"/>
+        <member name="index" type="uint32"/>
+        <member name="array" type="uint32" arrayDimensions="5,2"/>
+      </struct>
+    </type>
+    <type>
+      <struct name="Trig">
+        <member name="sine" type="float64" />
+        <member name="other" type="float64" />
+      </struct>
+    </type>
+</types>
+
+</dds>
+
+<!-- move to separate file? -->
+<ddsfmu>
+  <topic name="DDSDynHelloWorld" type="HelloWorld"/>
+</ddsfmu>

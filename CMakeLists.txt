@@ -128,6 +128,7 @@ add_custom_target(${fmuStagingTarget}
   COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuModuleTarget}>" "${fmuStagedBinariesDir}/"
   COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuRepackerTarget}>" "${fmuStagedResourceBinariesDir}/"
   COMMAND "${CMAKE_COMMAND}" "-E" "copy_directory" "${CMAKE_SOURCE_DIR}/src/idl" "${fmuStagedResourceConfigDir}/idl"
+  COMMAND "${CMAKE_COMMAND}" "-E" "copy_directory" "${CMAKE_SOURCE_DIR}/data/config" "${fmuStagedResourceConfigDir}/dds"
   COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${fmuGuidModelDescription}" "${fmuFinalModelDescription}"
   DEPENDS ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuGuidTarget}
   COMMENT "FMU staging: Populate FMU contents in staging directory"
@@ -222,9 +223,15 @@ add_executable(trigga "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trigga.cpp")
 target_include_directories(trigga PRIVATE $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/temp>)
 target_link_libraries(trigga trigs fastdds::fastrtps)
 
-
 add_executable(xplora "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/xplora.cpp")
 target_link_libraries(xplora configurator)
 
 add_executable(modeler "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/modeler.cpp")
 target_link_libraries(modeler configurator)
+
+add_executable(pubdyntop "${CMAKE_SOURCE_DIR}/src/temporary/pubdyntop.cpp")
+target_link_libraries(pubdyntop fastdds::fastrtps rapidxml::rapidxml)
+
+add_executable(subdyntop "${CMAKE_SOURCE_DIR}/src/temporary/subdyntop.cpp")
+target_link_libraries(subdyntop fastdds::fastrtps rapidxml::rapidxml)
+target_include_directories(subdyntop PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/temporary>)

@@ -45,13 +45,13 @@
 ** Implementation tasks
 
    + [X] Load idl files
-   + [ ] Load xml profiles as common for Fast-DDS (how many participants?)
-     + [ ] Load participant profiles (one for pub and one for sub)
-     + [ ] Load publisher profiles
-     + [ ] Load subscriber profiles
-     + [ ] Load topic profiles (topic names and their qos)
-     + [ ] Load transport profiles (e.g. unicast)
-     + [ ] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
+   + [4/5] Load xml profiles as common for Fast-DDS (how many participants?)
+     + [X] Load participant profiles (one for pub and one for sub)
+     + [X] Load publisher profile
+     + [X] Load subscriber profile
+     + [X] Load topic profiles (topic names and their qos), if they exist
+     + [-] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
+       + [X] Use XML first
        + [ ] Use converter to populate instead
 
    + [ ] Create mapping from dds topic primitive types to fmu value references
@@ -77,6 +77,7 @@
      - [X] zip the staged/binary and generated files
      - [ ] Figure out why permissions are lost
      - the only file not explicitly available before rendering is modelDescription.xml
+   + [ ] Make documentation target and bundle it with the fmu
 
    + [3/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
