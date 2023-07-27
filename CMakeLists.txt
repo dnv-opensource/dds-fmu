@@ -9,6 +9,7 @@ project(dds-fmu
 include(CTest)
 
 option(DDSFMU_WITH_TOOLS "FMU re-packaging capabilities" ON)
+option(DDSFMU_WITH_DOC "FMU documentation target" ON)
 message(STATUS "dds-fmu: Option DDSFMU_WITH_TOOLS = ${DDSFMU_WITH_TOOLS}")
 
 find_package(cppfmu CONFIG REQUIRED)
@@ -21,8 +22,12 @@ find_package(stduuid CONFIG REQUIRED)
 find_package(zip CONFIG REQUIRED)
 find_package(args CONFIG REQUIRED)
 
+enable_testing()
+
 if(BUILD_TESTING)
   find_package(FMUComplianceChecker REQUIRED)
+  find_package(GTest REQUIRED)
+  add_subdirectory(tests)
 endif()
 
 cppfmu_prepare()
@@ -100,8 +105,8 @@ add_library(${fmuModuleTarget} MODULE
 
 target_link_libraries(${fmuModuleTarget}
   PUBLIC cppfmu::cppfmu fastdds::fastrtps
-  PRIVATE configurator trigs
-  ) # TODO add more here
+  PRIVATE configurator helper # TODO add more here
+  )
 
 target_include_directories(${fmuModuleTarget}
   PRIVATE
@@ -178,8 +183,37 @@ set_target_properties(${fmuRepackerTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuStagingTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuArchiveTarget} PROPERTIES FOLDER ${fmuName})
 
-# Temporary targets
 
+add_library(helper OBJECT
+  ${CMAKE_SOURCE_DIR}/src/helper/Converter.cpp
+  ${CMAKE_SOURCE_DIR}/src/helper/DynamicPublisher.cpp
+  ${CMAKE_SOURCE_DIR}/src/helper/DynamicSubscriber.cpp
+  ${CMAKE_SOURCE_DIR}/src/helper/DdsLoader.cpp
+  )
+
+target_link_libraries(helper
+  PUBLIC
+    eprosima::xtypes
+    fastdds::fastrtps
+    configurator
+  PRIVATE
+    rapidxml::rapidxml
+    "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
+    "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
+  )
+
+target_include_directories(helper
+  PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/helper>)
+
+
+if(DDSFMU_WITH_DOC)
+  add_subdirectory(docs)
+endif()
+
+
+
+# Temporary targets
 add_library(configurator OBJECT
   "${CMAKE_SOURCE_DIR}/src/configurator/auxiliaries.cpp"
   "${CMAKE_SOURCE_DIR}/src/configurator/idl-loader.cpp"
@@ -200,38 +234,37 @@ target_include_directories(configurator
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/configurator>)
 
 
-add_executable(myuuid
-  ${CMAKE_SOURCE_DIR}/src/temporary/myuuid.cpp)
-
-target_link_libraries(myuuid configurator taywee::args)
-
 add_library(trigs OBJECT
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trig.cxx"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trigPubSubTypes.cxx"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/TrigPublisher.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/TrigSubscriber.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trig/trig.cxx"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trig/trigPubSubTypes.cxx"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trig/TrigPublisher.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trig/TrigSubscriber.cpp"
 )
 
 target_link_libraries(trigs fastdds::fastrtps)
 
 target_include_directories(trigs
   PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/temporary>)
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/temporary/trig>)
 
+add_executable(myuuid ${CMAKE_SOURCE_DIR}/src/temporary/executables/myuuid.cpp)
+target_link_libraries(myuuid configurator taywee::args)
 
-add_executable(trigga "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/trigga.cpp")
+add_executable(trigga "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/executables/trigga.cpp")
 target_include_directories(trigga PRIVATE $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/temp>)
 target_link_libraries(trigga trigs fastdds::fastrtps)
 
-add_executable(xplora "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/xplora.cpp")
+add_executable(xplora "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/executables/xplora.cpp")
 target_link_libraries(xplora configurator)
 
-add_executable(modeler "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/modeler.cpp")
+add_executable(modeler "${CMAKE_CURRENT_SOURCE_DIR}/src/temporary/executables/modeler.cpp")
 target_link_libraries(modeler configurator)
 
-add_executable(pubdyntop "${CMAKE_SOURCE_DIR}/src/temporary/pubdyntop.cpp")
+add_executable(pubdyntop "${CMAKE_SOURCE_DIR}/src/temporary/executables/pubdyntop.cpp")
 target_link_libraries(pubdyntop fastdds::fastrtps rapidxml::rapidxml)
 
-add_executable(subdyntop "${CMAKE_SOURCE_DIR}/src/temporary/subdyntop.cpp")
+add_executable(subdyntop "${CMAKE_SOURCE_DIR}/src/temporary/executables/subdyntop.cpp")
 target_link_libraries(subdyntop fastdds::fastrtps rapidxml::rapidxml)
-target_include_directories(subdyntop PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/temporary>)
+
+add_executable(structuriser "${CMAKE_SOURCE_DIR}/src/temporary/executables/structuriser.cpp")
+target_link_libraries(structuriser configurator)

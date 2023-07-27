@@ -1,2 +1,4 @@
 build/
 CMakeUserPresets.json
+docs/index.org
+SeaopsInterface.idl

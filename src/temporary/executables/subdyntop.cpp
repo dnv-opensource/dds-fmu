@@ -1,6 +1,3 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
-// Apache-2.0
-
 #include "subdyntop.hpp"
 #include <fastrtps/attributes/ParticipantAttributes.h>
 #include <fastrtps/attributes/SubscriberAttributes.h>
@@ -23,14 +20,14 @@ namespace efast = eprosima::fastrtps;
 namespace fs = std::filesystem;
 using eprosima::fastrtps::types::ReturnCode_t;
 
-HelloWorldSubscriber::HelloWorldSubscriber()
+DynamicSubscriber::DynamicSubscriber()
   : mp_participant(nullptr)
   , mp_subscriber(nullptr)
   , m_listener(this)
 {
 }
 
-bool HelloWorldSubscriber::init()
+bool DynamicSubscriber::init()
 {
 
   auto dds_profile = (fs::current_path() / "fmu-staging" / "resources" / "config" / "dds" / "dds_profile.xml").string();
@@ -42,7 +39,6 @@ bool HelloWorldSubscriber::init()
   }
 
   edds::StatusMask status_mask = edds::StatusMask::subscription_matched() << edds::StatusMask::data_available();
-  //mp_participant = edds::DomainParticipantFactory::get_instance()->create_participant(0, pqos, &m_listener, status_mask);
   mp_participant = edds::DomainParticipantFactory::get_instance()->create_participant_with_profile("dds-fmu-default", &m_listener, status_mask);
 
 
@@ -64,12 +60,18 @@ bool HelloWorldSubscriber::init()
     return false;
   }
 
-  efast::types::DynamicType_ptr dyn_type =
-   efast::xmlparser::XMLProfileManager::getDynamicTypeByName("HelloWorld")->build();
+  // TODO: should be managed by xtypes
+  std::vector<std::string> typenames{"HelloWorld", "Trig"};
 
-  edds::TypeSupport m_type(new efast::types::DynamicPubSubType(dyn_type));
-  m_Hello = efast::types::DynamicDataFactory::get_instance()->create_data(dyn_type);
-  m_type.register_type(mp_participant);
+  for (const auto& the_name : typenames) {
+
+    types_[the_name] = efast::xmlparser::XMLProfileManager::getDynamicTypeByName(the_name)->build();
+    edds::TypeSupport m_type(new efast::types::DynamicPubSubType(types_.at(the_name)));
+
+    m_type.get()->auto_fill_type_information(false);  // Will not work with at least Cyclonedds if set true
+    m_type.get()->auto_fill_type_object(true);        // default
+    m_type.register_type(mp_participant);
+  }
 
   rapidxml::xml_document<> doc;
   rapidxml::xml_node<> * root_node;
@@ -79,49 +81,67 @@ bool HelloWorldSubscriber::init()
   doc.parse<0>(&buffer[0]);
   root_node = doc.first_node("ddsfmu");
 
-  for (rapidxml::xml_node<> * topic_node = root_node->first_node("topic"); topic_node; topic_node = topic_node->next_sibling())
+  constexpr auto node_name = "fmu_out";
+  for (rapidxml::xml_node<> * fmu_node = root_node->first_node(node_name);
+       fmu_node;
+       fmu_node = fmu_node->next_sibling(node_name))
   {
-    std::string topic_name(topic_node->first_attribute("name")->value());
-    std::string topic_type(topic_node->first_attribute("type")->value());
+
+    auto topic = fmu_node->first_attribute("topic");
+    auto type = fmu_node->first_attribute("type");
+    if(!topic || !type){
+      std::cerr << "<ddsfmu><" << node_name
+                << "> must specify attributes 'topic' and 'type'. Got: 'topic': "
+                << std::boolalpha << (topic != nullptr) << " and 'type': "
+                << std::boolalpha << (type != nullptr) << std::endl;
+      continue;
+    }
+    std::string topic_name(topic->value());
+    std::string topic_type(type->value());
 
     // Create topic from profile (if it exists) otherwise default qos
-    topic_ = mp_participant->create_topic_with_profile(topic_name, topic_type, topic_name);
-    if (topic_ == nullptr) {
-      topic_ = mp_participant->create_topic(topic_name, topic_type, edds::TOPIC_QOS_DEFAULT);
+    eprosima::fastdds::dds::Topic* tmp_topic = mp_participant->create_topic_with_profile(topic_name, topic_type, topic_name);
+    if (tmp_topic == nullptr) {
+      tmp_topic = mp_participant->create_topic(topic_name, topic_type, edds::TOPIC_QOS_DEFAULT);
     }
-    if (topic_ == nullptr) { return false; }
+    if (tmp_topic == nullptr) { return false; }
 
     // Create reader from profile (if it exists) otherwise default qos
-    reader_ = mp_subscriber->create_datareader_with_profile(topic_, topic_name, &m_listener, status_mask);
-    if (reader_ == nullptr) {
-      reader_ = mp_subscriber->create_datareader(topic_, edds::DATAREADER_QOS_DEFAULT, &m_listener, status_mask);
+    eprosima::fastdds::dds::DataReader* tmp_reader = mp_subscriber->create_datareader_with_profile(tmp_topic, topic_name, &m_listener, status_mask);
+    if (tmp_reader == nullptr) {
+      tmp_reader = mp_subscriber->create_datareader(tmp_topic, edds::DATAREADER_QOS_DEFAULT, &m_listener, status_mask);
     }
-    if (reader_ == nullptr) { return false; }
+    if (tmp_reader == nullptr) { return false; }
 
+    topics_[tmp_reader] = tmp_topic;
+    datas_[tmp_reader] = efast::types::DynamicDataFactory::get_instance()->create_data(types_.at(topic_type));
+    // is TypeName retrievable from DataReader?
+    // -> yes lookup from reader->type().get_type_name() gives key for types_ (not confirmed raw names)
+    // not needed yet
   }
 
   return true;
 }
 
-HelloWorldSubscriber::~HelloWorldSubscriber()
+DynamicSubscriber::~DynamicSubscriber()
 {
-  std::cout << "Destructing" << std::endl;
-  if (reader_ != nullptr)
+  for (const auto& it : topics_)
   {
-    mp_subscriber->delete_datareader(reader_);
+    mp_subscriber->delete_datareader(it.first);
+    mp_participant->delete_topic(it.second);
   }
   if (mp_subscriber != nullptr)
   {
     mp_participant->delete_subscriber(mp_subscriber);
   }
-  if (topic_ != nullptr)
-  {
-    mp_participant->delete_topic(topic_);
-  }
+
   edds::DomainParticipantFactory::get_instance()->delete_participant(mp_participant);
+  types_.clear();
+  topics_.clear();
+  datas_.clear();
 }
 
-void HelloWorldSubscriber::SubListener::on_subscription_matched(
+void DynamicSubscriber::SubListener::on_subscription_matched(
     edds::DataReader*,
     const edds::SubscriptionMatchedStatus& info)
 {
@@ -142,30 +162,25 @@ void HelloWorldSubscriber::SubListener::on_subscription_matched(
   }
 }
 
-void HelloWorldSubscriber::SubListener::on_data_available(
+void DynamicSubscriber::SubListener::on_data_available(
     edds::DataReader* reader)
 {
   edds::SampleInfo info;
 
-  // map<reader,dynamicdata_ptr> -> lookup and populate instead of hard-coded m_Hello
+  // subscriber_->types_reader->type().get_type_name()
 
-  if (reader->take_next_sample(subscriber_->m_Hello.get(), &info) == ReturnCode_t::RETCODE_OK)
+  if (reader->take_next_sample(subscriber_->datas_.at(reader).get(),
+    &info) == ReturnCode_t::RETCODE_OK)
   {
     if (info.instance_state == edds::ALIVE_INSTANCE_STATE)
     {
       this->n_samples++;
-      eprosima::fastrtps::types::DynamicDataHelper::print(subscriber_->m_Hello);
+      eprosima::fastrtps::types::DynamicDataHelper::print(subscriber_->datas_.at(reader));
     }
   }
 }
 
-void HelloWorldSubscriber::run()
-{
-  std::cout << "Subscriber running. Please press CTRL-C to stop the Subscriber" << std::endl;
-  std::cin.ignore();
-}
-
-void HelloWorldSubscriber::run(
+void DynamicSubscriber::run(
     uint32_t number)
 {
   std::cout << "Subscriber running until " << number << " samples have been received" << std::endl;
@@ -173,13 +188,13 @@ void HelloWorldSubscriber::run(
   while (number > this->m_listener.n_samples)
   {
     std::cout << this->m_listener.n_samples << "/" << number << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 }
 
 int main(){
 
-  HelloWorldSubscriber mysub;
+  DynamicSubscriber mysub;
   if (mysub.init())
   {
     mysub.run(5);

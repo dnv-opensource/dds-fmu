@@ -20,11 +20,13 @@ class DdsFmuConan(ConanFile):
         "shared": [True, False],
         "fPIC": [True, False],
         "with_tools": [True, False],
+        "with_doc": [True, False]
     }
     default_options = {
         "shared": False,
         "fPIC": True,
         "with_tools": True,
+        "with_doc": False
     }
 
     @property
@@ -68,13 +70,13 @@ class DdsFmuConan(ConanFile):
     def requirements(self):
         self.requires("cppfmu/1.0")
         self.requires("fast-dds/2.10.1")
-        self.requires("stduuid/1.2.3")       # stduuid stduuid::stduuid
-        self.requires("rapidyaml/0.5.0")     # ryml ryml::ryml
+        self.requires("stduuid/1.2.3")
+        self.requires("rapidyaml/0.5.0")
         self.requires("rapidxml/1.13")
         self.requires("xtypes/cci.20230530")
 
         if self.options.with_tools:
-            self.requires("kuba-zip/0.2.6")      # zip zip::zip, or miniz?
+            self.requires("kuba-zip/0.2.6")
             self.requires("taywee-args/6.4.6")
 
     def validate(self):
@@ -89,10 +91,14 @@ class DdsFmuConan(ConanFile):
     def build_requirements(self):
         if self._with_tests:
             self.tool_requires("fmu-compliance-checker/2.0.4")
+            self.test_requires("gtest/1.13.0")
+        if self.options.with_doc:
+            self.tool_requires("doxygen/1.9.4")
 
     def generate(self):
         tc = CMakeToolchain(self)
         tc.variables["DDSFMU_WITH_TOOLS"] = self.options.with_tools
+        tc.variables["DDSFMU_WITH_DOC"] = self.options.with_doc
         tc.generate()
 
         deps = CMakeDeps(self)
@@ -104,6 +110,11 @@ class DdsFmuConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.configure()
+
+        if self.options.with_doc:
+            cmake.build(target="doc")
+            cmake.install(component="doc")
+
         cmake.build()
 
         if self._with_tests:

@@ -1,0 +1,11 @@
+/* custom.css, see https://jothepro.github.io/doxygen-awesome-css/index.html */
+html {
+    /* define light-mode variable overrides here */
+    --primary-color:          #00adef;
+    --primary-dark-color:     #0056ae;
+    --primary-light-color:    #7aabd6;
+    --primary-lighter-color:  #cae1f1;
+    --primary-lightest-color: #e9f1f8;
+    --side-nav-fixed-width:   @DOXYGEN_TREEVIEW_WIDTH@px;
+    --top-height:             @DDSFMU_CUSTOM_TOP_HEIGHT@px;
+}

@@ -17,17 +17,17 @@
         />
 
     <ModelVariables>
-        <ScalarVariable name="x" valueReference="0" variability="continuous" causality="input">
-          <Real start="1.0" />
-        </ScalarVariable>
-        <ScalarVariable name="y" valueReference="1" variability="continuous" causality="output"  initial="exact">
+        <ScalarVariable name="y" valueReference="0" variability="discrete" causality="output" initial="exact">
           <Real start="0.0" />
+        </ScalarVariable>
+        <ScalarVariable name="x" valueReference="1" variability="discrete" causality="input">
+          <Real start="1.0" />
         </ScalarVariable>
     </ModelVariables>
 
     <ModelStructure>
         <Outputs>
-            <Unknown index="2" />
+            <Unknown index="1" />
         </Outputs>
     </ModelStructure>
 </fmiModelDescription>

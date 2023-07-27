@@ -1,6 +1,11 @@
-#include <iostream>
-#include <filesystem>
+/**
+   @brief Repackage FMU
 
+   Creates an FMU archive from a given directory.
+
+*/
+#include <filesystem>
+#include <iostream>
 #include <args.hxx>
 #include <zip/zip.h>
 

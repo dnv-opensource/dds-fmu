@@ -1,0 +1,16 @@
+#pragma once
+
+struct Basic
+{
+  double value;
+};
+
+
+module Compleks {
+
+  struct ity
+  {
+    uint32 i;
+    Basic stuff;
+  }
+}

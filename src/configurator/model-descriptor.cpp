@@ -15,6 +15,7 @@ std::string load_template_xml(const std::filesystem::path& template_xml){
 
   std::ifstream theFile(template_xml.string());
   std::vector<char> buffer(std::istreambuf_iterator<char>{theFile}, {});
+  theFile.close();
   buffer.push_back('\0');
 
   constexpr int rapidxml_parse_flags = rapidxml::parse_full | rapidxml::parse_normalize_whitespace;
@@ -51,3 +52,14 @@ std::string load_template_xml(const std::filesystem::path& template_xml){
 // file.open(filename.c_str());
 // file << data;
 // file.close();
+
+
+std::string model_variable_generator(const std::string& name, const std::string& causality, const std::uint32_t& value_ref, const std::string& type){
+
+  return std::string();
+}
+
+std::string model_structure_outputs_generator(const std::uint32_t& num_outputs){
+
+  return std::string();
+}

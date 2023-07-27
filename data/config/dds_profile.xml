@@ -68,8 +68,3 @@
 </types>
 
 </dds>
-
-<!-- move to separate file? -->
-<ddsfmu>
-  <topic name="DDSDynHelloWorld" type="HelloWorld"/>
-</ddsfmu>

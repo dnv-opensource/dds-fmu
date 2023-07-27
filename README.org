@@ -1,3 +1,20 @@
+* Development
+
+  You will need conan 2. The compiler profile should specify =compiler.cppstd=17=. There
+  are conan packages not available in =conancenter=, you will need to build them yourself.
+  They are available as recipes, which are located in [[https://gitlab.sintef.no/seaops/equipment][seaops/equipment]] under
+  tools/recipes, and [[https://gitlab.sintef.no/cppfmu/cppfmu][cppfmu/cppfmu]]. The following packages should be built: =fmi1=,
+  =fmi2=, =cppfmu=, =fmilibrary=, =fmu-compliance-checker=, =xtypes=.
+
+  #+begin_src bash
+    cd dds-fmu
+    conan install . -u -b missing
+    conan build . -c tools.build:skip_test=False
+    # Repeat previous command, because the test currently fails
+  #+end_src
+
+  The created FMU is located in =build/Release/fmus/= on Linux.
+
 * DDS FMU Mediator
 
   + Create a mediator between cosim/FMU and DDS
@@ -44,23 +61,36 @@
 
 ** Implementation tasks
 
+   + [X] Remove temporary Trig pub sub compiled types from dds-fmu
+   + [X] Add Dynamic Publisher|Subscriber to dds-fmu
+   + [ ] Load dds types and register through xtypes + converter
+     + To be stored as scoped types (i.e. Kong::Foo)
+   + [ ] Store data as xtypes DynamicData instead of DDS DynamicData
+   + [ ] For a given type, iterate through its primitive types
+   + [ ] Define real reference structure to map between dynamic types for dds/idl and fmu
    + [X] Load idl files
-   + [4/5] Load xml profiles as common for Fast-DDS (how many participants?)
+   + [ ] Basic dynamic real publisher
+     + [ ] Iterate xtypes to populate fmu structures
+     + [ ] Use dynamic publisher to load idl types and publish on fmu
+   + [4/6] Load xml profiles as common for Fast-DDS (how many participants?)
      + [X] Load participant profiles (one for pub and one for sub)
      + [X] Load publisher profile
      + [X] Load subscriber profile
      + [X] Load topic profiles (topic names and their qos), if they exist
+     + [ ] If the qos is different -> separate participant is needed?
      + [-] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
        + [X] Use XML first
        + [ ] Use converter to populate instead
+       + [ ] Use converter to register types instead of xml-based
 
    + [ ] Create mapping from dds topic primitive types to fmu value references
-   + [ ] Generate modelDescription from mapping
-     + [ ] version, guid, CoSimulation
+   + [-] Generate modelDescription from mapping
+     + [X] version, guid, CoSimulation
      + [ ] ModelVariables auto-populate
      + [ ] ModelStructure auto-populate
    + [ ] Create publishers/subscribers from mapping
-   + [ ] Add GTest for systematic tests of functionality
+   + [X] Add GTest for systematic tests of functionality
+   + [ ] Run valgrind on functionality
    + [X] File loader with staging directory (std::filesystem)
    + [X] GUID functionality (replicate CMake target) with stduuid
      - hard-code which files to hash
@@ -77,7 +107,9 @@
      - [X] zip the staged/binary and generated files
      - [ ] Figure out why permissions are lost
      - the only file not explicitly available before rendering is modelDescription.xml
-   + [ ] Make documentation target and bundle it with the fmu
+   + [X] Make documentation target and bundle it with the fmu
+   + [ ] Add editorconfig and clang-format to unify formatting
+   + [ ] Figure out to properly handle fast-dds log (and xtypes) in conjunction with cppfmu
 
    + [3/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
@@ -87,6 +119,49 @@
         - Allow tweaking e.g. ModelStructure as long as consistency is retained?
      4. [ ] Write modelDescription from XML tree and evaluated GUID
      5. [X] Zip files into fmu
+
+
+** Description of signal mapping
+
+   + Let T(type) := {R(eal), I(nteger), B(oolean), S(tring)} be the set of FMI reference types
+   + V_{r,t} is a value reference (uint_32 := U_32), which is unique for each type t in T
+   + For each value reference, there exist a value f(V_{r,t}) = y_t in t.
+   + y_t is a mapping from a value reference to a value of type t.
+
+   + For each instance of <fmu_in, fmu_out>:
+     + Acquire the DynamicData type and iterate through its primitive types (leaf nodes)
+     + Auxiliary information known is:
+       + The iterated DynamicData type and its Readable|WritableDynamicDataRef instance
+       + All info provided by DynamicData (type, member index?)
+       + A way to generate structured name ./[i] notation
+     + For each leaf node (l) with type P:
+       + There is a mapping $P \to T \cup\, U(\text{nsupported})$ that dictates the appropriate FMI
+         setter/getter for which a node is to be associated.
+       + The mapping P to T may require a cast from one primitive type to another.
+       + In some cases the mapping from P is in U(nsupported). These primitive types are
+         not allowed and will raise runtime error during setup.
+       + If Leaf node in fmu_in, dds_out:
+         + Calls FMU Setters (SetT): FMU to DDS (set data from FMU, write to DDS)
+         + DDS to publish data
+         + The value pointed to by y(V_{r,t}) is to be set on the DDS primitive type,
+           which later will be sent.
+         + We need a way to set correct DDS member given V_{r,t} and y_t as input.
+         + *Note*: It is practical to work with XTypes DynamicType instances instead,
+           which can be converted to corresponding DDS type just before publishing.
+         + Let v_{i,t}(x,y) \in U_32 x t -> Ø be a visitor writer function for type t.
+           + It takes a V_{r,t}, y_t and writes to the right dynamic type member of type P
+           + We bind information so that the arguments and return types are known at compile-time
+         + Increment V_{r,t} once a new v_{i,t} has been defined
+       + If Leaf node in fmu_out, dds_in:
+         + Calls FMU Getters (GetT): DDS to FMU (read from DDS, put to FMU)
+         + DDS to subscribe data
+         + From the received DDS type instance, the correct member shall be retrieved and
+           set on the value pointed to by value reference V_{r,t}.
+         + Also here it is practical to work with XTypes DynamicType instances. Once read
+           from DDS, convert to XTypes dynamic type
+         + Let v_{o,t}(x) \in U_32 -> t be a visitor reader function for type t.
+           + It takes a V_{r,t} and returns the right dynamic type member of type t
+           + We bind information so that the arguments and return types are known at compile-time
 
 ** User configuration insight
 
@@ -111,12 +186,14 @@
    + Given an IDL-file, convert to xtypes, achieved with eprosima/xtypes header only library
    + [[https://github.com/eProsima/FastDDS-SH/blob/main/src/Conversion.hpp][This converts from xtypes to Dynamic Types]] in Fast DDS -> perhaps useful
    + [[https://github.com/eProsima/xtypes/issues/82#issuecomment-785089279][This issue indicates conversion of xtypes to Dynamic Types]]
-     + Investigate if xtypes has been integrated properly, of if this conversion is still needed
-     + If not integrated: load IDL file with xtypes library, convert to Dynamic Types
-     + The mapping from FMU input/output to DDS publish/subscribe may still need the
+     + [X] Investigate if xtypes has been integrated properly, of if this conversion is still needed. NEEDED
+     + [X] If not integrated: load IDL file with xtypes library, convert to Dynamic Types
+     + The mapping from FMU input/output to DDS publish/subscribe still need the
        information provided by the xtypes in order to reference these.
-   + Specification of subscribers and publishers using Fast-DDS XML profiles
+   + [[https://github.com/eProsima/Fast-DDS-Gen/issues/63][It seems fast dds does not support =@optional=?]]
+   + [X] Specification of subscribers and publishers using Fast-DDS XML profiles
      + Important to retain configurability of the profiles made possible with the XML files
+     + We will not use dynamic types from xml, since it is redundant with idl and xtypes with converter to dds
 
 * References
 
