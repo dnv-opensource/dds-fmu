@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 #include <xtypes/idl/idl.hpp>
+#include <xtypes/xtypes.hpp>
 
 TEST(XTypes, BasicUsage)
 {
@@ -49,5 +50,35 @@ TEST(XTypes, BasicUsage)
   // nested
   my_space["universe"][0]["my_inner"]["my_uint32"] = 23u;
   my_space["universe"][1]["my_inner"]["my_uint32"] = 24u;
+
+}
+
+TEST(XTypes, Annotations)
+{
+  std::string my_idl = R"~~~(
+    struct Inner
+    {
+        @key uint32 my_uint32;
+        @optional boolean yes;
+    };
+
+)~~~";
+
+  eprosima::xtypes::idl::Context context;
+  context.log_level(eprosima::xtypes::idl::log::LogLevel::xDEBUG);
+  context.print_log(true);
+
+  context = eprosima::xtypes::idl::parse(my_idl, context);
+
+  // Create same
+  eprosima::xtypes::StructType inner2 =
+   eprosima::xtypes::StructType("Inner")
+   .add_member(eprosima::xtypes::Member("my_uint32", eprosima::xtypes::primitive_type<uint32_t>()).key())
+   .add_member(eprosima::xtypes::Member("yes", eprosima::xtypes::primitive_type<bool>()).optional());
+
+  auto inner = context.module().structure("Inner");
+
+  EXPECT_EQ(inner.member(0).is_key(), inner2.member(0).is_key());           // false, true
+  EXPECT_EQ(inner.member(1).is_optional(), inner2.member(1).is_optional()); // false, true
 
 }

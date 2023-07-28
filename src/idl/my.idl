@@ -1,0 +1,10 @@
+#pragma once
+
+module my {
+  struct Mind
+  {
+    double ful;
+    @optional boolean ness;
+    @key uint32 applied;
+  };
+};
