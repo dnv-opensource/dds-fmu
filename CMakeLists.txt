@@ -43,19 +43,19 @@ set(fmuSourceFiles
 )
 
 set(fmuModuleTarget "${fmuName}")
+set(fmuDescriptorTarget "descriptor")
 set(fmuRepackerTarget "repacker")
 set(fmuGuidTarget "${fmuName}_guid")
 set(fmuStagingTarget "${fmuName}_staging")
 set(fmuArchiveTarget "${fmuName}_fmu")
-
-set(fmuGuidDir "${FMU_UUID_DIR}/${fmuName}")
-set(fmuGuidModelDescription "${fmuGuidDir}/modelDescription.xml")
 
 set(fmuStagingDir "${CPPFMU_CONFIG_STAGING_DIR}")
 set(fmuStagedBinariesDir "${fmuStagingDir}/binaries/${CPPFMU_PLATFORM_ID}")
 set(fmuStagedResourceBinariesDir "${fmuStagingDir}/resources/tools/${CPPFMU_PLATFORM_ID}")
 set(fmuStagedResourceConfigDir "${fmuStagingDir}/resources/config")
 set(fmuOutputFile "${FMU_OUTPUT_DIR}/${fmuName}.fmu")
+
+set(fmuGuidModelDescription "${fmuStagingDir}/modelDescription.xml")
 
 # We suppose this file is generated from idl and xml parsing:
 set(fmuIntermediateModelDescription "${fmuStagedResourceConfigDir}/modelDescription.xml")
@@ -74,27 +74,17 @@ configure_file(
   @ONLY)
 
 # Target: GUID generation
-# TODO: There is a circular dependency: need fmu-staging/modelDescription.xml before it exists
-# Reintroduce this evaluation once idl+xml generation has written model description
 add_custom_command(
-  OUTPUT "${fmuGuidModelDescription}" "${fmuGuidDir}/guid" ALWAYS
-  COMMAND "${CMAKE_COMMAND}" "-E" "make_directory" "${fmuGuidDir}"
-  COMMAND "myuuid" "${fmuStagingDir}" ">" "${fmuGuidDir}/guid"
-  COMMAND
-  "${CMAKE_COMMAND}"
-  "-DGUID=${fmuGuidDir}/guid"
-  "-DINPUT_MODEL_DESCRIPTION=${fmuIntermediateModelDescription}"
-  "-DOUTPUT_MODEL_DESCRIPTION=${fmuGuidModelDescription}"
-  "-P" "${CMAKE_SOURCE_DIR}/data/RenderGuid.cmake"
-  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${fmuGuidModelDescription}" "${fmuFinalModelDescription}"
-  DEPENDS "${fmuIntermediateModelDescription}"
+  OUTPUT "${fmuGuidModelDescription}" ALWAYS
+  COMMAND ${fmuDescriptorTarget} ${fmuStagingDir}
+  DEPENDS ${fmuIntermediateModelDescription} ${fmuStagingTarget}_1 ${fmuDescriptorTarget}
   COMMENT "Generate GUID and its resources"
   VERBATIM
   )
 
 add_custom_target(
   ${fmuGuidTarget}
-  DEPENDS "${fmuGuidModelDescription}" myuuid
+  DEPENDS "${fmuGuidModelDescription}" ${fmuDescriptorTarget}
   )
 
 # Target: build module library
@@ -125,17 +115,35 @@ target_link_libraries(${fmuRepackerTarget}
   "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
   )
 
-# Target: stage FMU contents
-add_custom_target(${fmuStagingTarget}
+add_executable(${fmuDescriptorTarget}
+  ${CMAKE_SOURCE_DIR}/src/descriptor/descriptor.cpp)
+
+target_link_libraries(${fmuDescriptorTarget}
+  PRIVATE
+  taywee::args
+  configurator
+  "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
+  "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
+  )
+
+
+# Target: stage FMU contents phase 1
+add_custom_target(${fmuStagingTarget}_1
   COMMAND "${CMAKE_COMMAND}" "-E" "make_directory" "${fmuStagedBinariesDir}"
   COMMAND "${CMAKE_COMMAND}" "-E" "make_directory" "${fmuStagedResourceBinariesDir}"
   COMMAND "${CMAKE_COMMAND}" "-E" "make_directory" "${fmuStagedResourceConfigDir}"
-  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuModuleTarget}>" "${fmuStagedBinariesDir}/"
-  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuRepackerTarget}>" "${fmuStagedResourceBinariesDir}/"
   COMMAND "${CMAKE_COMMAND}" "-E" "copy_directory" "${CMAKE_SOURCE_DIR}/src/idl" "${fmuStagedResourceConfigDir}/idl"
   COMMAND "${CMAKE_COMMAND}" "-E" "copy_directory" "${CMAKE_SOURCE_DIR}/data/config" "${fmuStagedResourceConfigDir}/dds"
-  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${fmuGuidModelDescription}" "${fmuFinalModelDescription}"
-  DEPENDS ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuGuidTarget}
+  COMMENT "FMU staging: Create and copy static FMU contents in staging directory"
+  VERBATIM
+  )
+
+# Target: stage FMU contents phase 2
+add_custom_target(${fmuStagingTarget}_2
+  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuModuleTarget}>" "${fmuStagedBinariesDir}/"
+  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuRepackerTarget}>" "${fmuStagedResourceBinariesDir}/"
+  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuDescriptorTarget}>" "${fmuStagedResourceBinariesDir}/"
+  DEPENDS ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuDescriptorTarget} ${fmuGuidTarget}
   COMMENT "FMU staging: Populate FMU contents in staging directory"
   VERBATIM
   )
@@ -153,7 +161,7 @@ if(NOT DDSFMU_WITH_TOOLS)
 
   add_custom_target(without_tools ALL
     COMMAND "${CMAKE_COMMAND}" "-E" "${_cmake_rmdir}" "${_cmake_rmdirflags}" "${fmuStagedResourceBinariesDir}"
-    DEPENDS ${fmuStagingTarget}
+    DEPENDS ${fmuStagingTarget}_2
     COMMENT "FMU without tools: Removing resources/tools/* from staging directory"
     VERBATIM)
 
@@ -162,7 +170,7 @@ endif()
 # Target: generate FMU archive
 add_custom_target(${fmuArchiveTarget} ALL
   COMMAND "${fmuRepackerTarget}" "-v" "-f" "--output=${fmuOutputFile}" "${fmuStagingDir}"
-  DEPENDS ${fmuStagingTarget} ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuGuidTarget}
+  DEPENDS ${fmuStagingTarget}_2 ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuGuidTarget}
   COMMENT "Creating ${fmuName}.fmu archive"
   VERBATIM)
 
@@ -180,7 +188,8 @@ set_target_properties(${fmuGuidTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuModuleTarget} PROPERTIES PROJECT_LABEL "${fmuName}-lib")
 set_target_properties(${fmuModuleTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuRepackerTarget} PROPERTIES FOLDER ${fmuName})
-set_target_properties(${fmuStagingTarget} PROPERTIES FOLDER ${fmuName})
+set_target_properties(${fmuStagingTarget}_1 PROPERTIES FOLDER ${fmuName})
+set_target_properties(${fmuStagingTarget}_2 PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuArchiveTarget} PROPERTIES FOLDER ${fmuName})
 
 
@@ -222,11 +231,11 @@ add_library(configurator OBJECT
 
 target_link_libraries(configurator
   PUBLIC
-  eprosima::xtypes # could be made private?
+  eprosima::xtypes
+  rapidxml::rapidxml
   PRIVATE
   "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
   "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
-  rapidxml::rapidxml
   stduuid::stduuid)
 
 target_include_directories(configurator

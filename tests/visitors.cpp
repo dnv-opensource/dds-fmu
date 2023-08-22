@@ -5,61 +5,11 @@
 #include <gtest/gtest.h>
 #include <xtypes/idl/idl.hpp>
 
+#include "model-descriptor.hpp"
+
 #include <visitors.hpp>
 
 //std::function<void(std::string&, const eprosima::xtypes::DynamicData::ReadableNode&)>
-
-/**
-   @brief Finds structured name for a given node
-
-   @param [out] name Variable name of node according to FMU structured naming convention
-   @param [in] rnode Node to inspect
-
-   Internally, this function recursively calls itself to find all ancestors of a node.
-   The convention used is '.' for members and '[i]', with i being zero-indexed array notation.
-
-*/
-void name_generator(std::string& name, const eprosima::xtypes::DynamicData::ReadableNode& rnode)
-{
-  std::string member_name;
-  bool is_array = rnode.type().kind() == eprosima::xtypes::TypeKind::ARRAY_TYPE;
-
-  std::string from_name = (rnode.from_member() ? rnode.from_member()->name() : std::string());
-  /*std::cout << "[" << rnode.type().name() << "]: ";
-    << "Member name: " << from_name  << "\n";
-    << "From member: " << rnode.from_member() << "\n"
-    << "From index:  " << rnode.from_index() << "\n"
-    << "Has parent:  " << rnode.has_parent() << "\n"
-    << "Deep:        " << rnode.deep() << "\n";
-  */
-
-  // Determine name to give:
-  if (rnode.from_member()) {
-    member_name = rnode.from_member()->name();
-  }
-
-  // Parent is array
-  if (rnode.has_parent() && rnode.parent().type().kind()
-   == eprosima::xtypes::TypeKind::ARRAY_TYPE) {
-    member_name += "[" + std::to_string(rnode.from_index()) + "]";
-  }
-
-  // Member name is non-empty and not an array
-  if (!member_name.empty() && !is_array) {
-    member_name += ".";
-  }
-
-  name.insert(0, member_name);
-
-  if (rnode.has_parent()) {
-    name_generator(name, rnode.parent());
-  } else {
-    if (name.back() == '.') {
-      name.pop_back(); // remove trailing '.'
-    }
-  }
-}
-
 
 
 

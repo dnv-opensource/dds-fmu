@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
+
 <fmiModelDescription
     fmiVersion="2.0"
     modelName="no.sintef.dds-fmu"
@@ -7,8 +8,8 @@
     copyright="© 2023 SINTEF Ocean"
     license="BSD-3-Clause"
     version="@CMAKE_PROJECT_VERSION@"
-    guid="@FMU_UUID@"
     variableNamingConvention="structured"
+    guid="this-is-a-placeholder-for-uuid36char"
     >
 
     <CoSimulation
@@ -16,18 +17,4 @@
         canHandleVariableCommunicationStepSize="true"
         />
 
-    <ModelVariables>
-        <ScalarVariable name="y" valueReference="0" variability="discrete" causality="output" initial="exact">
-          <Real start="0.0" />
-        </ScalarVariable>
-        <ScalarVariable name="x" valueReference="1" variability="discrete" causality="input">
-          <Real start="1.0" />
-        </ScalarVariable>
-    </ModelVariables>
-
-    <ModelStructure>
-        <Outputs>
-            <Unknown index="1" />
-        </Outputs>
-    </ModelStructure>
 </fmiModelDescription>

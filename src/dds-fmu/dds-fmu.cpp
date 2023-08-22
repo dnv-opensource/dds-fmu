@@ -160,10 +160,11 @@ cppfmu::UniquePtr<cppfmu::SlaveInstance> CppfmuInstantiateSlave(
           fmuResourceLocation,
           std::regex("file://"), ""));
   auto fmu_base_path = resource_dir.parent_path();
-  auto evalGUID = generate_uuid(get_uuid_files(fmu_base_path));
+  auto evalGUID = generate_uuid(get_uuid_files(fmu_base_path, false));
 
   if (evalGUID != std::string(fmuGUID)) {
-    throw std::runtime_error("FMU GUID mismatch");
+    throw std::runtime_error(std::string("FMU GUID mismatch: Got from ModelDescription: ")
+     + std::string(fmuGUID) + std::string(", but evaluated: ") + evalGUID);
   }
 
   return cppfmu::AllocateUnique<DdsFmuInstance>(memory, resource_dir);

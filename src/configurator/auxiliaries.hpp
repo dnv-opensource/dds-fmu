@@ -8,7 +8,7 @@
    @brief Creates a uuid from a list of files and list of strings
 
    This functions loads the contents of each listed file and appends the list of strings
-   also provided by the user. Next, it strips CR LF, as well as the section: guid="<uuid>"
+   also provided by the user. Next, it strips spaces, CR, LF, as well as the section: guid="<uuid>"
    found in modelDescription.xml. The resulting string buffer is then used to create a
    uuid, which is returned as a string.
 
