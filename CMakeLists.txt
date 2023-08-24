@@ -122,6 +122,7 @@ target_link_libraries(${fmuDescriptorTarget}
   PRIVATE
   taywee::args
   configurator
+  helper
   "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
   "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
   )
@@ -198,6 +199,8 @@ add_library(helper OBJECT
   ${CMAKE_SOURCE_DIR}/src/helper/DynamicPublisher.cpp
   ${CMAKE_SOURCE_DIR}/src/helper/DynamicSubscriber.cpp
   ${CMAKE_SOURCE_DIR}/src/helper/DdsLoader.cpp
+  ${CMAKE_SOURCE_DIR}/src/helper/SignalDistributor.cpp
+  ${CMAKE_SOURCE_DIR}/src/helper/DataMapper.cpp
   )
 
 target_link_libraries(helper

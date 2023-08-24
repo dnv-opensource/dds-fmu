@@ -66,12 +66,12 @@
    + [ ] Load dds types and register through xtypes + converter
      + To be stored as scoped types (i.e. Kong::Foo)
    + [ ] Store data as xtypes DynamicData instead of DDS DynamicData
-   + [ ] For a given type, iterate through its primitive types
-   + [ ] Define real reference structure to map between dynamic types for dds/idl and fmu
+   + [X] For a given type, iterate through its primitive types
+   + [X] Define real reference structure to map between dynamic types for dds/idl and fmu
    + [X] Load idl files
-   + [ ] Basic dynamic real publisher
-     + [ ] Iterate xtypes to populate fmu structures
-     + [ ] Use dynamic publisher to load idl types and publish on fmu
+   + [-] Basic dynamic real publisher/subscriber
+     + [X] Iterate xtypes to populate fmu structures
+     + [ ] Use dynamic pubsub to load idl types and publish on fmu
    + [4/6] Load xml profiles as common for Fast-DDS (how many participants?)
      + [X] Load participant profiles (one for pub and one for sub)
      + [X] Load publisher profile
@@ -84,10 +84,10 @@
        + [ ] Use converter to register types instead of xml-based
 
    + [ ] Create mapping from dds topic primitive types to fmu value references
-   + [-] Generate modelDescription from mapping
+   + [X] Generate modelDescription from mapping
      + [X] version, guid, CoSimulation
-     + [ ] ModelVariables auto-populate
-     + [ ] ModelStructure auto-populate
+     + [X] ModelVariables auto-populate
+     + [X] ModelStructure auto-populate
    + [ ] Create publishers/subscribers from mapping
    + [X] Add GTest for systematic tests of functionality
    + [ ] Run valgrind on functionality
@@ -100,7 +100,7 @@
      - hash fast-dds config file(s) (resource) dds-fmu-profile.xml
      - eval GUID must be possible given model description and mentioned files
    + [X] CMake Target to generate GUID using stduuid functionality
-   + [ ] Generate modelDescription.xml
+   + [X] Generate modelDescription.xml
      - given idl files and xml, model description must be generate-able
      - must be possible through bundled library API
    + [-] Zip staging directory
@@ -110,16 +110,17 @@
    + [X] Make documentation target and bundle it with the fmu
    + [ ] Add editorconfig and clang-format to unify formatting
    + [ ] Figure out to properly handle fast-dds log (and xtypes) in conjunction with cppfmu
+   + [ ] Tidy code and remove temporary stuff
+   + [ ] Properly document end user documentation
 
-   + [3/5] Repackaging
+   + [4/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
      2. [ ] Parse idls, xml profile and other config files
         - [ ] Create mock-up parser with placeholders for each step
      3. [X] Produce GUID based on modelDescription template info and config files
         - Allow tweaking e.g. ModelStructure as long as consistency is retained?
-     4. [ ] Write modelDescription from XML tree and evaluated GUID
+     4. [X] Write modelDescription from XML tree and evaluated GUID
      5. [X] Zip files into fmu
-
 
 ** Description of signal mapping
 

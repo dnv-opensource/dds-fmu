@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ddsfmu>
+  <fmu_out topic="msg_read" type="Message" />
+  <fmu_in topic="msg_write" type="Message" />
+</ddsfmu>

@@ -1,11 +1,5 @@
 #pragma once
 
-struct Trig
-{
-  double sine;
-  double other;
-};
-
 enum EnumState {
   Sleep, Okay, Alert, Failure, Dead
 };
@@ -30,19 +24,4 @@ struct Message
   boolean enabled;
   char ch;
   EnumState status;
-};
-
-
-module Kong {
-
-  struct Fu
-  {
-    double fighter; ///< It is a fighter
-    @optional boolean looser;
-    @key string member;
-    uint32 happy[2];
-    uint32 my_array[3][2];
-    Trig onometry;
-  };
-
 };

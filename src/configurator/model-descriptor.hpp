@@ -22,8 +22,9 @@ void name_generator(std::string& name, const eprosima::xtypes::DynamicData::Read
 namespace ddsfmu
 {
 
+// TODO: for fmi3 this and related impl need to be extended.
 enum ScalarVariableType {
-  Real, Integer, Boolean, String
+  Real, Integer, Boolean, String, Unknown
 };
 
 }
@@ -71,7 +72,6 @@ void load_ddsfmu_mapping(rapidxml::xml_document<>& doc, const std::filesystem::p
 
 */
 void write_model_description(const rapidxml::xml_document<>& doc, const std::filesystem::path& fmu_root);
-
 
 /**
    @brief Constructs a <ScalarVariable> tag to be used in <ModelVariables> of the modelDescription.xml

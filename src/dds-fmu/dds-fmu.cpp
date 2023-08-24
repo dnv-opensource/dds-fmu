@@ -5,31 +5,17 @@
 #include <cmath>
 #include <cstring>
 #include <filesystem>
+#include <functional>
 #include <iostream>
 #include <regex>
 
 #include <cppfmu_cs.hpp>
 
+#include "auxiliaries.hpp"
+#include "DataMapper.hpp"
 #include "DdsLoader.hpp"
 #include "DynamicPublisher.hpp"
 #include "DynamicSubscriber.hpp"
-#include "auxiliaries.hpp"
-
-// Temporary
-#include <functional>
-#include <vector>
-
-enum
-  {
-    // outputs -> DDS inputs, i.e. subs
-    VR_y    = 0,
-    VR_OUTPUT_COUNT = 1,
-
-    // inputs and parameters -> DDS outputs, i.e. pubs
-    VR_x    = 1,
-    VR_COUNT = 2,
-  };
-
 
 class DdsFmuInstance : public cppfmu::SlaveInstance
 {
@@ -47,16 +33,7 @@ public:
     override
   {
     for (std::size_t i = 0; i < nvr; ++i) {
-      // evaluate visitor writer v_{i,R}(vr[i], value[i])
-      // auto v_iR = std::function<void(const std::uint32_t, const double&)>
-    }
-
-    for (std::size_t i = 0; i < nvr; ++i) {
-      if (vr[i] < VR_OUTPUT_COUNT) {
-        throw std::out_of_range{"Value reference out of range"};
-      }
-      m_input[vr[i] - VR_OUTPUT_COUNT] = value[i];
-      // Populates data structure to be published on DDS
+      m_mapper.set_double(vr[i], value[i]);
     }
   }
 
@@ -68,21 +45,77 @@ public:
   {
 
     for (std::size_t i = 0; i < nvr; ++i) {
-      // evaluate visitor reader value[i] = v_{o,R}(vr[i])
-      // slight rewrite to get more alike function signature
-      // auto v_oR = std::function<void(const std::uint32_t, double&)>
+      m_mapper.get_double(vr[i], value[i]);
     }
+  }
 
+  void SetInteger(
+      const cppfmu::FMIValueReference vr[],
+      std::size_t nvr,
+      const cppfmu::FMIInteger value[])
+    override
+  {
     for (std::size_t i = 0; i < nvr; ++i) {
-      if (vr[i] == VR_y) {
-        value[i] = m_output[VR_y];
-        // Use data acquired from DDS
+      m_mapper.set_int(vr[i], value[i]);
+    }
+  }
 
-      } else if (vr[i] >= VR_OUTPUT_COUNT) {
-        value[i] = m_input[vr[i] - VR_OUTPUT_COUNT];
-      } else {
-        throw std::out_of_range{"Value reference out of range"};
-      }
+  void GetInteger(
+      const cppfmu::FMIValueReference vr[],
+      std::size_t nvr,
+      cppfmu::FMIInteger value[])
+    const override
+  {
+    for (std::size_t i = 0; i < nvr; ++i) {
+      m_mapper.get_int(vr[i], value[i]);
+    }
+  }
+
+  void SetBoolean(
+      const cppfmu::FMIValueReference vr[],
+      std::size_t nvr,
+      const cppfmu::FMIBoolean value[])
+    override
+  {
+    for (std::size_t i = 0; i < nvr; ++i) {
+      m_mapper.set_bool(vr[i], static_cast<bool>(value[i]));
+    }
+  }
+
+  void GetBoolean(
+      const cppfmu::FMIValueReference vr[],
+      std::size_t nvr,
+      cppfmu::FMIBoolean value[])
+    const override
+  {
+    for (std::size_t i = 0; i < nvr; ++i) {
+      bool val;
+      m_mapper.get_bool(vr[i], val);
+      value[i] = val;
+    }
+  }
+
+  void SetString(
+      const cppfmu::FMIValueReference vr[],
+      std::size_t nvr,
+      const cppfmu::FMIString value[])
+    override
+  {
+    for (std::size_t i = 0; i < nvr; ++i) {
+      m_mapper.set_string(vr[i], value[i]);
+    }
+  }
+
+  void GetString(
+      const cppfmu::FMIValueReference vr[],
+      std::size_t nvr,
+      cppfmu::FMIString value[])
+    const override
+  {
+    for (std::size_t i = 0; i < nvr; ++i) {
+      std::string val;
+      m_mapper.get_string(vr[i], val);
+      value[i] = val.c_str();
     }
   }
 
@@ -108,17 +141,8 @@ private:
     override
   {
     m_time = currentCommunicationPoint + communicationStepSize;
-
-    //Trig trig;
-    //trig.sine() = m_input[VR_x];
-    //m_trigger_happy.publish(trig);
-
-    // m_input or replacement to be pointed to by publisher
-    //
     m_publisher.publish(false);
-
-    //auto& rig = m_trigger_sad.read();
-    //m_output[VR_y - VR_INPUT_COUNT] = rig.sine();
+    // publish and subscribe
 
     return true;
   }
@@ -126,16 +150,11 @@ private:
   void Reset() override
   {
     m_time = 0.0;
-    for (auto& v : m_input) v = 0.0;
-    for (auto& v : m_output) v = 0.0;
-    // Probably define helper functions instead of iterating visitors
-    // Reset other types too
+    m_mapper.reset(m_resource_path);
   }
 
   cppfmu::FMIReal m_time;
-
-  cppfmu::FMIReal m_input[VR_COUNT - VR_OUTPUT_COUNT];
-  cppfmu::FMIReal m_output[VR_OUTPUT_COUNT];
+  DataMapper m_mapper; // has reader/writer visitor functions into DynamicData
   DdsLoader m_loader;
   DynamicPublisher m_publisher;   // own visitor writers v_{i,T}, m_publisher.set(const uint32_t, const T&)
   DynamicSubscriber m_subscriber; // own visitor readers v_{o,T}, m_publisher.get(const uint32_t, T&)
@@ -156,9 +175,7 @@ cppfmu::UniquePtr<cppfmu::SlaveInstance> CppfmuInstantiateSlave(
     cppfmu::Logger /*logger*/)
 {
   auto resource_dir = std::filesystem::path(
-      std::regex_replace(
-          fmuResourceLocation,
-          std::regex("file://"), ""));
+      std::regex_replace(fmuResourceLocation, std::regex("file://"), ""));
   auto fmu_base_path = resource_dir.parent_path();
   auto evalGUID = generate_uuid(get_uuid_files(fmu_base_path, false));
 

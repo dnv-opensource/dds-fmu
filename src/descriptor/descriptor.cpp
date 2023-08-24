@@ -11,11 +11,7 @@
 #include "model-descriptor.hpp"
 #include "idl-loader.hpp"
 #include "auxiliaries.hpp"
-
-void descriptor_builder(){
-
-}
-
+#include "SignalDistributor.hpp"
 
 int main(int argc, const char* argv[])
 {
@@ -71,9 +67,6 @@ int main(int argc, const char* argv[])
     return 1;
   }
 
-  // load idl types into context
-  auto context = load_fmu_idls(resources_path);
-
   // load ddsfmu_mapping of signals to be mapped
   std::vector<char> buffer_0;
   rapidxml::xml_document<> signal_mapping;
@@ -84,23 +77,68 @@ int main(int argc, const char* argv[])
   std::vector<char> buffer_1;
   load_template_xml(doc, modelDescription_template, buffer_1);
 
-
   rapidxml::xml_node<> *root_node = doc.first_node("fmiModelDescription");
-
   rapidxml::xml_node<>* mv_node = doc.allocate_node(rapidxml::node_element, "ModelVariables");
   root_node->append_node(mv_node);
 
-  // populate the model description file
-  // TODO: replace by iterating signal_mapping
+  auto distributor = SignalDistributor();
+  distributor.load_idls(resources_path);   // load idl types into context
 
-  // For each output
-  model_variable_generator(doc, mv_node, "y", "output", 0, ddsfmu::Real);
+  auto mapper_ddsfmu = signal_mapping.first_node("ddsfmu");
+
+  auto mapper_iterator = [&](bool is_in_not_out) {
+
+    std::string node_name;
+    if(is_in_not_out) node_name = "fmu_in";
+    else node_name = "fmu_out";
+
+    for (rapidxml::xml_node<>* fmu_node = mapper_ddsfmu->first_node(node_name.c_str());
+         fmu_node;
+         fmu_node = fmu_node->next_sibling(node_name.c_str())) {
+
+      auto topic = fmu_node->first_attribute("topic");
+      auto type = fmu_node->first_attribute("type");
+      if(!topic || !type){
+        std::cerr << "<ddsfmu><" << node_name
+                  << "> must specify attributes 'topic' and 'type'. Got: 'topic': "
+                  << std::boolalpha << (topic != nullptr) << " and 'type': "
+                  << std::boolalpha << (type != nullptr) << std::endl;
+        throw std::runtime_error("Incomplete user data");
+      }
+      std::string topic_name(topic->value());
+      std::string topic_type(type->value());
+
+      if(!distributor.has_structure(topic_type)){
+        std::cerr << "Got non-existing 'type': " << topic_type << std::endl;
+        throw std::runtime_error("Unknown idl type");
+      }
+
+      //std::cout << "Topic: " << topic_name << " Type: " << topic_type << std::endl;
+      distributor.add(topic_name, topic_type, is_in_not_out);
+    }
+  };
+
+  // out before in since this is assumed in module_structure_outputs further below!
+  mapper_iterator(false); // out
+  mapper_iterator(true); // in
+
+  // populate the model description file
+  const auto& mapping = distributor.get_mapping();
+
+  for (const auto& info : mapping) {
+    std::cout << "valRef: " << std::get<0>(info) << " causality: " << std::get<2>(info) << " name: " << std::get<1>(info) << std::endl;
+    model_variable_generator(doc, mv_node, std::get<1>(info), std::get<2>(info), std::get<0>(info), std::get<3>(info));
+  }
+
+  model_structure_outputs_generator(doc, root_node, distributor.outputs());
+
+  //model_variable_generator(doc, mv_node, "y", "output", 0, ddsfmu::Real);
 
   // For each input
-  model_variable_generator(doc, mv_node, "x", "input", 1, ddsfmu::Real);
+  //model_variable_generator(doc, mv_node, "x", "input", 1, ddsfmu::Real);
 
   // Count outputs and call this
-  model_structure_outputs_generator(doc, root_node, 1);
+  //model_structure_outputs_generator(doc, root_node, 1);
 
   // retrieve guid
   auto guid = generate_uuid(get_uuid_files(fmu_path, true), std::vector<std::string>{print_xml(doc)});

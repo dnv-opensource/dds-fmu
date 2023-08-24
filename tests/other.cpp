@@ -16,20 +16,6 @@ TEST(Other, IsATrueTest)
   EXPECT_TRUE(a);
 }
 
-//TEST(get_uuid_files,
-//TEST(generate_uuid
-//TEST(load_fmu_idls
-//TEST(load_template_xml
-//TEST(Converter
-//Test stuff implemented in DynamicPublisherSubscriber
-//Test ability to create visitor reader and writer
-//Test generated xml entries from idl
-
-// xplora
-// myuuid
-// structuriser
-// modeller
-
 TEST(ModelDescriptor, NameGenerator)
 {
   std::string my_idl = R"~~~(
@@ -49,6 +35,7 @@ TEST(ModelDescriptor, NameGenerator)
        {
          int32 distance;
          Outer universe[2];
+         string name;
        };
     };
 
@@ -63,7 +50,8 @@ TEST(ModelDescriptor, NameGenerator)
 
   data.for_each([&](eprosima::xtypes::DynamicData::ReadableNode& node){
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
-    if(is_leaf){
+    bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
+    if(is_leaf || is_string){
       std::string ret;
       name_generator(ret, node);
       names.push_back(ret);
@@ -74,11 +62,12 @@ TEST(ModelDescriptor, NameGenerator)
     std::cout << name << std::endl;
   }
 
-  ASSERT_EQ(names.size(), 3);
+  ASSERT_EQ(names.size(), 4);
   EXPECT_EQ(names[0], std::string("distance"));
   EXPECT_EQ(names[1], std::string("universe[0].my_inner.my_uint32"));
   EXPECT_EQ(names[2], std::string("universe[1].my_inner.my_uint32"));
-  // TODO: support sequence type, string type, wstring type, map type
+  EXPECT_EQ(names[3], std::string("name"));
+  // TODO: support sequence type, wstring type, map type
 }
 
 TEST(ModelDescriptor, ScalarVariable)

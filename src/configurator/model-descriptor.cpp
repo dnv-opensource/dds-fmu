@@ -17,6 +17,10 @@ std::string print_xml(const rapidxml::xml_document<>& doc){
 
 void load_template_xml(rapidxml::xml_document<>& doc, const std::filesystem::path& template_xml, std::vector<char>& buffer){
 
+  if(!std::filesystem::exists(template_xml)){
+    throw std::runtime_error("File not found: " + template_xml.string());
+  }
+
   rapidxml::xml_node<> * root_node;
 
   std::ifstream theFile(template_xml.string());
@@ -43,6 +47,11 @@ void load_template_xml(rapidxml::xml_document<>& doc, const std::filesystem::pat
 }
 
 void load_ddsfmu_mapping(rapidxml::xml_document<>& doc, const std::filesystem::path& ddsfmu_mapping, std::vector<char>& buffer){
+
+  if(!std::filesystem::exists(ddsfmu_mapping)){
+     throw std::runtime_error("File not found: " + ddsfmu_mapping.string());
+  }
+
   rapidxml::xml_node<> * root_node;
   std::ifstream theFile(ddsfmu_mapping.string());
   buffer = std::vector<char>(std::istreambuf_iterator<char>{theFile}, {});
@@ -162,6 +171,7 @@ void model_variable_generator(
     start = doc.allocate_attribute("start", "");
     break;
   }
+  case ddsfmu::Unknown:
   default:
    break;
   }
