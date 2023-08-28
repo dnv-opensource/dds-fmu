@@ -131,30 +131,30 @@ TEST(DataMapper, Visitors)
   dyn_data["i8"] = std::int8_t(-127);              // int: 1
   dyn_data["ui16"] = std::uint16_t(65565);         // int: 2
   dyn_data["i16"] = std::int16_t(-32766);          // int: 3
-  dyn_data["ui32"] = std::uint32_t(100000);        // int: 4
-  dyn_data["ui32_2"] = std::uint32_t(100001);      // int: 5
-  dyn_data["i32"] = std::int32_t(-100000);         // int: 6
-  dyn_data["i32_2"] = std::int32_t(-100001);       // int: 7
-  dyn_data["i64"] = std::int64_t(-4294967296);     // dbl: 0
-  dyn_data["i64_2"] = std::int64_t(-4294967297);   // dbl: 1
-  dyn_data["ui64"] = std::uint64_t(4294967296);    // dbl: 2
-  dyn_data["ui64_2"] = std::uint64_t(4294967297);  // dbl: 3
-  dyn_data["d_val"] = 3.14;                        // dbl: 4
-  dyn_data["f_val"] = 1.81f;                       // dbl: 5
+  dyn_data["i32"] = std::int32_t(-100000);         // int: 4
+  dyn_data["i32_2"] = std::int32_t(-100001);       // int: 5
+  dyn_data["ui32"] = std::uint32_t(2147483648);    // dbl: 0
+  dyn_data["ui32_2"] = std::uint32_t(2147483649);  // dbl: 1
+  dyn_data["i64"] = std::int64_t(-4294967296);     // dbl: 2
+  dyn_data["i64_2"] = std::int64_t(-4294967297);   // dbl: 3
+  dyn_data["ui64"] = std::uint64_t(4294967296);    // dbl: 4
+  dyn_data["ui64_2"] = std::uint64_t(4294967297);  // dbl: 5
+  dyn_data["d_val"] = 3.14;                        // dbl: 6
+  dyn_data["f_val"] = 1.81f;                       // dbl: 7
   dyn_data["enabled"] = true;                      // bool: 0
   dyn_data["ch"] = '!';                            // str: 1
   if (with_enum) {
-    dyn_data["status"] = 1;                          // int: 8
+    dyn_data["status"] = 1;                          // int: 6
   }
 
   std::cout << "Did set dynamic data" << std::endl;
 
   // fmi getters to fetch from datamapper into local vars)
 
-  double i64, i64_2, ui64, ui64_2, d_val, f_val;                       // 6 double
+  double ui32, ui32_2, i64, i64_2, ui64, ui64_2, d_val, f_val;         // 8 double
   std::string str, ch;                                                 // 2 string
   bool enabled;                                                        // 1 bool
-  std::int32_t ui8, i8, ui16, i16, ui32, ui32_2, i32, i32_2, status;   // 9 int
+  std::int32_t ui8, i8, ui16, i16, i32, i32_2, status;   // 7 int
 
   std::int32_t dbl_idx(0), str_idx(0), int_idx(0), bool_idx(0);
 
@@ -162,12 +162,12 @@ TEST(DataMapper, Visitors)
   data_mapper.get_int(int_idx++, i8);
   data_mapper.get_int(int_idx++, ui16);
   data_mapper.get_int(int_idx++, i16);
-  data_mapper.get_int(int_idx++, ui32);
-  data_mapper.get_int(int_idx++, ui32_2);
   data_mapper.get_int(int_idx++, i32);
   data_mapper.get_int(int_idx++, i32_2);
   if (with_enum) { data_mapper.get_int(int_idx++, status); }
 
+  data_mapper.get_double(dbl_idx++, ui32);
+  data_mapper.get_double(dbl_idx++, ui32_2);
   data_mapper.get_double(dbl_idx++, i64);
   data_mapper.get_double(dbl_idx++, i64_2);
   data_mapper.get_double(dbl_idx++, ui64);
@@ -186,10 +186,10 @@ TEST(DataMapper, Visitors)
   EXPECT_EQ(i8, dyn_data["i8"].value<std::int8_t>());
   EXPECT_EQ(ui16, dyn_data["ui16"].value<std::uint16_t>());
   EXPECT_EQ(i16, dyn_data["i16"].value<std::int16_t>());
-  EXPECT_EQ(ui32, dyn_data["ui32"].value<std::uint32_t>());
-  EXPECT_EQ(ui32_2, dyn_data["ui32_2"].value<std::uint32_t>());
   EXPECT_EQ(i32, dyn_data["i32"].value<std::int32_t>());
   EXPECT_EQ(i32_2, dyn_data["i32_2"].value<std::int32_t>());
+  EXPECT_EQ(static_cast<std::uint32_t>(ui32),   dyn_data["ui32"].value<std::uint32_t>());
+  EXPECT_EQ(static_cast<std::uint32_t>(ui32_2), dyn_data["ui32_2"].value<std::uint32_t>());
   EXPECT_DOUBLE_EQ(i64, dyn_data["i64"].value<std::int64_t>());
   EXPECT_DOUBLE_EQ(i64_2, dyn_data["i64_2"].value<std::int64_t>());
   EXPECT_DOUBLE_EQ(ui64, dyn_data["ui64"].value<std::uint64_t>());
@@ -214,11 +214,11 @@ TEST(DataMapper, Visitors)
   data_mapper.set_int(int_idx++, i8);
   data_mapper.set_int(int_idx++, ui16);
   data_mapper.set_int(int_idx++, i16);
-  data_mapper.set_int(int_idx++, ui32);
-  data_mapper.set_int(int_idx++, ui32_2);
   data_mapper.set_int(int_idx++, i32);
   data_mapper.set_int(int_idx++, i32_2);
   if (with_enum) { data_mapper.set_int(int_idx++, status); }
+  data_mapper.set_double(dbl_idx++, ui32);
+  data_mapper.set_double(dbl_idx++, ui32_2);
   data_mapper.set_double(dbl_idx++, i64);
   data_mapper.set_double(dbl_idx++, i64_2);
   data_mapper.set_double(dbl_idx++, ui64);

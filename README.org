@@ -83,6 +83,7 @@
        + [X] Use converter to populate instead
        + [X] Use converter to register types instead of xml-based
        + [ ] Figure out why registering enum fails
+   + [ ] Take all samples on reading
 
    + [X] Create mapping from dds topic primitive types to fmu value references
    + [X] Generate modelDescription from mapping

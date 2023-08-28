@@ -40,13 +40,27 @@
     </qos>
   </subscriber>
 
-  <data_writer profile_name="msg">
+  <data_writer profile_name="roundtrip">
     <qos>
       <reliability>
         <kind>BEST_EFFORT</kind>
       </reliability>
     </qos>
   </data_writer>
+
+  <data_reader profile_name="roundtrip">
+    <topic>
+      <historyQos>
+        <kind>KEEP_LAST</kind>
+        <depth>2</depth>
+      </historyQos>
+    </topic>
+    <qos>
+      <reliability>
+        <kind>BEST_EFFORT</kind>
+      </reliability>
+    </qos>
+  </data_reader>
 
 
 </profiles>

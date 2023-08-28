@@ -71,7 +71,6 @@ ddsfmu::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::Rea
   case eprosima::xtypes::TypeKind::UINT_8_TYPE:
   case eprosima::xtypes::TypeKind::INT_16_TYPE:
   case eprosima::xtypes::TypeKind::UINT_16_TYPE:
-  case eprosima::xtypes::TypeKind::UINT_32_TYPE:
   case eprosima::xtypes::TypeKind::INT_32_TYPE:
     return ddsfmu::Integer;
   case eprosima::xtypes::TypeKind::FLOAT_32_TYPE:
@@ -79,10 +78,11 @@ ddsfmu::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::Rea
     return ddsfmu::Real;
 
   case eprosima::xtypes::TypeKind::STRING_TYPE:
-  case eprosima::xtypes::TypeKind::CHAR_8_TYPE: // Supported as string?
+  case eprosima::xtypes::TypeKind::CHAR_8_TYPE:
     return ddsfmu::String;
   case eprosima::xtypes::TypeKind::ENUMERATION_TYPE:
     return ddsfmu::Integer;
+  case eprosima::xtypes::TypeKind::UINT_32_TYPE:
   case eprosima::xtypes::TypeKind::INT_64_TYPE:
   case eprosima::xtypes::TypeKind::UINT_64_TYPE:
     return ddsfmu::Real;

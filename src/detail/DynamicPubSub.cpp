@@ -16,7 +16,7 @@
 
 #include <tuple>
 
-DynamicPubSub::DynamicPubSub() : m_data_mapper(nullptr), m_xml_loaded(false) {}
+DynamicPubSub::DynamicPubSub() : m_participant(nullptr), m_subscriber(nullptr), m_publisher(nullptr), m_data_mapper(nullptr), m_xml_loaded(false) {}
 
 void DynamicPubSub::write() {
   for (auto& writes : m_write_data) {
@@ -25,26 +25,109 @@ void DynamicPubSub::write() {
   }
 }
 
-void DynamicPubSub::read() {
+DynamicPubSub::~DynamicPubSub() {
+  clear();
+}
+
+void DynamicPubSub::take() {
   for (auto& reads : m_read_data) {
-    // TODO: take all samples
+
+    auto have_data = eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK;
+    eprosima::fastrtps::types::ReturnCode_t exec_result = have_data;
     eprosima::fastdds::dds::SampleInfo info;
-    if (eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK
-     == reads.first->take_next_sample(reads.second.second.get(), &info)) {
-      ddsfmu::Converter::fastdds_to_xtypes(reads.second.second.get(), reads.second.first);
+
+    while (exec_result == have_data) {
+      exec_result = reads.first->take_next_sample(reads.second.second.get(), &info);
+      if (exec_result == have_data) {
+        ddsfmu::Converter::fastdds_to_xtypes(reads.second.second.get(), reads.second.first);
+      }
     }
+
+    /* TODO: figure out how to use take(..) instead of repeated take_next_sample
+
+    eprosima::fastdds::dds::SampleInfoSeq infos;
+    // What is the correct template type here?:
+    eprosima::fastdds::dds::LoanableSequence<eprosima::fastrtps::types::DynamicPubSubType> data_values;
+    //eprosima::fastdds::dds::LoanableSequence<eprosima::fastrtps::types::DynamicData_ptr> data_values;
+
+    exec_result = have_data;
+    while (exec_result == have_data) {
+      exec_result = reads.first->take(data_values, infos);
+
+      int samples=0;
+      for(eprosima::fastdds::dds::LoanableCollection::size_type i = 0; i < infos.length(); ++i){
+        if (infos[i].valid_data)
+        {
+          const auto& sample = data_values[i];
+
+          ++samples;
+          std::cout << "Sample received (count=" << samples
+                    << ") at address " << &sample << std::endl;
+
+          // Unclear how to access dynamic type with LoanableSequence
+          // Want to fetch data into reads.second.second.get() (etypes::DynamicData*) like take_next_sample
+          //ddsfmu::Converter::fastdds_to_xtypes(reads.second.second.get(), reads.second.first);
+          //ddsfmu::Converter::fastdds_to_xtypes(data_values[i].get(), reads.second.first);
+        }
+      }
+      reads.first->return_loan(data_values, infos);
+      infos.unloan();
+    }
+    */
   }
 }
 
-void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper* mapper_ptr){
+void DynamicPubSub::clear() {
 
-  m_data_mapper = mapper_ptr;
+  auto* participant_factory = eprosima::fastdds::dds::DomainParticipantFactory::get_instance();
 
-  // TODO Also need clean-up of pointers
+  // Clean-up old instances, if they exist
+  for (auto& item : m_write_data) {
+    // Not needed when using DynamicData_ptr
+    //eprosima::fastrtps::types::DynamicDataFactory::get_instance()->delete_data(item.second.second);
+
+    item.first->set_listener(nullptr);
+    m_publisher->delete_datawriter(item.first);
+  }
+
+  if (m_publisher) { m_participant->delete_publisher(m_publisher); }
+  m_publisher = nullptr;
+
+  for (auto& item : m_read_data) {
+    // Not needed when using DynamicData_ptr
+    //eprosima::fastrtps::types::DynamicDataFactory::get_instance()->delete_data(item.second.second);
+    item.first->set_listener(nullptr);
+    m_subscriber->delete_datareader(item.first);
+  }
+  if (m_subscriber) { m_participant->delete_subscriber(m_subscriber); }
+  m_subscriber = nullptr;
+
+  for (auto& item : m_topic_name_ptr) {
+    m_participant->delete_topic(item.second);
+  }
+
+
+  auto operation_ok = eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK;
+
+  if (m_participant && operation_ok != participant_factory->delete_participant(m_participant)) {
+    throw std::runtime_error("Could not successfully delete DDS domain participant");
+  }
+
+  m_topic_to_type.clear();
   m_types.clear();
   m_topic_name_ptr.clear();
   m_write_data.clear();
   m_read_data.clear();
+
+}
+
+void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper* const mapper_ptr){
+
+  clear();
+  m_data_mapper = mapper_ptr;
+
+
+  // Load and create new instances
 
   if(!m_xml_loaded){
     // only load once
@@ -64,7 +147,6 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
   namespace etypes = eprosima::fastrtps::types;
 
   // Note: We create only one participant for each fmu
-
   m_participant = edds::DomainParticipantFactory::get_instance()->create_participant_with_profile("dds-fmu-default");
 
   if (!m_participant) { throw std::runtime_error("Could not create domain participant"); }
@@ -86,6 +168,7 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
   typedef std::vector<std::tuple<std::string, std::string, DynamicPubSub::PubOrSub>> SignalList;
   SignalList fmu_signals;
 
+  // This lambda loads topic and type from <fmu_in> and <fmu_out> of <ddsfmu> the ddsfmu mapping xml
   auto xml_loader = [&](const std::string& node_name, SignalList& signals){
 
     DynamicPubSub::PubOrSub sig_type;
@@ -115,6 +198,19 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
   xml_loader("fmu_in", fmu_signals);  // publishers
   xml_loader("fmu_out", fmu_signals); // subscribers
 
+
+  /*
+    For each topic name, type name and dds direction (read or write)
+    1. Get xtypes DynamicType
+    2. Retrieve DynamicTypeBuilder (fast-dds) for xtypes DynamicType
+    3. Register type if not registered
+    4. Create topic if not already created
+    5. Create DynamicData_ptr for DDS to write/read to/from.
+    6. Create DataWriter and DataReader using profile, otherwise use default profile
+    7. Add data store with connection between DDS DynamicData_ptr and xtypes::DynamicData
+      xtypes::DynamicData is a reference to data owned by DataMapper.
+
+  */
   for (auto& topic_type : fmu_signals){
     // Get xtypes DynamicType
     const eprosima::xtypes::DynamicType& message_type(
@@ -157,8 +253,8 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
         dyn_type_support.setName(std::get<1>(topic_type).c_str());
         // A bug with UnionType in Fast DDS Dynamic Types is bypassed.
         // WORKAROUND START
-        dyn_type_support.auto_fill_type_information(false); // ture will not work with CycloneDDS
-        dyn_type_support.auto_fill_type_object(true); // TODO: or false?
+        dyn_type_support.auto_fill_type_information(false); // True will not work with CycloneDDS
+        dyn_type_support.auto_fill_type_object(true);       // TODO: or false?
         // WORKAROUND END
 
         // TODO: fix failure here if type has enum
@@ -180,6 +276,7 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
       tmp_topic = m_participant->create_topic_with_profile(
           std::get<0>(topic_type), std::get<1>(topic_type), std::get<0>(topic_type));
       if (!tmp_topic) {
+        // TODO: add log entry about using default topic qos
         tmp_topic = m_participant->create_topic(std::get<0>(topic_type), std::get<1>(topic_type), edds::TOPIC_QOS_DEFAULT);
       }
       if(!tmp_topic) { throw std::runtime_error("Unable to create topic: " + std::get<0>(topic_type) + " of type " + std::get<1>(topic_type)); }
@@ -199,6 +296,7 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
       edds::DataWriter* tmp_writer = m_publisher->create_datawriter_with_profile(tmp_topic, std::get<0>(topic_type));
 
       if(!tmp_writer) {
+        // TODO: add log entry about using default datawriter qos
         tmp_writer = m_publisher->create_datawriter(tmp_topic, edds::DATAWRITER_QOS_DEFAULT);
       }
       if (!tmp_writer) { throw std::runtime_error("Unable to create DataWriter for topic: " + std::get<1>(topic_type)); }
@@ -209,6 +307,7 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
       edds::DataReader* tmp_reader = m_subscriber->create_datareader_with_profile(tmp_topic, std::get<0>(topic_type));
 
       if(!tmp_reader) {
+        // TODO: add log entry about using default datareader qos
         tmp_reader = m_subscriber->create_datareader(tmp_topic, edds::DATAREADER_QOS_DEFAULT);
       }
       if (!tmp_reader) { throw std::runtime_error("Unable to create DataReader for topic: " + std::get<1>(topic_type)); }
@@ -216,6 +315,6 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
       m_read_data.emplace(std::make_pair(tmp_reader, std::make_pair(std::ref(mapper().data_ref(std::get<0>(topic_type), DataMapper::Direction::Read)), dynamic_data_ptr)));
 
     }
-    //std::cout << "Added: " << std::get<0>(topic_type) << ", " << std::get<1>(topic_type) << std::endl;
+
   }
 }

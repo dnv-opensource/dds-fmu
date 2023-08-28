@@ -28,8 +28,35 @@ TEST(DynamicPubSub, Initialization)
 
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  pubsub.read();
+  pubsub.take();
 
   EXPECT_EQ(d_val, dyn_read["val"].value<double>());
+
+
+  d_val = 1.8;
+  dyn_write["val"] = d_val;
+  pubsub.write();
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  d_val = 0.9;
+  dyn_write["val"] = d_val;
+  pubsub.write();
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  pubsub.take();
+
+  EXPECT_EQ(d_val, dyn_read["val"].value<double>());
+
+}
+
+TEST(DynamicPubSub, Reinitialization)
+{
+  auto resources = std::filesystem::current_path() / "resources";
+  DataMapper data_mapper;
+  DynamicPubSub pubsub;
+
+  data_mapper.reset(resources);
+  pubsub.reset(resources, &data_mapper);
+  pubsub.reset(resources, &data_mapper);
 
 }

@@ -138,7 +138,7 @@ private:
   {
     m_time = currentCommunicationPoint + communicationStepSize;
     m_pubsub.write();
-    m_pubsub.read();
+    m_pubsub.take();
 
     return true;
   }

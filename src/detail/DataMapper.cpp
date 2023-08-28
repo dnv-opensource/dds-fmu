@@ -149,6 +149,14 @@ void DataMapper::add(const std::string& topic_name, const std::string& topic_typ
           m_real_reader.emplace_back(
               std::bind(reader_visitor<double, double>, std::placeholders::_1, node.data()));
           break;
+        case eprosima::xtypes::TypeKind::UINT_32_TYPE:
+          if(read_write == Direction::Write){
+            m_real_writer.emplace_back(
+                std::bind(writer_visitor<double, std::uint32_t>, std::placeholders::_1, node.data()));
+          }
+          m_real_reader.emplace_back(
+              std::bind(reader_visitor<double, std::uint32_t>, std::placeholders::_1, node.data()));
+          break;
         case eprosima::xtypes::TypeKind::INT_64_TYPE:
           if(read_write == Direction::Write){
             m_real_writer.emplace_back(
@@ -212,14 +220,6 @@ void DataMapper::add(const std::string& topic_name, const std::string& topic_typ
           m_int_reader.emplace_back(
               std::bind(reader_visitor<std::int32_t, std::int32_t>, std::placeholders::_1, node.data()));
           break;
-        case eprosima::xtypes::TypeKind::UINT_32_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
-          }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
-          break;
         case eprosima::xtypes::TypeKind::ENUMERATION_TYPE:
           if(read_write == Direction::Write){
             m_int_writer.emplace_back(
@@ -274,39 +274,5 @@ void DataMapper::add(const std::string& topic_name, const std::string& topic_typ
         break;
       }
     }
-
   });
-
-}
-
-void DataMapper::set_double(const std::int32_t value_ref, const double& value){
-  m_real_writer.at(value_ref - m_real_offset)(value);
-}
-
-void DataMapper::get_double(const std::int32_t value_ref, double& value) const {
-  m_real_reader.at(value_ref)(value);
-}
-
-void DataMapper::set_int(const std::int32_t value_ref, const std::int32_t& value){
-  m_int_writer.at(value_ref - m_int_offset)(value);
-}
-
-void DataMapper::get_int(const std::int32_t value_ref, std::int32_t& value) const {
-  m_int_reader.at(value_ref)(value);
-}
-
-void DataMapper::set_bool(const std::int32_t value_ref, const bool& value){
-  m_bool_writer.at(value_ref - m_bool_offset)(value);
-}
-
-void DataMapper::get_bool(const std::int32_t value_ref, bool& value) const {
-  m_bool_reader.at(value_ref)(value);
-}
-
-void DataMapper::set_string(const std::int32_t value_ref, const std::string& value){
-  m_string_writer.at(value_ref - m_string_offset)(value);
-}
-
-void DataMapper::get_string(const std::int32_t value_ref, std::string& value) const {
-  m_string_reader.at(value_ref)(value);
 }

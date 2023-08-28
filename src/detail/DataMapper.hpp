@@ -38,27 +38,39 @@ inline void writer_visitor<std::string, char>(const std::string& in, eprosima::x
 /**
    @brief Manages mapping between FMU signals and xtypes data storage
 
+   Types defined in IDL is mapped onto four FMU types, namely (Real, Integer, Boolean and String).
+   Integer types with >32 bit is mapped to Real. uint32_t, int64_t, uint64_t are mapped to Real. Enumeration is mapped to Integer.
+   All data are stored in xtypes::DynamicData. Each data member of DynamicData is directly written to or read from using visitor functions.
+   The visitor functions are called from {set,get}_{double,int,bool,string}(value_ref, value).
 
 */
 class DataMapper {
 public:
-  enum Direction { Read, Write };
+  enum Direction { Read, Write }; ///< Internal indication whether it is Read (FMU output) or Write (FMU input)
 
   DataMapper() = default;
-  DataMapper(const DataMapper&) = delete;
-  DataMapper& operator=(const DataMapper&) = delete;
+  DataMapper(const DataMapper&) = delete; ///< Copy constructor
+  DataMapper& operator=(const DataMapper&) = delete; ///< Copy assignment
 
-  void reset(const std::filesystem::path& fmu_root);
+  /**
+     @brief Clears and repopulates internal data structures
+
+     Clears member variables and containers.
+     Loads IDL files into xtypes and uses dds to fmu mapping configuration file to set up mapping between DDS topics to FMU scalar signals.
+
+     @param [in] fmu_resources Path to resources folder of FMU
+  */
+  void reset(const std::filesystem::path& fmu_resources);
 
   // visitor functions
-  void set_double(const std::int32_t value_ref, const double& value);
-  void get_double(const std::int32_t value_ref, double& value) const;
-  void set_int(const std::int32_t value_ref, const std::int32_t& value);
-  void get_int(const std::int32_t value_ref, std::int32_t& value) const;
-  void set_bool(const std::int32_t value_ref, const bool& value);
-  void get_bool(const std::int32_t value_ref, bool& value) const;
-  void set_string(const std::int32_t value_ref, const std::string& value);
-  void get_string(const std::int32_t value_ref, std::string& value) const;
+  inline void set_double(const std::int32_t value_ref, const double& value){ m_real_writer.at(value_ref - m_real_offset)(value); }
+  void get_double(const std::int32_t value_ref, double& value) const { m_real_reader.at(value_ref)(value); }
+  void set_int(const std::int32_t value_ref, const std::int32_t& value){ m_int_writer.at(value_ref - m_int_offset)(value); }
+  void get_int(const std::int32_t value_ref, std::int32_t& value) const { m_int_reader.at(value_ref)(value); }
+  void set_bool(const std::int32_t value_ref, const bool& value){ m_bool_writer.at(value_ref - m_bool_offset)(value); }
+  void get_bool(const std::int32_t value_ref, bool& value) const { m_bool_reader.at(value_ref)(value); }
+  void set_string(const std::int32_t value_ref, const std::string& value) { m_string_writer.at(value_ref - m_string_offset)(value); }
+  void get_string(const std::int32_t value_ref, std::string& value) const { m_string_reader.at(value_ref)(value); }
 
   inline eprosima::xtypes::DynamicData& data_ref(const std::string& topic, Direction read_write) {
     return m_data_store.at(std::make_tuple(topic, read_write));
