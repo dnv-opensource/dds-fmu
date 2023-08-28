@@ -7,7 +7,7 @@
 
 #include <xtypes/idl/idl.hpp>
 
-#include "idl-loader.hpp"
+#include "auxiliaries.hpp"
 #include "model-descriptor.hpp"
 
 typedef std::tuple<std::uint32_t, std::string, std::string, ddsfmu::ScalarVariableType> SignalInfo;

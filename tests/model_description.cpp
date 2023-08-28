@@ -7,14 +7,6 @@
 
 #include "model-descriptor.hpp"
 
-// check ratatoskcomponentsextra/tests/unit/furuno for ::testing::Test fixtures
-
-TEST(Other, IsATrueTest)
-{
-  bool a=true;
-
-  EXPECT_TRUE(a);
-}
 
 TEST(ModelDescriptor, NameGenerator)
 {

@@ -9,7 +9,6 @@
 #include <args.hxx>
 
 #include "model-descriptor.hpp"
-#include "idl-loader.hpp"
 #include "auxiliaries.hpp"
 #include "SignalDistributor.hpp"
 
@@ -126,7 +125,7 @@ int main(int argc, const char* argv[])
   const auto& mapping = distributor.get_mapping();
 
   for (const auto& info : mapping) {
-    std::cout << "valRef: " << std::get<0>(info) << " causality: " << std::get<2>(info) << " name: " << std::get<1>(info) << std::endl;
+    //std::cout << "valRef: " << std::get<0>(info) << " causality: " << std::get<2>(info) << " name: " << std::get<1>(info) << std::endl;
     model_variable_generator(doc, mv_node, std::get<1>(info), std::get<2>(info), std::get<0>(info), std::get<3>(info));
   }
 

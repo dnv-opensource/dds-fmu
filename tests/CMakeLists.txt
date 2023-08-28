@@ -2,12 +2,11 @@
 include(GoogleTest)
 
 add_executable(unit-tests RunTests.cpp
-  visitors.cpp
-  pubsub_procedure.cpp
   dynamic_pubsub.cpp
-  xtypes.cpp
-  other.cpp
+  model_description.cpp
+  pubsub_procedure.cpp
   visitors.cpp
+  xtypes.cpp
 )
 
 target_include_directories(unit-tests
@@ -18,7 +17,7 @@ target_link_libraries(unit-tests
   GTest::GTest
   eprosima::xtypes
   fastdds::fastrtps
-  helper
+  detail
   configurator
   )
 

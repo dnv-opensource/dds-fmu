@@ -115,8 +115,6 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
   xml_loader("fmu_in", fmu_signals);  // publishers
   xml_loader("fmu_out", fmu_signals); // subscribers
 
-  std::cout << "To process element count: " << fmu_signals.size() << std::endl;
-
   for (auto& topic_type : fmu_signals){
     // Get xtypes DynamicType
     const eprosima::xtypes::DynamicType& message_type(
@@ -218,6 +216,6 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
       m_read_data.emplace(std::make_pair(tmp_reader, std::make_pair(std::ref(mapper().data_ref(std::get<0>(topic_type), DataMapper::Direction::Read)), dynamic_data_ptr)));
 
     }
-    std::cout << "Added: " << std::get<0>(topic_type) << ", " << std::get<1>(topic_type) << std::endl;
+    //std::cout << "Added: " << std::get<0>(topic_type) << ", " << std::get<1>(topic_type) << std::endl;
   }
 }

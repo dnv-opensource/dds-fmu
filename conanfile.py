@@ -69,9 +69,8 @@ class DdsFmuConan(ConanFile):
 
     def requirements(self):
         self.requires("cppfmu/1.0")
-        self.requires("fast-dds/2.10.1")
+        self.requires("fast-dds/2.11.1")
         self.requires("stduuid/1.2.3")
-        self.requires("rapidyaml/0.5.0")
         self.requires("rapidxml/1.13")
         self.requires("xtypes/cci.20230530")
 

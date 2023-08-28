@@ -1,5 +1,11 @@
 #pragma once
 
+struct Trig
+{
+  double sine;
+  double other;
+};
+
 module my {
   struct Mind
   {
