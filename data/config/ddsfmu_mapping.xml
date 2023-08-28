@@ -3,6 +3,4 @@
   <!--fmu_in topic="msg" type="Message" /-->
   <fmu_in topic="DDS_FMI_In" type="Trig" />
   <fmu_out topic="DDS_FMI_Out" type="Trig" />
-  <!--fmu_in topic="DDSDynHelloWorld" type="HelloWorld" /-->
-  <!--fmu_out topic="DDSDynHelloWorld" type="HelloWorld" /-->
 </ddsfmu>

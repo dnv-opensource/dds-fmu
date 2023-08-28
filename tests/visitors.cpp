@@ -7,12 +7,9 @@
 #include <xtypes/DynamicData.hpp>
 
 #include "model-descriptor.hpp"
-
 #include <DataMapper.hpp>
 
-//std::function<void(std::string&, const eprosima::xtypes::DynamicData::ReadableNode&)>
-
-TEST(Visitors, Reader)
+TEST(Visitors, Principle)
 {
 
   std::string my_idl = R"~~~(
@@ -112,11 +109,21 @@ TEST(Visitors, Reader)
 
 TEST(DataMapper, Visitors)
 {
+  // This test assumes that msg_read is the first listed <fmu_out> in ddsfmu_mapping, and that msg_write is the first <fmu_in>
+  // It will fail otherwise
+
   DataMapper data_mapper;
   data_mapper.reset(std::filesystem::current_path() / "resources");
 
   auto& dyn_data = data_mapper.data_ref("msg_read", DataMapper::Direction::Read);
   auto& dyn_data2 = data_mapper.data_ref("msg_write", DataMapper::Direction::Write);
+
+  bool with_enum = true;
+  try {
+    dyn_data["status"] = 1;
+  } catch(const std::runtime_error&){
+    with_enum = false;
+  }
 
   // We want to pretend we got data on dds (read data) (manually set dynamic data)
   dyn_data["str"] = std::string("Hello");          // str: 0
@@ -136,7 +143,9 @@ TEST(DataMapper, Visitors)
   dyn_data["f_val"] = 1.81f;                       // dbl: 5
   dyn_data["enabled"] = true;                      // bool: 0
   dyn_data["ch"] = '!';                            // str: 1
-  dyn_data["status"] = 1;                          // int: 8
+  if (with_enum) {
+    dyn_data["status"] = 1;                          // int: 8
+  }
 
   std::cout << "Did set dynamic data" << std::endl;
 
@@ -157,7 +166,7 @@ TEST(DataMapper, Visitors)
   data_mapper.get_int(int_idx++, ui32_2);
   data_mapper.get_int(int_idx++, i32);
   data_mapper.get_int(int_idx++, i32_2);
-  data_mapper.get_int(int_idx++, status);
+  if (with_enum) { data_mapper.get_int(int_idx++, status); }
 
   data_mapper.get_double(dbl_idx++, i64);
   data_mapper.get_double(dbl_idx++, i64_2);
@@ -189,11 +198,17 @@ TEST(DataMapper, Visitors)
   EXPECT_DOUBLE_EQ(f_val, dyn_data["f_val"].value<float>());
   EXPECT_EQ(enabled, dyn_data["enabled"].value<bool>());
   EXPECT_EQ(ch, std::string(1, dyn_data["ch"].value<char>()));
-  EXPECT_EQ(status, dyn_data["status"].value<std::uint32_t>());
+  if (with_enum) { EXPECT_EQ(status, dyn_data["status"].value<std::uint32_t>()); }
 
   std::cout << "Did verify dynamic data" << std::endl;
 
   // Set these data (write data) using setters into dds outbound data buffers (Direction::Write)
+
+  // This only usable if the msg_read and msg_write placement assumptions at the start of this function hold.
+  int_idx = data_mapper.int_offset();
+  dbl_idx = data_mapper.real_offset();
+  str_idx = data_mapper.string_offset();
+  bool_idx = data_mapper.bool_offset();
 
   data_mapper.set_int(int_idx++, ui8);
   data_mapper.set_int(int_idx++, i8);
@@ -203,7 +218,7 @@ TEST(DataMapper, Visitors)
   data_mapper.set_int(int_idx++, ui32_2);
   data_mapper.set_int(int_idx++, i32);
   data_mapper.set_int(int_idx++, i32_2);
-  data_mapper.set_int(int_idx++, status);
+  if (with_enum) { data_mapper.set_int(int_idx++, status); }
   data_mapper.set_double(dbl_idx++, i64);
   data_mapper.set_double(dbl_idx++, i64_2);
   data_mapper.set_double(dbl_idx++, ui64);
@@ -228,7 +243,7 @@ TEST(DataMapper, Visitors)
   // Test set_string with char*, not string, usage pattern being used in cpp-fmu
   const char* something = "yeah";
   std::string other;
-  data_mapper.set_string(2, something); // msg_read str
+  data_mapper.set_string(data_mapper.string_offset(), something); // msg_read str
   dyn_data["str"] = std::string(something);
   data_mapper.get_string(0, other);     // msg_write str
 
@@ -239,7 +254,7 @@ TEST(DataMapper, Visitors)
   // Test set_bool with int32, not bool, usage pattern being used in cpp-fmu
   std::int32_t my_bool(1);
   bool my_other_bool;
-  data_mapper.set_bool(1, static_cast<bool>(my_bool));
+  data_mapper.set_bool(data_mapper.bool_offset(), static_cast<bool>(my_bool));
   dyn_data["enabled"] = bool(my_bool);
   data_mapper.get_bool(0, my_other_bool);
   EXPECT_EQ(dyn_data["enabled"].value<bool>(), dyn_data2["enabled"].value<bool>());

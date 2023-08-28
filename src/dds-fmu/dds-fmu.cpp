@@ -13,9 +13,7 @@
 
 #include "auxiliaries.hpp"
 #include "DataMapper.hpp"
-#include "DdsLoader.hpp"
-#include "DynamicPublisher.hpp"
-#include "DynamicSubscriber.hpp"
+#include "DynamicPubSub.hpp"
 
 class DdsFmuInstance : public cppfmu::SlaveInstance
 {
@@ -129,8 +127,6 @@ private:
     override
   {
     m_time = tStart;
-    m_publisher.init(m_loader, m_resource_path);
-    m_subscriber.init(m_loader, m_resource_path);
   }
 
   bool DoStep(
@@ -141,8 +137,8 @@ private:
     override
   {
     m_time = currentCommunicationPoint + communicationStepSize;
-    m_publisher.publish(false);
-    // publish and subscribe
+    m_pubsub.write();
+    m_pubsub.read();
 
     return true;
   }
@@ -151,13 +147,12 @@ private:
   {
     m_time = 0.0;
     m_mapper.reset(m_resource_path);
+    m_pubsub.reset(m_resource_path, &m_mapper);
   }
 
   cppfmu::FMIReal m_time;
   DataMapper m_mapper; // has reader/writer visitor functions into DynamicData
-  DdsLoader m_loader;
-  DynamicPublisher m_publisher;   // own visitor writers v_{i,T}, m_publisher.set(const uint32_t, const T&)
-  DynamicSubscriber m_subscriber; // own visitor readers v_{o,T}, m_publisher.get(const uint32_t, T&)
+  DynamicPubSub m_pubsub;
   std::filesystem::path m_resource_path;
 
 };

@@ -66,6 +66,13 @@ public:
   inline const eprosima::xtypes::DynamicData& data_ref(const std::string& topic, Direction read_write) const {
     return m_data_store.at(std::make_tuple(topic, read_write)); }
 
+  inline eprosima::xtypes::idl::Context& idl_context() { return m_context; }
+
+  inline std::int32_t int_offset(){ return m_int_offset; }
+  inline std::int32_t real_offset(){ return m_real_offset; }
+  inline std::int32_t bool_offset(){ return m_bool_offset; }
+  inline std::int32_t string_offset(){ return m_string_offset; }
+
 private:
   typedef std::tuple<std::string, Direction> StoreKey;
   void clear();
@@ -79,6 +86,8 @@ private:
   std::vector<std::function<void(bool&)>> m_bool_reader;
   std::vector<std::function<void(const std::string&)>> m_string_writer;
   std::vector<std::function<void(std::string&)>> m_string_reader;
+
+  std::int32_t m_int_offset, m_real_offset, m_bool_offset, m_string_offset;
 
   std::map<StoreKey, eprosima::xtypes::DynamicData> m_data_store; // TODO: key needs extending to support key
   eprosima::xtypes::idl::Context m_context;

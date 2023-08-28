@@ -2,4 +2,6 @@
 <ddsfmu>
   <fmu_out topic="msg_read" type="Message" />
   <fmu_in topic="msg_write" type="Message" />
+  <fmu_out topic="roundtrip" type="Trivial" />
+  <fmu_in topic="roundtrip" type="Trivial" />
 </ddsfmu>

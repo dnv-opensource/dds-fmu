@@ -63,15 +63,15 @@
 
    + [X] Remove temporary Trig pub sub compiled types from dds-fmu
    + [X] Add Dynamic Publisher|Subscriber to dds-fmu
-   + [ ] Load dds types and register through xtypes + converter
+   + [X] Load dds types and register through xtypes + converter
      + To be stored as scoped types (i.e. Kong::Foo)
-   + [ ] Store data as xtypes DynamicData instead of DDS DynamicData
+   + [X] Store data as xtypes DynamicData instead of DDS DynamicData
    + [X] For a given type, iterate through its primitive types
    + [X] Define real reference structure to map between dynamic types for dds/idl and fmu
    + [X] Load idl files
-   + [-] Basic dynamic real publisher/subscriber
+   + [X] Basic dynamic real publisher/subscriber
      + [X] Iterate xtypes to populate fmu structures
-     + [ ] Use dynamic pubsub to load idl types and publish on fmu
+     + [X] Use dynamic pubsub to load idl types and publish on fmu
    + [4/6] Load xml profiles as common for Fast-DDS (how many participants?)
      + [X] Load participant profiles (one for pub and one for sub)
      + [X] Load publisher profile
@@ -80,15 +80,16 @@
      + [ ] If the qos is different -> separate participant is needed?
      + [-] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
        + [X] Use XML first
-       + [ ] Use converter to populate instead
-       + [ ] Use converter to register types instead of xml-based
+       + [X] Use converter to populate instead
+       + [X] Use converter to register types instead of xml-based
+       + [ ] Figure out why registering enum fails
 
-   + [ ] Create mapping from dds topic primitive types to fmu value references
+   + [X] Create mapping from dds topic primitive types to fmu value references
    + [X] Generate modelDescription from mapping
      + [X] version, guid, CoSimulation
      + [X] ModelVariables auto-populate
      + [X] ModelStructure auto-populate
-   + [ ] Create publishers/subscribers from mapping
+   + [X] Create publishers/subscribers from mapping
    + [X] Add GTest for systematic tests of functionality
    + [ ] Run valgrind on functionality
    + [X] File loader with staging directory (std::filesystem)
@@ -113,10 +114,10 @@
    + [ ] Tidy code and remove temporary stuff
    + [ ] Properly document end user documentation
 
-   + [4/5] Repackaging
+   + [5/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
-     2. [ ] Parse idls, xml profile and other config files
-        - [ ] Create mock-up parser with placeholders for each step
+     2. [X] Parse idls, xml profile and other config files
+        - [X] Create mock-up parser with placeholders for each step
      3. [X] Produce GUID based on modelDescription template info and config files
         - Allow tweaking e.g. ModelStructure as long as consistency is retained?
      4. [X] Write modelDescription from XML tree and evaluated GUID

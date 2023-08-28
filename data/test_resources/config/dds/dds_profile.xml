@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+<profiles>
+  <participant profile_name="dds-fmu-default" >
+    <domainId>0</domainId>
+    <rtps>
+      <name>dds-fmu</name>
+    </rtps>
+    <!--builtin>
+      <metatrafficUnicastLocatorList/> should contain one locator with null address and null port
+      <initialPeersList>
+        <locator>
+          <udpv4>
+            <address>10.2.0.155</address>
+          </udpv4>
+        </locator>
+      </initialPeersList>
+    </builtin-->
+  </participant>
+
+  <publisher profile_name="dds-fmu-default">
+    <qos>
+      <durability>
+        <kind>TRANSIENT_LOCAL</kind>
+      </durability>
+      <reliability>
+        <kind>RELIABLE</kind>
+      </reliability>
+    </qos>
+  </publisher>
+
+  <subscriber profile_name="dds-fmu-default">
+    <qos>
+      <durability>
+        <kind>TRANSIENT_LOCAL</kind>
+      </durability>
+      <reliability>
+        <kind>RELIABLE</kind>
+      </reliability>
+    </qos>
+  </subscriber>
+
+  <data_writer profile_name="msg">
+    <qos>
+      <reliability>
+        <kind>BEST_EFFORT</kind>
+      </reliability>
+    </qos>
+  </data_writer>
+
+
+</profiles>
+
+</dds>

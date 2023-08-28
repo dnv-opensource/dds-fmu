@@ -4,6 +4,7 @@ include(GoogleTest)
 add_executable(unit-tests RunTests.cpp
   visitors.cpp
   pubsub_procedure.cpp
+  dynamic_pubsub.cpp
   xtypes.cpp
   other.cpp
   visitors.cpp

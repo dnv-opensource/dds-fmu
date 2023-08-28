@@ -196,6 +196,7 @@ set_target_properties(${fmuArchiveTarget} PROPERTIES FOLDER ${fmuName})
 
 add_library(helper OBJECT
   ${CMAKE_SOURCE_DIR}/src/helper/Converter.cpp
+  ${CMAKE_SOURCE_DIR}/src/helper/DynamicPubSub.cpp
   ${CMAKE_SOURCE_DIR}/src/helper/DynamicPublisher.cpp
   ${CMAKE_SOURCE_DIR}/src/helper/DynamicSubscriber.cpp
   ${CMAKE_SOURCE_DIR}/src/helper/DdsLoader.cpp

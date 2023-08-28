@@ -1,7 +1,7 @@
 #pragma once
 
 enum EnumState {
-  Sleep, Okay, Alert, Failure, Dead
+  SLEEP, OKAY, ALERT, FAILURE, DEAD
 };
 
 struct Message
@@ -23,5 +23,10 @@ struct Message
   float f_val;
   boolean enabled;
   char ch;
-  EnumState status;
+  //EnumState status; // Fails with fastdds
+};
+
+struct Trivial
+{
+  double val;
 };
