@@ -42,7 +42,6 @@ set(fmuSourceFiles
 )
 
 set(fmuModuleTarget "${fmuName}")
-set(fmuDescriptorTarget "descriptor")
 set(fmuRepackerTarget "repacker")
 set(fmuGuidTarget "${fmuName}_guid")
 set(fmuStagingTarget "${fmuName}_staging")
@@ -75,15 +74,15 @@ configure_file(
 # Target: GUID generation
 add_custom_command(
   OUTPUT "${fmuGuidModelDescription}" ALWAYS
-  COMMAND ${fmuDescriptorTarget} ${fmuStagingDir}
-  DEPENDS ${fmuIntermediateModelDescription} ${fmuStagingTarget}_1 ${fmuDescriptorTarget}
+  COMMAND ${fmuRepackerTarget} "generate" ${fmuStagingDir}
+  DEPENDS ${fmuIntermediateModelDescription} ${fmuStagingTarget}_1 ${fmuRepackerTarget}
   COMMENT "Generate GUID and its resources"
   VERBATIM
   )
 
 add_custom_target(
   ${fmuGuidTarget}
-  DEPENDS "${fmuGuidModelDescription}" ${fmuDescriptorTarget}
+  DEPENDS "${fmuGuidModelDescription}" ${fmuRepackerTarget}
   )
 
 # Target: build module library
@@ -144,27 +143,12 @@ target_include_directories(detail
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/detail>)
 
 
-# TODO: merge executables and create sub commands instead
-
-# Target: Executable tool repacker
-add_executable(${fmuRepackerTarget}
-  ${CMAKE_SOURCE_DIR}/src/repacker/repacker.cpp)
+add_executable(${fmuRepackerTarget} ${CMAKE_SOURCE_DIR}/src/repacker/repacker.cpp)
 
 target_link_libraries(${fmuRepackerTarget}
   PRIVATE
   taywee::args
   zip::zip
-  "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
-  "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
-  )
-
-# Target: Executable tool descriptor
-add_executable(${fmuDescriptorTarget}
-  ${CMAKE_SOURCE_DIR}/src/descriptor/descriptor.cpp)
-
-target_link_libraries(${fmuDescriptorTarget}
-  PRIVATE
-  taywee::args
   configurator
   detail
   "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
@@ -186,8 +170,7 @@ add_custom_target(${fmuStagingTarget}_1
 add_custom_target(${fmuStagingTarget}_2
   COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuModuleTarget}>" "${fmuStagedBinariesDir}/"
   COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuRepackerTarget}>" "${fmuStagedResourceBinariesDir}/"
-  COMMAND "${CMAKE_COMMAND}" "-E" "copy" "$<TARGET_FILE:${fmuDescriptorTarget}>" "${fmuStagedResourceBinariesDir}/"
-  DEPENDS ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuDescriptorTarget} ${fmuGuidTarget}
+  DEPENDS ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuGuidTarget}
   COMMENT "FMU staging: Populate FMU contents in staging directory"
   VERBATIM
   )
@@ -212,7 +195,7 @@ endif()
 
 # Target: generate FMU archive
 add_custom_target(${fmuArchiveTarget} ALL
-  COMMAND "${fmuRepackerTarget}" "-v" "-f" "--output=${fmuOutputFile}" "${fmuStagingDir}"
+  COMMAND "${fmuRepackerTarget}" "zip" "-v" "-f" "--output=${fmuOutputFile}" "${fmuStagingDir}"
   DEPENDS ${fmuStagingTarget}_2 ${fmuModuleTarget} ${fmuRepackerTarget} ${fmuGuidTarget}
   COMMENT "Creating ${fmuName}.fmu archive"
   VERBATIM)
@@ -237,7 +220,6 @@ set_target_properties(${fmuGuidTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuModuleTarget} PROPERTIES PROJECT_LABEL "${fmuName}-lib")
 set_target_properties(${fmuModuleTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuRepackerTarget} PROPERTIES FOLDER ${fmuName})
-set_target_properties(${fmuDescriptorTarget} PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuStagingTarget}_1 PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuStagingTarget}_2 PROPERTIES FOLDER ${fmuName})
 set_target_properties(${fmuArchiveTarget} PROPERTIES FOLDER ${fmuName})

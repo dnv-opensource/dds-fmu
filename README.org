@@ -72,19 +72,20 @@
    + [X] Basic dynamic real publisher/subscriber
      + [X] Iterate xtypes to populate fmu structures
      + [X] Use dynamic pubsub to load idl types and publish on fmu
-   + [4/6] Load xml profiles as common for Fast-DDS (how many participants?)
+   + [6/6] Load xml profiles as common for Fast-DDS (how many participants?)
      + [X] Load participant profiles (one for pub and one for sub)
      + [X] Load publisher profile
      + [X] Load subscriber profile
      + [X] Load topic profiles (topic names and their qos), if they exist
-     + [ ] If the qos is different -> separate participant is needed?
-     + [-] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
+     + [X] If the qos is different -> separate participant is needed? Split into multiple fmus
+     + [X] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
        + [X] Use XML first
        + [X] Use converter to populate instead
        + [X] Use converter to register types instead of xml-based
-       + [ ] Figure out why registering enum fails
-   + [ ] Take all samples on reading
-
+   + [ ] Figure out why registering enum fails
+   + [X] Take all samples on reading
+   + [ ] Clarify in doc that there will be a sample lag
+   + [ ] Add support for key (perhaps manually?) -> how will data structures change?
    + [X] Create mapping from dds topic primitive types to fmu value references
    + [X] Generate modelDescription from mapping
      + [X] version, guid, CoSimulation
