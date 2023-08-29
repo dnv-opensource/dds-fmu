@@ -1,15 +1,14 @@
+#include "DataMapper.hpp"
 
 #include <functional>
 #include <vector>
 
 #include <rapidxml/rapidxml.hpp>
 
+#include "SignalDistributor.hpp" // resolve_type
 #include "model-descriptor.hpp"
 
-#include "DataMapper.hpp"
-#include "SignalDistributor.hpp" // resolve_type
-
-void DataMapper::clear(){
+void DataMapper::clear() {
   m_int_writer.clear();
   m_int_reader.clear();
   m_real_writer.clear();
@@ -25,8 +24,7 @@ void DataMapper::clear(){
   m_string_offset = 0;
 }
 
-void DataMapper::reset(const std::filesystem::path& fmu_resources){
-
+void DataMapper::reset(const std::filesystem::path& fmu_resources) {
   clear();
 
   m_context = load_fmu_idls(fmu_resources);
@@ -38,7 +36,7 @@ void DataMapper::reset(const std::filesystem::path& fmu_resources){
 
   auto mapper_ddsfmu = signal_mapping.first_node("ddsfmu");
 
-  if(mapper_ddsfmu == nullptr){
+  if (mapper_ddsfmu == nullptr) {
     throw std::runtime_error("<ddsfmu> not found in ddsfmu_mapping.xml");
   }
 
@@ -55,23 +53,21 @@ void DataMapper::reset(const std::filesystem::path& fmu_resources){
       direction = Direction::Read;
     }
 
-    for (rapidxml::xml_node<>* fmu_node = mapper_ddsfmu->first_node(node_name.c_str());
-         fmu_node;
+    for (rapidxml::xml_node<>* fmu_node = mapper_ddsfmu->first_node(node_name.c_str()); fmu_node;
          fmu_node = fmu_node->next_sibling(node_name.c_str())) {
-
       auto topic = fmu_node->first_attribute("topic");
       auto type = fmu_node->first_attribute("type");
-      if(!topic || !type){
+      if (!topic || !type) {
         std::cerr << "<ddsfmu><" << node_name
                   << "> must specify attributes 'topic' and 'type'. Got: 'topic': "
-                  << std::boolalpha << (topic != nullptr) << " and 'type': "
-                  << std::boolalpha << (type != nullptr) << std::endl;
+                  << std::boolalpha << (topic != nullptr) << " and 'type': " << std::boolalpha
+                  << (type != nullptr) << std::endl;
         throw std::runtime_error("Incomplete user data");
       }
       std::string topic_name(topic->value());
       std::string topic_type(type->value());
 
-      if(!m_context.module().has_structure(topic_type)){
+      if (!m_context.module().has_structure(topic_type)) {
         std::cerr << "Got non-existing 'type': " << topic_type << std::endl;
         throw std::runtime_error("Unknown idl type");
       }
@@ -87,23 +83,26 @@ void DataMapper::reset(const std::filesystem::path& fmu_resources){
   m_bool_offset = m_bool_reader.size();
   m_string_offset = m_string_reader.size();
   mapper_iterator(true);
-
 }
 
-void DataMapper::add(const std::string& topic_name, const std::string& topic_type, Direction read_write){
-
+void DataMapper::add(
+  const std::string& topic_name, const std::string& topic_type, Direction read_write) {
   const eprosima::xtypes::DynamicType& message_type(m_context.module().structure(topic_type));
   DataMapper::StoreKey key = std::make_tuple(topic_name, read_write);
 
   auto item = m_data_store.emplace(key, eprosima::xtypes::DynamicData(message_type));
 
-  if (!item.second){
+  if (!item.second) {
     std::string dir;
-    if (read_write == DataMapper::Direction::Write){ dir = "input"; }
-    else { dir = "output"; }
+    if (read_write == DataMapper::Direction::Write) {
+      dir = "input";
+    } else {
+      dir = "output";
+    }
 
     throw std::runtime_error(
-        std::string("Tried to create existing topic: ") + topic_name + std::string(" for FMU ") + dir);
+      std::string("Tried to create existing topic: ") + topic_name + std::string(" for FMU ")
+      + dir);
   }
 
   auto& dyn_data = (*item.first).second;
@@ -121,157 +120,147 @@ void DataMapper::add(const std::string& topic_name, const std::string& topic_typ
   //   for each type (primitive/string): register writer_visitor (write from fmu into dds, i.e. Set{Real,Integer..})
   //     valueRef is index of registered visitor (kind of)
 
-  dyn_data.for_each([&](eprosima::xtypes::DynamicData::WritableNode& node){
+  dyn_data.for_each([&](eprosima::xtypes::DynamicData::WritableNode& node) {
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
     bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
 
-    if(is_leaf || is_string){
-
+    if (is_leaf || is_string) {
       auto fmi_type = resolve_type(node);
 
       switch (fmi_type) {
       case ddsfmu::Real:
-        switch (node.type().kind())
-        {
+        switch (node.type().kind()) {
         case eprosima::xtypes::TypeKind::FLOAT_32_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_real_writer.emplace_back(
-                std::bind(writer_visitor<double, float>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<double, float>, std::placeholders::_1, node.data()));
           }
           m_real_reader.emplace_back(
-              std::bind(reader_visitor<double, float>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<double, float>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::FLOAT_64_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_real_writer.emplace_back(
-                std::bind(writer_visitor<double, double>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<double, double>, std::placeholders::_1, node.data()));
           }
           m_real_reader.emplace_back(
-              std::bind(reader_visitor<double, double>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<double, double>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::UINT_32_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_real_writer.emplace_back(
-                std::bind(writer_visitor<double, std::uint32_t>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<double, std::uint32_t>, std::placeholders::_1, node.data()));
           }
           m_real_reader.emplace_back(
-              std::bind(reader_visitor<double, std::uint32_t>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<double, std::uint32_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::INT_64_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_real_writer.emplace_back(
-                std::bind(writer_visitor<double, std::int64_t>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<double, std::int64_t>, std::placeholders::_1, node.data()));
           }
           m_real_reader.emplace_back(
-              std::bind(reader_visitor<double, std::int64_t>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<double, std::int64_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::UINT_64_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_real_writer.emplace_back(
-                std::bind(writer_visitor<double, std::uint64_t>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<double, std::uint64_t>, std::placeholders::_1, node.data()));
           }
           m_real_reader.emplace_back(
-              std::bind(reader_visitor<double, std::uint64_t>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<double, std::uint64_t>, std::placeholders::_1, node.data()));
           break;
-        default:
-          break;
+        default: break;
         }
         break;
       case ddsfmu::Integer:
-        switch (node.type().kind())
-        {
+        switch (node.type().kind()) {
         case eprosima::xtypes::TypeKind::INT_8_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::int8_t>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_int_writer.emplace_back(std::bind(
+              writer_visitor<std::int32_t, std::int8_t>, std::placeholders::_1, node.data()));
           }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::int8_t>, std::placeholders::_1, node.data()));
+          m_int_reader.emplace_back(std::bind(
+            reader_visitor<std::int32_t, std::int8_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::UINT_8_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::uint8_t>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_int_writer.emplace_back(std::bind(
+              writer_visitor<std::int32_t, std::uint8_t>, std::placeholders::_1, node.data()));
           }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::uint8_t>, std::placeholders::_1, node.data()));
+          m_int_reader.emplace_back(std::bind(
+            reader_visitor<std::int32_t, std::uint8_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::INT_16_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::int16_t>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_int_writer.emplace_back(std::bind(
+              writer_visitor<std::int32_t, std::int16_t>, std::placeholders::_1, node.data()));
           }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::int16_t>, std::placeholders::_1, node.data()));
+          m_int_reader.emplace_back(std::bind(
+            reader_visitor<std::int32_t, std::int16_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::UINT_16_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::uint16_t>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_int_writer.emplace_back(std::bind(
+              writer_visitor<std::int32_t, std::uint16_t>, std::placeholders::_1, node.data()));
           }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::uint16_t>, std::placeholders::_1, node.data()));
+          m_int_reader.emplace_back(std::bind(
+            reader_visitor<std::int32_t, std::uint16_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::INT_32_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::int32_t>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_int_writer.emplace_back(std::bind(
+              writer_visitor<std::int32_t, std::int32_t>, std::placeholders::_1, node.data()));
           }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::int32_t>, std::placeholders::_1, node.data()));
+          m_int_reader.emplace_back(std::bind(
+            reader_visitor<std::int32_t, std::int32_t>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::ENUMERATION_TYPE:
-          if(read_write == Direction::Write){
-            m_int_writer.emplace_back(
-                std::bind(writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_int_writer.emplace_back(std::bind(
+              writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
           }
-          m_int_reader.emplace_back(
-              std::bind(reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
+          m_int_reader.emplace_back(std::bind(
+            reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
           break;
-        default:
-          break;
+        default: break;
         }
         break;
       case ddsfmu::Boolean:
-        switch (node.type().kind())
-        {
+        switch (node.type().kind()) {
         case eprosima::xtypes::TypeKind::BOOLEAN_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_bool_writer.emplace_back(
-                std::bind(writer_visitor<bool, bool>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<bool, bool>, std::placeholders::_1, node.data()));
           }
           m_bool_reader.emplace_back(
-              std::bind(reader_visitor<bool, bool>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<bool, bool>, std::placeholders::_1, node.data()));
           break;
-        default:
-          break;
+        default: break;
         }
         break;
       case ddsfmu::String:
-        switch (node.type().kind())
-        {
+        switch (node.type().kind()) {
         case eprosima::xtypes::TypeKind::STRING_TYPE:
-          if(read_write == Direction::Write){
-            m_string_writer.emplace_back(
-                std::bind(writer_visitor<std::string, std::string>, std::placeholders::_1, node.data()));
+          if (read_write == Direction::Write) {
+            m_string_writer.emplace_back(std::bind(
+              writer_visitor<std::string, std::string>, std::placeholders::_1, node.data()));
           }
-          m_string_reader.emplace_back(
-              std::bind(reader_visitor<std::string, std::string>, std::placeholders::_1, node.data()));
+          m_string_reader.emplace_back(std::bind(
+            reader_visitor<std::string, std::string>, std::placeholders::_1, node.data()));
           break;
         case eprosima::xtypes::TypeKind::CHAR_8_TYPE:
-          if(read_write == Direction::Write){
+          if (read_write == Direction::Write) {
             m_string_writer.emplace_back(
-                std::bind(writer_visitor<std::string, char>, std::placeholders::_1, node.data()));
+              std::bind(writer_visitor<std::string, char>, std::placeholders::_1, node.data()));
           }
           m_string_reader.emplace_back(
-              std::bind(reader_visitor<std::string, char>, std::placeholders::_1, node.data()));
+            std::bind(reader_visitor<std::string, char>, std::placeholders::_1, node.data()));
           break;
-        default:
-          break;
+        default: break;
         }
         break;
-      default:
-        break;
+      default: break;
       }
     }
   });

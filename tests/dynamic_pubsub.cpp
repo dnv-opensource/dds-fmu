@@ -2,15 +2,12 @@
 #include <filesystem>
 #include <thread>
 
+#include <gtest/gtest.h>
 
-#include<gtest/gtest.h>
+#include "DataMapper.hpp"
+#include "DynamicPubSub.hpp"
 
-
-#include <DataMapper.hpp>
-#include <DynamicPubSub.hpp>
-
-TEST(DynamicPubSub, Initialization)
-{
+TEST(DynamicPubSub, Initialization) {
   auto resources = std::filesystem::current_path() / "resources";
   DataMapper data_mapper;
   DynamicPubSub pubsub;
@@ -46,11 +43,9 @@ TEST(DynamicPubSub, Initialization)
   pubsub.take();
 
   EXPECT_EQ(d_val, dyn_read["val"].value<double>());
-
 }
 
-TEST(DynamicPubSub, Reinitialization)
-{
+TEST(DynamicPubSub, Reinitialization) {
   auto resources = std::filesystem::current_path() / "resources";
   DataMapper data_mapper;
   DynamicPubSub pubsub;
@@ -58,5 +53,4 @@ TEST(DynamicPubSub, Reinitialization)
   data_mapper.reset(resources);
   pubsub.reset(resources, &data_mapper);
   pubsub.reset(resources, &data_mapper);
-
 }

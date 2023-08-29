@@ -8,8 +8,7 @@
 #include "model-descriptor.hpp"
 
 
-TEST(ModelDescriptor, NameGenerator)
-{
+TEST(ModelDescriptor, NameGenerator) {
   std::string my_idl = R"~~~(
     struct Inner
     {
@@ -40,19 +39,17 @@ TEST(ModelDescriptor, NameGenerator)
 
   std::vector<std::string> names;
 
-  data.for_each([&](eprosima::xtypes::DynamicData::ReadableNode& node){
+  data.for_each([&](eprosima::xtypes::DynamicData::ReadableNode& node) {
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
     bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
-    if(is_leaf || is_string){
+    if (is_leaf || is_string) {
       std::string ret;
       name_generator(ret, node);
       names.push_back(ret);
     }
   });
 
-  for(const auto& name : names) {
-    std::cout << name << std::endl;
-  }
+  for (const auto& name : names) { std::cout << name << std::endl; }
 
   ASSERT_EQ(names.size(), 4);
   EXPECT_EQ(names[0], std::string("distance"));
@@ -62,8 +59,7 @@ TEST(ModelDescriptor, NameGenerator)
   // TODO: support sequence type, wstring type, map type
 }
 
-TEST(ModelDescriptor, ScalarVariable)
-{
+TEST(ModelDescriptor, ScalarVariable) {
   rapidxml::xml_document<> doc;
   rapidxml::xml_node<>* root_node = doc.allocate_node(rapidxml::node_element, "ModelVariables");
   doc.append_node(root_node);
@@ -74,18 +70,18 @@ TEST(ModelDescriptor, ScalarVariable)
   model_variable_generator(doc, root_node, "distance", "output", 0, ddsfmu::String);
   model_variable_generator(doc, root_node, "distance", "input", 0, ddsfmu::Real);
 
-
+  // clang-format off
   EXPECT_EQ(print_xml(doc), std::string("<ModelVariables>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Real start=\"0.0\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Integer start=\"0\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Boolean start=\"false\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<String start=\"\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"input\">\n\t\t<Real start=\"0.0\"/>\n\t</ScalarVariable>\n</ModelVariables>\n\n"));
+  // clang-format on
 
   std::cout << print_xml(doc) << std::endl;
-
 }
 
-TEST(ModelDescriptor, ModelStructure)
-{
+TEST(ModelDescriptor, ModelStructure) {
   rapidxml::xml_document<> doc;
   model_structure_outputs_generator(doc, &doc, 3);
 
+  // clang-format off
   EXPECT_EQ(print_xml(doc), std::string("<ModelStructure>\n\t<Outputs>\n\t\t<Unknown index=\"1\"/>\n\t\t<Unknown index=\"2\"/>\n\t\t<Unknown index=\"3\"/>\n\t</Outputs>\n</ModelStructure>\n\n"));
-
+  // clang-format on
 }

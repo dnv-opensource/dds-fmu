@@ -2,23 +2,20 @@
 #include <functional>
 #include <vector>
 
+#include <fastdds/dds/domain/DomainParticipant.hpp>
+#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <fastrtps/types/DynamicDataFactory.h>
+#include <fastrtps/types/DynamicPubSubType.h>
+#include <fastrtps/types/DynamicTypeBuilder.h>
+#include <fastrtps/types/DynamicTypePtr.h>
 #include <gtest/gtest.h>
 #include <xtypes/idl/idl.hpp>
 #include <xtypes/xtypes.hpp>
 
-#include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
-#include <fastrtps/types/DynamicDataFactory.h>
-#include <fastrtps/types/DynamicTypeBuilder.h>
-#include <fastrtps/types/DynamicPubSubType.h>
-#include <fastrtps/types/DynamicTypePtr.h>
-
 #include "Converter.hpp"
 
 
-TEST(XTypes, BasicUsage)
-{
-
+TEST(XTypes, BasicUsage) {
   std::string my_idl = R"~~~(
     struct Inner
     {
@@ -43,9 +40,7 @@ TEST(XTypes, BasicUsage)
   // Parse an idl
   eprosima::xtypes::idl::Context context = eprosima::xtypes::idl::parse(my_idl);
 
-  for (auto [name, type] : context.get_all_scoped_types()) {
-    std::cout << name << std::endl;
-  }
+  for (auto [name, type] : context.get_all_scoped_types()) { std::cout << name << std::endl; }
 
   EXPECT_TRUE(context.success) << "IDL parsing successful";
   EXPECT_TRUE(context.module().has_structure("Space::Sun")) << "Has structure Space::Sun";
@@ -61,11 +56,9 @@ TEST(XTypes, BasicUsage)
   // nested
   my_space["universe"][0]["my_inner"]["my_uint32"] = 23u;
   my_space["universe"][1]["my_inner"]["my_uint32"] = 24u;
-
 }
 
-TEST(XTypes, Annotations)
-{
+TEST(XTypes, Annotations) {
   std::string my_idl = R"~~~(
     struct Inner
     {
@@ -85,22 +78,24 @@ TEST(XTypes, Annotations)
 
   // Create same
   eprosima::xtypes::StructType inner2 =
-   eprosima::xtypes::StructType("Inner")
-   .add_member(eprosima::xtypes::Member("my_uint32", eprosima::xtypes::primitive_type<uint32_t>()).key())
-   .add_member(eprosima::xtypes::Member("yes", eprosima::xtypes::primitive_type<bool>()).optional());
+    eprosima::xtypes::StructType("Inner")
+      .add_member(
+        eprosima::xtypes::Member("my_uint32", eprosima::xtypes::primitive_type<uint32_t>()).key())
+      .add_member(
+        eprosima::xtypes::Member("yes", eprosima::xtypes::primitive_type<bool>()).optional());
 
   auto inner = context.module().structure("Inner");
 
   // These will fail.
   GTEST_SKIP(); // Remove this once fixed
-  EXPECT_EQ(inner.member(0).is_key(), inner2.member(0).is_key()) << "my_uint32 is @key";          // false, true
-  EXPECT_EQ(inner.member(1).is_optional(), inner2.member(1).is_optional()) << "yes is @optional"; // false, true
-
+  EXPECT_EQ(inner.member(0).is_key(), inner2.member(0).is_key())
+    << "my_uint32 is @key"; // false, true
+  EXPECT_EQ(inner.member(1).is_optional(), inner2.member(1).is_optional())
+    << "yes is @optional"; // false, true
 }
 
 
-TEST(XTypes, DdsEnum)
-{
+TEST(XTypes, DdsEnum) {
   // Test case where struct has enum and to be registered with as type in fast-dds
 
   std::string my_idl = R"~~~(
@@ -151,18 +146,19 @@ TEST(XTypes, DdsEnum)
 
   dyntype_sup.setName("Menum");
   // WORKAROUND START
-  dyntype_sup.auto_fill_type_information(false);  // True will not work with Cyclone DDS
-  dyntype_sup.auto_fill_type_object(false);       // True causes seg fault with enums
+  dyntype_sup.auto_fill_type_information(false); // True will not work with Cyclone DDS
+  dyntype_sup.auto_fill_type_object(false);      // True causes seg fault with enums
   // WORKAROUND END
 
-  eprosima::fastdds::dds::DomainParticipantQos participant_qos = eprosima::fastdds::dds::PARTICIPANT_QOS_DEFAULT;
+  eprosima::fastdds::dds::DomainParticipantQos participant_qos =
+    eprosima::fastdds::dds::PARTICIPANT_QOS_DEFAULT;
 
   eprosima::fastdds::dds::DomainId_t domain_id(0);
-  auto participant = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(domain_id, participant_qos);
+  auto participant =
+    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
+      domain_id, participant_qos);
 
   ASSERT_NE(participant, nullptr);
 
   participant->register_type(dyntype_sup);
-
-
 }

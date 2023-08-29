@@ -110,9 +110,9 @@
      - [ ] Figure out why permissions are lost
      - the only file not explicitly available before rendering is modelDescription.xml
    + [X] Make documentation target and bundle it with the fmu
-   + [ ] Add editorconfig and clang-format to unify formatting
+   + [X] Add editorconfig and clang-format to unify formatting
    + [ ] Figure out to properly handle fast-dds log (and xtypes) in conjunction with cppfmu
-   + [ ] Tidy code and remove temporary stuff
+   + [X] Tidy code and remove temporary stuff
    + [ ] Properly document end user documentation
 
    + [5/5] Repackaging

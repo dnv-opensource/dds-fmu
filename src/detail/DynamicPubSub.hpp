@@ -1,18 +1,17 @@
 #pragma once
 
-#include "DataMapper.hpp"
-
-#include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/publisher/Publisher.hpp>
-#include <fastdds/dds/publisher/DataWriter.hpp>
-#include <fastdds/dds/subscriber/Subscriber.hpp>
-#include <fastdds/dds/subscriber/DataReader.hpp>
-
-#include <fastrtps/types/DynamicPubSubType.h>
-
 #include <filesystem>
 #include <functional>
 #include <map>
+
+#include <fastdds/dds/domain/DomainParticipant.hpp>
+#include <fastdds/dds/publisher/DataWriter.hpp>
+#include <fastdds/dds/publisher/Publisher.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastrtps/types/DynamicPubSubType.h>
+
+#include "DataMapper.hpp"
 
 
 /**
@@ -25,12 +24,11 @@
    By means of a converter, the inbound or outbound DDS data are populated in a connected DataMapper instance.
 
 */
-class DynamicPubSub
-{
+class DynamicPubSub {
 public:
-  DynamicPubSub(); ///< Default constructor sets pointers to nullptr and m_xml_load ed false
+  DynamicPubSub();  ///< Default constructor sets pointers to nullptr and m_xml_load ed false
   ~DynamicPubSub(); ///< Destructor calls clear()
-  DynamicPubSub(const DynamicPubSub&) = delete; ///< Copy constructor
+  DynamicPubSub(const DynamicPubSub&) = delete;            ///< Copy constructor
   DynamicPubSub& operator=(const DynamicPubSub&) = delete; ///< Copy assignment
 
   /**
@@ -61,8 +59,12 @@ public:
 
 private:
   void clear(); ///< Clears and deletes all members in need of cleanup
-  typedef std::pair<eprosima::xtypes::DynamicData&, eprosima::fastrtps::types::DynamicData_ptr> DynamicDataConnection;
-  enum PubOrSub { PUBLISH, SUBSCRIBE }; ///< Internal indication whether dealing with publish or subscriber
+  typedef std::pair<eprosima::xtypes::DynamicData&, eprosima::fastrtps::types::DynamicData_ptr>
+    DynamicDataConnection;
+  enum PubOrSub {
+    PUBLISH,
+    SUBSCRIBE
+  }; ///< Internal indication whether dealing with publish or subscriber
   eprosima::fastdds::dds::DomainParticipant* m_participant;
   eprosima::fastdds::dds::Publisher* m_publisher;
   eprosima::fastdds::dds::Subscriber* m_subscriber;
@@ -77,5 +79,4 @@ private:
 
   // m_{read,write}_data (read?) also need to distinguish data for same topic in case of @key (separate data instances)
   // https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706
-
 };

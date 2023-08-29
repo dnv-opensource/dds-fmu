@@ -1,32 +1,31 @@
+#include "auxiliaries.hpp"
+
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <regex>
 #include <set>
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <regex>
 #include <vector>
-
 
 #include <uuid.h>
 #include <xtypes/xtypes.hpp>
 
-#include "auxiliaries.hpp"
-
 namespace fs = std::filesystem;
 
-std::string generate_uuid(const std::vector<std::filesystem::path>& uuid_files, const std::vector<std::string>& strings){
-
+std::string generate_uuid(
+  const std::vector<std::filesystem::path>& uuid_files, const std::vector<std::string>& strings) {
   constexpr std::string_view namespace_uuid = "1a9ff216-b23c-24a7-ff73-e4e6d3ab3dcd";
   uuids::uuid_name_generator generator(uuids::uuid::from_string(namespace_uuid).value());
   std::string to_uuid;
 
   // Copy file contents into buffer
-  for (const fs::path& item : uuid_files){
-    if(!fs::is_regular_file(item)){
+  for (const fs::path& item : uuid_files) {
+    if (!fs::is_regular_file(item)) {
       std::cerr << "File does not exist, skipping: " << item << std::endl;
       continue;
     }
@@ -35,7 +34,7 @@ std::string generate_uuid(const std::vector<std::filesystem::path>& uuid_files, 
   }
 
   // Copy extra strings into buffer
-  for (const std::string& in_str : strings){
+  for (const std::string& in_str : strings) {
     //std::cout << in_str << std::endl;
     copy(in_str.begin(), in_str.end(), back_inserter(to_uuid));
   }
@@ -50,25 +49,24 @@ std::string generate_uuid(const std::vector<std::filesystem::path>& uuid_files, 
 }
 
 
-std::vector<std::filesystem::path> get_uuid_files(const std::filesystem::path& fmu_root, bool skip_modelDescription){
-
+std::vector<std::filesystem::path>
+  get_uuid_files(const std::filesystem::path& fmu_root, bool skip_modelDescription) {
   auto idl_path = fmu_root / "resources" / "config";
-  std::set<std::string> exts {".idl", ".xml", ".yml"};
+  std::set<std::string> exts{".idl", ".xml", ".yml"};
   std::vector<fs::path> uuid_files;
 
   if (!fs::exists(idl_path)) {
     std::cerr << "Expected path does not exist: " << idl_path << std::endl;
   } else {
-    for (const fs::directory_entry& dir_entry : fs::recursive_directory_iterator(idl_path))
-    {
-      if (dir_entry.is_regular_file() && exts.count(dir_entry.path().extension()) != 0){
+    for (const fs::directory_entry& dir_entry : fs::recursive_directory_iterator(idl_path)) {
+      if (dir_entry.is_regular_file() && exts.count(dir_entry.path().extension()) != 0) {
         uuid_files.emplace_back(dir_entry);
         //std::cout << "added: " << dir_entry << std::endl;
       }
     }
   }
 
-  if (!skip_modelDescription){
+  if (!skip_modelDescription) {
     uuid_files.emplace_back(fmu_root / "modelDescription.xml");
     // std::cout << added: " << fmu_root / "modelDescription.xml" << std::endl;
   }
@@ -76,8 +74,8 @@ std::vector<std::filesystem::path> get_uuid_files(const std::filesystem::path& f
   return uuid_files;
 }
 
-eprosima::xtypes::idl::Context load_fmu_idls(const std::filesystem::path& resource_path, bool print, const std::string& main_idl){
-
+eprosima::xtypes::idl::Context load_fmu_idls(
+  const std::filesystem::path& resource_path, bool print, const std::string& main_idl) {
   namespace fs = std::filesystem;
   namespace ex = eprosima::xtypes;
 
@@ -86,8 +84,8 @@ eprosima::xtypes::idl::Context load_fmu_idls(const std::filesystem::path& resour
   auto idl_dir = resource_path / "config" / "idl";
   auto entry_idl = idl_dir / main_idl;
 
-  if(!fs::exists(entry_idl) && !fs::is_regular_file(entry_idl)){
-    std::cerr << "Main idl file does not exist: "<< entry_idl << std::endl;
+  if (!fs::exists(entry_idl) && !fs::is_regular_file(entry_idl)) {
+    std::cerr << "Main idl file does not exist: " << entry_idl << std::endl;
     throw std::runtime_error("Could not find IDL file: " + entry_idl.string());
   }
 
@@ -98,26 +96,22 @@ eprosima::xtypes::idl::Context load_fmu_idls(const std::filesystem::path& resour
 
   //std::cout << "IDL parsing: " << (context.success ? "Successful" : "Failed!") << std::endl;
 
-  if(!context.success) { throw std::runtime_error("Failed to parse IDL files"); }
+  if (!context.success) { throw std::runtime_error("Failed to parse IDL files"); }
 
   if (print) {
-    for (auto [name, type] : context.get_all_scoped_types())
-    {
+    for (auto [name, type] : context.get_all_scoped_types()) {
       // TODO: Support printing all kinds
-      if (type->kind() == ex::TypeKind::STRUCTURE_TYPE)
-      {
+      if (type->kind() == ex::TypeKind::STRUCTURE_TYPE) {
         std::cout << "Struct Name:" << name << std::endl;
         auto members = static_cast<const ex::StructType*>(type.get())->members();
-        for (auto &m: members)
-        {
-          if (m.type().kind() == ex::TypeKind::ALIAS_TYPE)
-          {
+        for (auto& m : members) {
+          if (m.type().kind() == ex::TypeKind::ALIAS_TYPE) {
             auto alias = static_cast<const ex::AliasType&>(m.type());
-            std::cout << "Struct Member:" << name << "[" << m.name() << "," << alias.rget().name() << "]" << std::endl;
-          }
-          else
-          {
-            std::cout << "Struct Member:" << name << "[" << m.name() << "," << m.type().name() << "]" << std::endl;
+            std::cout << "Struct Member:" << name << "[" << m.name() << "," << alias.rget().name()
+                      << "]" << std::endl;
+          } else {
+            std::cout << "Struct Member:" << name << "[" << m.name() << "," << m.type().name()
+                      << "]" << std::endl;
           }
         }
       }

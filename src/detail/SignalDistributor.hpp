@@ -32,7 +32,6 @@ ddsfmu::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::Rea
 */
 class SignalDistributor {
 public:
-
   SignalDistributor(); ///< Constructor that sets integer members to 0;
   /**
      @brief Loads the IDLs into a member variable
@@ -61,11 +60,14 @@ public:
      @param [in] is_in_not_out Whether the signal is input and not output
   */
   void add(const std::string& topic_name, const std::string& topic_type, bool is_in_not_out);
-  inline const std::vector<SignalInfo>& get_mapping() const { return m_signal_mapping; } ///< Returns reference to the vector of SignalInfo.
-  inline std::uint32_t outputs() const { return m_outputs; } ///< Returns number of scalar FMU outputs
+  inline const std::vector<SignalInfo>& get_mapping() const {
+    return m_signal_mapping;
+  } ///< Returns reference to the vector of SignalInfo.
+  inline std::uint32_t outputs() const {
+    return m_outputs;
+  } ///< Returns number of scalar FMU outputs
 private:
-  std::uint32_t  m_real_idx, m_integer_idx, m_boolean_idx, m_string_idx, m_outputs;
+  std::uint32_t m_real_idx, m_integer_idx, m_boolean_idx, m_string_idx, m_outputs;
   eprosima::xtypes::idl::Context m_context;
   std::vector<SignalInfo> m_signal_mapping;
-
 };

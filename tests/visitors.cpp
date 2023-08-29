@@ -3,15 +3,13 @@
 #include <vector>
 
 #include <gtest/gtest.h>
-#include <xtypes/idl/idl.hpp>
 #include <xtypes/DynamicData.hpp>
+#include <xtypes/idl/idl.hpp>
 
+#include "DataMapper.hpp"
 #include "model-descriptor.hpp"
-#include <DataMapper.hpp>
 
-TEST(Visitors, Principle)
-{
-
+TEST(Visitors, Principle) {
   std::string my_idl = R"~~~(
     struct Inner
     {
@@ -60,29 +58,28 @@ TEST(Visitors, Principle)
   // need to store structured name for later use in modelDescription
   //   iterate visitors and
 
-  data.for_each([&](eprosima::xtypes::DynamicData::WritableNode& node)
-  {
+  data.for_each([&](eprosima::xtypes::DynamicData::WritableNode& node) {
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
     bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
     // missing: sequence type, wstring type, map type
 
-    if(is_leaf || is_string){
+    if (is_leaf || is_string) {
       std::string nested_name;
       name_generator(nested_name, node);
       std::cout << nested_name << std::endl;
 
-      if (node.type().kind() == eprosima::xtypes::TypeKind::UINT_32_TYPE){
+      if (node.type().kind() == eprosima::xtypes::TypeKind::UINT_32_TYPE) {
+        int_reader_visitors.emplace_back(std::bind(
+          reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
 
-        int_reader_visitors.emplace_back(
-            std::bind(reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
+        int_writer_visitors.emplace_back(std::bind(
+          writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
 
-        int_writer_visitors.emplace_back(
-            std::bind(writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
-
-        std::cout << "valueReference " << int_reader_visitors.size()-1 << " with name " << nested_name << std::endl;
-        std::cout << "valueReference " << int_writer_visitors.size()-1 << " with name " << nested_name << std::endl;
+        std::cout << "valueReference " << int_reader_visitors.size() - 1 << " with name "
+                  << nested_name << std::endl;
+        std::cout << "valueReference " << int_writer_visitors.size() - 1 << " with name "
+                  << nested_name << std::endl;
       }
-
     }
   });
 
@@ -91,7 +88,8 @@ TEST(Visitors, Principle)
   EXPECT_EQ(val, data["universe"][0]["my_inner"]["my_uint32"][0].value<std::uint32_t>());
 
   std::int32_t fetch;
-  int_reader_visitors[0](fetch); // 0 is value reference, fetch would be reference value to read into
+  // 0 is value reference, fetch would be reference value to read into
+  int_reader_visitors[0](fetch);
   // reader_visitor is to be called in GetT or here: GetInt of cppfmu
   EXPECT_EQ(fetch, val);
   EXPECT_EQ(fetch, data["universe"][0]["my_inner"]["my_uint32"][0].value<std::uint32_t>());
@@ -103,12 +101,10 @@ TEST(Visitors, Principle)
   EXPECT_EQ(val2, data["universe"][0]["my_inner"]["my_uint32"][1].value<std::uint32_t>());
 
   //data["universe"][0]["my_inner"]["my_uint32"] equivalent with universe[0].my_inner.my_uint32
-
 }
 
 
-TEST(DataMapper, Visitors)
-{
+TEST(DataMapper, Visitors) {
   // This test assumes that msg_read is the first listed <fmu_out> in ddsfmu_mapping, and that msg_write is the first <fmu_in>
   // It will fail otherwise
 
@@ -121,40 +117,38 @@ TEST(DataMapper, Visitors)
   bool with_enum = true;
   try {
     dyn_data["status"] = 1;
-  } catch(const std::runtime_error&){
-    with_enum = false;
-  }
+  } catch (const std::runtime_error&) { with_enum = false; }
 
   // We want to pretend we got data on dds (read data) (manually set dynamic data)
-  dyn_data["str"] = std::string("Hello");          // str: 0
-  dyn_data["ui8"] = std::uint8_t(255);             // int: 0
-  dyn_data["i8"] = std::int8_t(-127);              // int: 1
-  dyn_data["ui16"] = std::uint16_t(65565);         // int: 2
-  dyn_data["i16"] = std::int16_t(-32766);          // int: 3
-  dyn_data["i32"] = std::int32_t(-100000);         // int: 4
-  dyn_data["i32_2"] = std::int32_t(-100001);       // int: 5
-  dyn_data["ui32"] = std::uint32_t(2147483648);    // dbl: 0
-  dyn_data["ui32_2"] = std::uint32_t(2147483649);  // dbl: 1
-  dyn_data["i64"] = std::int64_t(-4294967296);     // dbl: 2
-  dyn_data["i64_2"] = std::int64_t(-4294967297);   // dbl: 3
-  dyn_data["ui64"] = std::uint64_t(4294967296);    // dbl: 4
-  dyn_data["ui64_2"] = std::uint64_t(4294967297);  // dbl: 5
-  dyn_data["d_val"] = 3.14;                        // dbl: 6
-  dyn_data["f_val"] = 1.81f;                       // dbl: 7
-  dyn_data["enabled"] = true;                      // bool: 0
-  dyn_data["ch"] = '!';                            // str: 1
+  dyn_data["str"] = std::string("Hello");         // str: 0
+  dyn_data["ui8"] = std::uint8_t(255);            // int: 0
+  dyn_data["i8"] = std::int8_t(-127);             // int: 1
+  dyn_data["ui16"] = std::uint16_t(65565);        // int: 2
+  dyn_data["i16"] = std::int16_t(-32766);         // int: 3
+  dyn_data["i32"] = std::int32_t(-100000);        // int: 4
+  dyn_data["i32_2"] = std::int32_t(-100001);      // int: 5
+  dyn_data["ui32"] = std::uint32_t(2147483648);   // dbl: 0
+  dyn_data["ui32_2"] = std::uint32_t(2147483649); // dbl: 1
+  dyn_data["i64"] = std::int64_t(-4294967296);    // dbl: 2
+  dyn_data["i64_2"] = std::int64_t(-4294967297);  // dbl: 3
+  dyn_data["ui64"] = std::uint64_t(4294967296);   // dbl: 4
+  dyn_data["ui64_2"] = std::uint64_t(4294967297); // dbl: 5
+  dyn_data["d_val"] = 3.14;                       // dbl: 6
+  dyn_data["f_val"] = 1.81f;                      // dbl: 7
+  dyn_data["enabled"] = true;                     // bool: 0
+  dyn_data["ch"] = '!';                           // str: 1
   if (with_enum) {
-    dyn_data["status"] = 1;                          // int: 6
+    dyn_data["status"] = 1; // int: 6
   }
 
   std::cout << "Did set dynamic data" << std::endl;
 
   // fmi getters to fetch from datamapper into local vars)
 
-  double ui32, ui32_2, i64, i64_2, ui64, ui64_2, d_val, f_val;         // 8 double
-  std::string str, ch;                                                 // 2 string
-  bool enabled;                                                        // 1 bool
-  std::int32_t ui8, i8, ui16, i16, i32, i32_2, status;   // 7 int
+  double ui32, ui32_2, i64, i64_2, ui64, ui64_2, d_val, f_val; // 8 double
+  std::string str, ch;                                         // 2 string
+  bool enabled;                                                // 1 bool
+  std::int32_t ui8, i8, ui16, i16, i32, i32_2, status;         // 7 int
 
   std::int32_t dbl_idx(0), str_idx(0), int_idx(0), bool_idx(0);
 
@@ -188,7 +182,7 @@ TEST(DataMapper, Visitors)
   EXPECT_EQ(i16, dyn_data["i16"].value<std::int16_t>());
   EXPECT_EQ(i32, dyn_data["i32"].value<std::int32_t>());
   EXPECT_EQ(i32_2, dyn_data["i32_2"].value<std::int32_t>());
-  EXPECT_EQ(static_cast<std::uint32_t>(ui32),   dyn_data["ui32"].value<std::uint32_t>());
+  EXPECT_EQ(static_cast<std::uint32_t>(ui32), dyn_data["ui32"].value<std::uint32_t>());
   EXPECT_EQ(static_cast<std::uint32_t>(ui32_2), dyn_data["ui32_2"].value<std::uint32_t>());
   EXPECT_DOUBLE_EQ(i64, dyn_data["i64"].value<std::int64_t>());
   EXPECT_DOUBLE_EQ(i64_2, dyn_data["i64_2"].value<std::int64_t>());
@@ -234,7 +228,8 @@ TEST(DataMapper, Visitors)
   EXPECT_FALSE(dyn_data == dyn_data2) << "Dynamic data 'msg_read' not yet equal to 'msg_write'";
 
   data_mapper.set_bool(bool_idx - 1, enabled); // reset previous
-  EXPECT_TRUE(dyn_data == dyn_data2) << "Dynamic data read and written to same data structures shall be equal";
+  EXPECT_TRUE(dyn_data == dyn_data2)
+    << "Dynamic data read and written to same data structures shall be equal";
 
   std::cout << "Did confirm dynamic data equality" << std::endl;
 
@@ -245,11 +240,12 @@ TEST(DataMapper, Visitors)
   std::string other;
   data_mapper.set_string(data_mapper.string_offset(), something); // msg_read str
   dyn_data["str"] = std::string(something);
-  data_mapper.get_string(0, other);     // msg_write str
+  data_mapper.get_string(0, other); // msg_write str
 
   EXPECT_EQ(dyn_data["str"].value<std::string>(), dyn_data2["str"].value<std::string>());
   EXPECT_EQ(other, std::string(something));
-  EXPECT_TRUE(dyn_data == dyn_data2) << "Dynamic data read and written to same data structures shall be equal";
+  EXPECT_TRUE(dyn_data == dyn_data2)
+    << "Dynamic data read and written to same data structures shall be equal";
 
   // Test set_bool with int32, not bool, usage pattern being used in cpp-fmu
   std::int32_t my_bool(1);
@@ -259,6 +255,6 @@ TEST(DataMapper, Visitors)
   data_mapper.get_bool(0, my_other_bool);
   EXPECT_EQ(dyn_data["enabled"].value<bool>(), dyn_data2["enabled"].value<bool>());
   EXPECT_EQ(bool(my_bool), my_other_bool);
-  EXPECT_TRUE(dyn_data == dyn_data2) << "Dynamic data read and written to same data structures shall be equal";
-
+  EXPECT_TRUE(dyn_data == dyn_data2)
+    << "Dynamic data read and written to same data structures shall be equal";
 }

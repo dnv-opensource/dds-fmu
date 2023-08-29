@@ -1,7 +1,9 @@
 #pragma once
+
+#include <filesystem>
 #include <string>
 #include <vector>
-#include <filesystem>
+
 #include <xtypes/idl/idl.hpp>
 
 
@@ -18,7 +20,9 @@
    @return Generated uuid string
 
 */
-std::string generate_uuid(const std::vector<std::filesystem::path>& uuid_files, const std::vector<std::string>& strings=std::vector<std::string>());
+std::string generate_uuid(
+  const std::vector<std::filesystem::path>& uuid_files,
+  const std::vector<std::string>& strings = std::vector<std::string>());
 
 /**
    @brief Given FMU root, returns a list of file paths to be used to generate uuid
@@ -31,7 +35,8 @@ std::string generate_uuid(const std::vector<std::filesystem::path>& uuid_files, 
 
    @return List of paths to files.
 */
-std::vector<std::filesystem::path> get_uuid_files(const std::filesystem::path& fmu_root, bool skip_modelDescription=true /* TODO: false */);
+std::vector<std::filesystem::path> get_uuid_files(
+  const std::filesystem::path& fmu_root, bool skip_modelDescription = true /* TODO: false */);
 
 
 /**
@@ -46,4 +51,6 @@ std::vector<std::filesystem::path> get_uuid_files(const std::filesystem::path& f
 
 
 */
-eprosima::xtypes::idl::Context load_fmu_idls(const std::filesystem::path& resource_path, bool print=false, const std::string& main_idl="dds-fmu.idl");
+eprosima::xtypes::idl::Context load_fmu_idls(
+  const std::filesystem::path& resource_path, bool print = false,
+  const std::string& main_idl = "dds-fmu.idl");

@@ -1,11 +1,8 @@
 #pragma once
 
-enum EnumState {
-  SLEEP, OKAY, ALERT, FAILURE, DEAD
-};
+enum EnumState { SLEEP, OKAY, ALERT, FAILURE, DEAD };
 
-struct Message
-{
+struct Message {
   string str;
   uint8 ui8;
   int8 i8;
@@ -26,7 +23,6 @@ struct Message
   EnumState status; // Fails with fastdds
 };
 
-struct Trivial
-{
+struct Trivial {
   double val;
 };

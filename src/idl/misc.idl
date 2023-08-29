@@ -1,16 +1,15 @@
 #pragma once
 
-struct Trig
-{
+struct Trig {
   double sine;
   double other;
 };
 
 module my {
-  struct Mind
-  {
+  struct Mind {
     double ful;
-    @optional boolean ness;
+    @optional
+    boolean ness;
     @key uint32 applied;
   };
 };

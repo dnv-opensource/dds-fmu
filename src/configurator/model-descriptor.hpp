@@ -1,10 +1,11 @@
 #pragma once
+
 #include <filesystem>
 #include <string>
 #include <vector>
 
-#include <xtypes/idl/idl.hpp>
 #include <rapidxml/rapidxml.hpp>
+#include <xtypes/idl/idl.hpp>
 
 /**
    @brief Finds structured name for a given node
@@ -19,13 +20,10 @@
 void name_generator(std::string& name, const eprosima::xtypes::DynamicData::ReadableNode& rnode);
 
 
-namespace ddsfmu
-{
+namespace ddsfmu {
 
 // TODO: for fmi3 this and related impl need to be extended.
-enum ScalarVariableType {
-  Real, Integer, Boolean, String, Unknown
-};
+enum ScalarVariableType { Real, Integer, Boolean, String, Unknown };
 
 }
 
@@ -48,7 +46,9 @@ std::string print_xml(const rapidxml::xml_document<>& doc);
    @param [in, out] buffer Buffer that the function uses to load file contents
 
 */
-void load_template_xml(rapidxml::xml_document<>& doc, const std::filesystem::path& template_xml, std::vector<char>& buffer);
+void load_template_xml(
+  rapidxml::xml_document<>& doc, const std::filesystem::path& template_xml,
+  std::vector<char>& buffer);
 
 /**
    @brief Loads mapping between dds topics and fmu signal references ddsfmu_mapping
@@ -60,7 +60,9 @@ void load_template_xml(rapidxml::xml_document<>& doc, const std::filesystem::pat
    @param [in, out] buffer Buffer that the function uses to load file contents
 
 */
-void load_ddsfmu_mapping(rapidxml::xml_document<>& doc, const std::filesystem::path& ddsfmu_mapping, std::vector<char>& buffer);
+void load_ddsfmu_mapping(
+  rapidxml::xml_document<>& doc, const std::filesystem::path& ddsfmu_mapping,
+  std::vector<char>& buffer);
 
 /**
    @brief Writes contents of xml document to modelDescription.xml
@@ -71,7 +73,8 @@ void load_ddsfmu_mapping(rapidxml::xml_document<>& doc, const std::filesystem::p
    @param [in] fmu_root Path to FMU root directory, where the file will be written
 
 */
-void write_model_description(const rapidxml::xml_document<>& doc, const std::filesystem::path& fmu_root);
+void write_model_description(
+  const rapidxml::xml_document<>& doc, const std::filesystem::path& fmu_root);
 
 /**
    @brief Constructs a <ScalarVariable> tag to be used in <ModelVariables> of the modelDescription.xml
@@ -87,12 +90,9 @@ void write_model_description(const rapidxml::xml_document<>& doc, const std::fil
 
 */
 void model_variable_generator(
-    rapidxml::xml_document<>& doc,
-    rapidxml::xml_node<>* model_variables_node,
-    const std::string& name,
-    const std::string& causality,
-    const std::uint32_t& value_ref,
-    const ddsfmu::ScalarVariableType& type);
+  rapidxml::xml_document<>& doc, rapidxml::xml_node<>* model_variables_node,
+  const std::string& name, const std::string& causality, const std::uint32_t& value_ref,
+  const ddsfmu::ScalarVariableType& type);
 
 /**
    @brief Create <Outputs> tag with necessary <Unknown>
@@ -104,4 +104,5 @@ void model_variable_generator(
    @param [in, out] root Node for which to attach <ModelStructure>
    @param [in] num_outputs Number of outputs
 */
-void model_structure_outputs_generator(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* root, const std::uint32_t& num_outputs);
+void model_structure_outputs_generator(
+  rapidxml::xml_document<>& doc, rapidxml::xml_node<>* root, const std::uint32_t& num_outputs);
