@@ -59,12 +59,10 @@ set(fmuGuidModelDescription "${fmuStagingDir}/modelDescription.xml")
 set(fmuIntermediateModelDescription "${fmuStagedResourceConfigDir}/modelDescription.xml")
 set(fmuFinalModelDescription "${fmuStagingDir}/modelDescription.xml")
 
-set(FMU_UUID "@FMU_UUID@") # Temporary workaround
 configure_file(
   "${CMAKE_SOURCE_DIR}/data/templates/modelDescription.xml.in"
   "${fmuIntermediateModelDescription}"
   @ONLY)
-unset(FMU_UUID)
 
 configure_file(
   "${CMAKE_SOURCE_DIR}/data/templates/config.hpp.in"

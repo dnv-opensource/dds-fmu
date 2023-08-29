@@ -23,7 +23,7 @@ struct Message
   float f_val;
   boolean enabled;
   char ch;
-  //EnumState status; // Fails with fastdds
+  EnumState status; // Fails with fastdds
 };
 
 struct Trivial

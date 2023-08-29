@@ -254,7 +254,7 @@ void DynamicPubSub::reset(const std::filesystem::path& fmu_resources, DataMapper
         // A bug with UnionType in Fast DDS Dynamic Types is bypassed.
         // WORKAROUND START
         dyn_type_support.auto_fill_type_information(false); // True will not work with CycloneDDS
-        dyn_type_support.auto_fill_type_object(true);       // TODO: or false?
+        dyn_type_support.auto_fill_type_object(false);      // True causes seg fault with enums
         // WORKAROUND END
 
         // TODO: fix failure here if type has enum

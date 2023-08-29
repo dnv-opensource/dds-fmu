@@ -64,7 +64,6 @@
    + [X] Remove temporary Trig pub sub compiled types from dds-fmu
    + [X] Add Dynamic Publisher|Subscriber to dds-fmu
    + [X] Load dds types and register through xtypes + converter
-     + To be stored as scoped types (i.e. Kong::Foo)
    + [X] Store data as xtypes DynamicData instead of DDS DynamicData
    + [X] For a given type, iterate through its primitive types
    + [X] Define real reference structure to map between dynamic types for dds/idl and fmu
@@ -82,7 +81,7 @@
        + [X] Use XML first
        + [X] Use converter to populate instead
        + [X] Use converter to register types instead of xml-based
-   + [ ] Figure out why registering enum fails
+   + [X] Figure out why registering enum fails
    + [X] Take all samples on reading
    + [ ] Clarify in doc that there will be a sample lag
    + [ ] Add support for key (perhaps manually?) -> how will data structures change?

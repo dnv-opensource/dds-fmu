@@ -40,6 +40,10 @@ int zip_fmu(const fs::path& fmu_root, const fs::path& out_file, bool verbose, bo
       if (verbose){
         std::cout << "Adding: " << fs::relative(dir_entry, fmu_root).generic_string() << std::endl;
       }
+      if(fs::relative(dir_entry, fmu_root) == fs::relative(out_file, fmu_root)) {
+        std::cout << "Output file is within target directory, skipping: " << out_file << std::endl;
+        continue;
+      }
       auto relative_entry = fs::relative(dir_entry, fmu_root).generic_string();
       if (zip_entry_open(zip, relative_entry.c_str()) != 0){
         std::cerr << "Unable to open zip entry for writing: " << relative_entry << std::endl;
