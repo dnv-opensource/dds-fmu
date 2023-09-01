@@ -38,7 +38,7 @@ public:
 
      Calls clear(), then loads configuration files and initializes DDS members, as well as other data structures.
 
-     @param [in] fmu_resourcs Path to FMU resources folder
+     @param [in] fmu_resources Path to FMU resources folder
      @param [in] mapper Pointer to DataMapper instance to be used
 
   */

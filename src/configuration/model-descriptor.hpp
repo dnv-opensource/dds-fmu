@@ -80,7 +80,7 @@ void write_model_description(
   const rapidxml::xml_document<>& doc, const std::filesystem::path& fmu_root);
 
 /**
-   @brief Constructs a <ScalarVariable> tag to be used in <ModelVariables> of the modelDescription.xml
+   @brief Constructs a `<ScalarVariable>` tag to be used in `<ModelVariables>` of the modelDescription.xml
 
    @param [in,out] doc XML document to work on
    @param [in,out] model_variables_node ModelVariables node to be appended
@@ -88,8 +88,6 @@ void write_model_description(
    @param [in] causality Causality attribute input|output
    @param [in] value_ref valueReference attribute
    @param [in] type ScalarVariable type: Real|Integer|Boolean|String
-   // add start?
-   @return <ScalarVariable><...></ScalarVariable> as string
 
 */
 void model_variable_generator(
@@ -98,13 +96,13 @@ void model_variable_generator(
   const ddsfmu::config::ScalarVariableType& type);
 
 /**
-   @brief Create <Outputs> tag with necessary <Unknown>
+   @brief Create `<Outputs>` tag with necessary `<Unknown>`
 
    Our implementation puts all outputs before inputs, so inferring indices are
    straightforward, namely one-indexed with the number of outputs, starting with 1.
 
    @param [in, out] doc XML document to work on
-   @param [in, out] root Node for which to attach <ModelStructure>
+   @param [in, out] root Node for which to attach `<ModelStructure>`
    @param [in] num_outputs Number of outputs
 */
 void model_structure_outputs_generator(

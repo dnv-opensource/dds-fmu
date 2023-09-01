@@ -8,8 +8,8 @@
 
   #+begin_src bash
     cd dds-fmu
-    conan install . -u -b missing
-    conan build . -c tools.build:skip_test=False
+    conan install . -u -b missing -o dds-fmu/*:with_doc=True
+    conan build . -o dds-fmu/*:with_doc=True -c tools.build:skip_test=False
     # Repeat previous command, because the test currently fails
   #+end_src
 
@@ -113,10 +113,11 @@
    + [X] Make documentation target and bundle it with the fmu
    + [X] Add editorconfig and clang-format to unify formatting
    + [ ] Figure out to handle fast-dds log (and xtypes) in conjunction with cppfmu
+     + [ ] Print out report on number of inputs and outputs when generating modelDescription
    + [X] Tidy code and remove temporary stuff
    + [ ] Properly document end user documentation
    + [ ] Add support for keys https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706
-   + [ ] Add support for sequences and other variable size containers.
+   + [ ] Add support for sequences other variable size containers and missing types.
      + Figure out which types are not supported
    + [5/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
