@@ -15,6 +15,9 @@
 #include <uuid.h>
 #include <xtypes/xtypes.hpp>
 
+namespace ddsfmu {
+namespace config {
+
 namespace fs = std::filesystem;
 
 std::string generate_uuid(
@@ -118,4 +121,7 @@ eprosima::xtypes::idl::Context load_fmu_idls(
     }
   }
   return context;
+}
+
+}
 }

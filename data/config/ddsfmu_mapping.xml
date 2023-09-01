@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ddsfmu>
   <!--fmu_in topic="msg" type="Message" /-->
-  <fmu_in topic="DDS_FMI_In" type="Trig" />
-  <fmu_out topic="DDS_FMI_Out" type="Trig" />
+  <fmu_in topic="DDS_FMI_In" type="idl::Trigonometry" />
+  <fmu_out topic="DDS_FMI_Out" type="idl::Trigonometry" />
 </ddsfmu>

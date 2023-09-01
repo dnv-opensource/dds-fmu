@@ -1,10 +1,12 @@
 #include "SignalDistributor.hpp"
 
+namespace ddsfmu {
+
 SignalDistributor::SignalDistributor()
     : m_real_idx(0), m_integer_idx(0), m_boolean_idx(0), m_string_idx(0), m_outputs(0) {}
 
 void SignalDistributor::load_idls(const std::filesystem::path& resource_path) {
-  m_context = load_fmu_idls(resource_path);
+  m_context = ddsfmu::config::load_fmu_idls(resource_path);
 
   /*for (auto [name, type] : m_context.get_all_scoped_types()) {
     std::cout << name << std::endl;
@@ -33,25 +35,25 @@ void SignalDistributor::add(
       if (!is_in_not_out) { m_outputs++; }
 
       std::string structured_name;
-      name_generator(structured_name, node);
+      config::name_generator(structured_name, node);
       structured_name = topic_name + "." + structured_name;
 
-      auto fmi_type = resolve_type(node);
+      auto fmi_type = SignalDistributor::resolve_type(node);
 
       switch (fmi_type) {
-      case ddsfmu::Real:
+      case config::ScalarVariableType::Real:
         m_signal_mapping.emplace_back(
           std::make_tuple(m_real_idx++, structured_name, in_or_output, fmi_type));
         break;
-      case ddsfmu::Integer:
+      case config::ScalarVariableType::Integer:
         m_signal_mapping.emplace_back(
           std::make_tuple(m_integer_idx++, structured_name, in_or_output, fmi_type));
         break;
-      case ddsfmu::Boolean:
+      case config::ScalarVariableType::Boolean:
         m_signal_mapping.emplace_back(
           std::make_tuple(m_boolean_idx++, structured_name, in_or_output, fmi_type));
         break;
-      case ddsfmu::String:
+      case config::ScalarVariableType::String:
         m_signal_mapping.emplace_back(
           std::make_tuple(m_string_idx++, structured_name, in_or_output, fmi_type));
         break;
@@ -61,23 +63,25 @@ void SignalDistributor::add(
   });
 }
 
-ddsfmu::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::ReadableNode& node) {
+ddsfmu::config::ScalarVariableType
+  SignalDistributor::resolve_type(const eprosima::xtypes::DynamicData::ReadableNode& node) {
   switch (node.type().kind()) {
-  case eprosima::xtypes::TypeKind::BOOLEAN_TYPE: return ddsfmu::Boolean;
+  case eprosima::xtypes::TypeKind::BOOLEAN_TYPE: return ddsfmu::config::ScalarVariableType::Boolean;
   case eprosima::xtypes::TypeKind::INT_8_TYPE:
   case eprosima::xtypes::TypeKind::UINT_8_TYPE:
   case eprosima::xtypes::TypeKind::INT_16_TYPE:
   case eprosima::xtypes::TypeKind::UINT_16_TYPE:
-  case eprosima::xtypes::TypeKind::INT_32_TYPE: return ddsfmu::Integer;
+  case eprosima::xtypes::TypeKind::INT_32_TYPE: return ddsfmu::config::ScalarVariableType::Integer;
   case eprosima::xtypes::TypeKind::FLOAT_32_TYPE:
-  case eprosima::xtypes::TypeKind::FLOAT_64_TYPE: return ddsfmu::Real;
+  case eprosima::xtypes::TypeKind::FLOAT_64_TYPE: return ddsfmu::config::ScalarVariableType::Real;
 
   case eprosima::xtypes::TypeKind::STRING_TYPE:
-  case eprosima::xtypes::TypeKind::CHAR_8_TYPE: return ddsfmu::String;
-  case eprosima::xtypes::TypeKind::ENUMERATION_TYPE: return ddsfmu::Integer;
+  case eprosima::xtypes::TypeKind::CHAR_8_TYPE: return ddsfmu::config::ScalarVariableType::String;
+  case eprosima::xtypes::TypeKind::ENUMERATION_TYPE:
+    return ddsfmu::config::ScalarVariableType::Integer;
   case eprosima::xtypes::TypeKind::UINT_32_TYPE:
   case eprosima::xtypes::TypeKind::INT_64_TYPE:
-  case eprosima::xtypes::TypeKind::UINT_64_TYPE: return ddsfmu::Real;
+  case eprosima::xtypes::TypeKind::UINT_64_TYPE: return ddsfmu::config::ScalarVariableType::Real;
   case eprosima::xtypes::TypeKind::FLOAT_128_TYPE:
   case eprosima::xtypes::TypeKind::CHAR_16_TYPE:
   case eprosima::xtypes::TypeKind::WIDE_CHAR_TYPE:
@@ -88,6 +92,8 @@ ddsfmu::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::Rea
   case eprosima::xtypes::TypeKind::MAP_TYPE:
   default:
     std::cerr << "Unsupported type: " << node.type().name() << std::endl;
-    return ddsfmu::Unknown;
+    return config::ScalarVariableType::Unknown;
   }
+}
+
 }

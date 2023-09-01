@@ -6,6 +6,16 @@
 
 #include <xtypes/idl/idl.hpp>
 
+/**
+   @namespace ddsfmu Everything pertaining to the dds fmu
+*/
+namespace ddsfmu {
+
+/**
+   @namespace ddsfmu::config Helper functions for loading and generating configuration files
+*/
+namespace config {
+
 
 /**
    @brief Creates a uuid from a list of files and list of strings
@@ -36,7 +46,7 @@ std::string generate_uuid(
    @return List of paths to files.
 */
 std::vector<std::filesystem::path> get_uuid_files(
-  const std::filesystem::path& fmu_root, bool skip_modelDescription = true /* TODO: false */);
+  const std::filesystem::path& fmu_root, bool skip_modelDescription = true);
 
 
 /**
@@ -54,3 +64,6 @@ std::vector<std::filesystem::path> get_uuid_files(
 eprosima::xtypes::idl::Context load_fmu_idls(
   const std::filesystem::path& resource_path, bool print = false,
   const std::string& main_idl = "dds-fmu.idl");
+
+}
+}

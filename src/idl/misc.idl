@@ -1,15 +1,33 @@
 #pragma once
 
-struct Trig {
-  double sine;
-  double other;
-};
+/**
+   @brief Some example data structures used as DDS types, which can be mapped to signals in FMI.
+*/
+module idl {
+  /**
+     @brief Struct to contain trigonometric values
+  */
+  struct Trigonometry {
+    double sine;   ///< Sine value
+    double cosine; ///< Cosine value
+  };
 
-module my {
-  struct Mind {
-    double ful;
+  /**
+     @brief Simple struct with both @optional and @key attributes
+  */
+  struct Info {
+    double number; ///< float64 value
     @optional
-    boolean ness;
-    @key uint32 applied;
+    boolean active; ///< a boolean value, which is @optional
+    @key uint32 id; ///< unsigned int identifier, which is @key
+  };
+
+  /**
+     @brief Test structure with array data
+  */
+  struct TestData {
+    string message; ///< A string message
+    uint32 index;   ///< An unsigned integer index
+    uint32 my_matrix[5][2]; ///< 2D array of unsigned int (32bits), where row major [rows][columns], column major [columns][rows]
   };
 };

@@ -91,7 +91,7 @@ add_library(${fmuModuleTarget} MODULE
 
 target_link_libraries(${fmuModuleTarget}
   PUBLIC cppfmu::cppfmu fastdds::fastrtps
-  PRIVATE configurator detail
+  PRIVATE configuration detail
   )
 
 target_include_directories(${fmuModuleTarget}
@@ -99,12 +99,12 @@ target_include_directories(${fmuModuleTarget}
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/temp>
   )
 
-add_library(configurator OBJECT
-  "${CMAKE_SOURCE_DIR}/src/configurator/auxiliaries.cpp"
-  "${CMAKE_SOURCE_DIR}/src/configurator/model-descriptor.cpp"
+add_library(configuration OBJECT
+  "${CMAKE_SOURCE_DIR}/src/configuration/auxiliaries.cpp"
+  "${CMAKE_SOURCE_DIR}/src/configuration/model-descriptor.cpp"
   )
 
-target_link_libraries(configurator
+target_link_libraries(configuration
   PUBLIC
   eprosima::xtypes
   rapidxml::rapidxml
@@ -113,9 +113,9 @@ target_link_libraries(configurator
   "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
   stduuid::stduuid)
 
-target_include_directories(configurator
+target_include_directories(configuration
   PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/configurator>)
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/configuration>)
 
 
 add_library(detail OBJECT
@@ -129,7 +129,7 @@ target_link_libraries(detail
   PUBLIC
     eprosima::xtypes
     fastdds::fastrtps
-    configurator
+    configuration
   PRIVATE
     rapidxml::rapidxml
     "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
@@ -147,7 +147,7 @@ target_link_libraries(${fmuRepackerTarget}
   PRIVATE
   taywee::args
   zip::zip
-  configurator
+  configuration
   detail
   "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
   "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"

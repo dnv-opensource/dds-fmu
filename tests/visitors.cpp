@@ -65,15 +65,15 @@ TEST(Visitors, Principle) {
 
     if (is_leaf || is_string) {
       std::string nested_name;
-      name_generator(nested_name, node);
+      ddsfmu::config::name_generator(nested_name, node);
       std::cout << nested_name << std::endl;
 
       if (node.type().kind() == eprosima::xtypes::TypeKind::UINT_32_TYPE) {
         int_reader_visitors.emplace_back(std::bind(
-          reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
+          ddsfmu::detail::reader_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
 
         int_writer_visitors.emplace_back(std::bind(
-          writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
+          ddsfmu::detail::writer_visitor<std::int32_t, std::uint32_t>, std::placeholders::_1, node.data()));
 
         std::cout << "valueReference " << int_reader_visitors.size() - 1 << " with name "
                   << nested_name << std::endl;
@@ -108,11 +108,11 @@ TEST(DataMapper, Visitors) {
   // This test assumes that msg_read is the first listed <fmu_out> in ddsfmu_mapping, and that msg_write is the first <fmu_in>
   // It will fail otherwise
 
-  DataMapper data_mapper;
+  ddsfmu::DataMapper data_mapper;
   data_mapper.reset(std::filesystem::current_path() / "resources");
 
-  auto& dyn_data = data_mapper.data_ref("msg_read", DataMapper::Direction::Read);
-  auto& dyn_data2 = data_mapper.data_ref("msg_write", DataMapper::Direction::Write);
+  auto& dyn_data = data_mapper.data_ref("msg_read", ddsfmu::DataMapper::Direction::Read);
+  auto& dyn_data2 = data_mapper.data_ref("msg_write", ddsfmu::DataMapper::Direction::Write);
 
   bool with_enum = true;
   try {

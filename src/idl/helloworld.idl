@@ -1,7 +1,0 @@
-#pragma once
-
-struct HelloWorld {
-  string message;
-  uint32 index;
-  uint32 my_matrix[5][2]; // row major [rows][columns], column major [columns][rows]
-};

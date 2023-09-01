@@ -23,6 +23,9 @@
 
 namespace ddsfmu {
 
+/**
+   @brief Class with functions to convert between xtypes::DynamicData and fast-dds DynamicData
+*/
 struct Converter {
   /**
        @brief Converts from xtypes to fastdds DynamicData

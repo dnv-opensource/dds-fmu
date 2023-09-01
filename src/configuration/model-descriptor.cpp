@@ -7,6 +7,9 @@
 #include <rapidxml/rapidxml.hpp>
 #include <rapidxml/rapidxml_print.hpp>
 
+namespace ddsfmu {
+namespace config {
+
 std::string print_xml(const rapidxml::xml_document<>& doc) {
   constexpr int rapidxml_parse_flags = rapidxml::parse_full | rapidxml::parse_normalize_whitespace;
   std::string out_str;
@@ -113,7 +116,7 @@ void name_generator(std::string& name, const eprosima::xtypes::DynamicData::Read
 void model_variable_generator(
   rapidxml::xml_document<>& doc, rapidxml::xml_node<>* parent, const std::string& name,
   const std::string& causality, const std::uint32_t& value_ref,
-  const ddsfmu::ScalarVariableType& type) {
+  const ddsfmu::config::ScalarVariableType& type) {
   char* name_val = doc.allocate_string(name.c_str());
   char* ref_val = doc.allocate_string(std::to_string(value_ref).c_str());
   char* caus_val = doc.allocate_string(causality.c_str());
@@ -136,27 +139,27 @@ void model_variable_generator(
   rapidxml::xml_attribute<>* start = nullptr;
 
   switch (type) {
-  case ddsfmu::Real: {
+  case config::ScalarVariableType::Real: {
     child = doc.allocate_node(rapidxml::node_element, "Real");
     start = doc.allocate_attribute("start", "0.0");
     break;
   }
-  case ddsfmu::Integer: {
+  case config::ScalarVariableType::Integer: {
     child = doc.allocate_node(rapidxml::node_element, "Integer");
     start = doc.allocate_attribute("start", "0");
     break;
   }
-  case ddsfmu::Boolean: {
+  case config::ScalarVariableType::Boolean: {
     child = doc.allocate_node(rapidxml::node_element, "Boolean");
     start = doc.allocate_attribute("start", "false");
     break;
   }
-  case ddsfmu::String: {
+  case config::ScalarVariableType::String: {
     child = doc.allocate_node(rapidxml::node_element, "String");
     start = doc.allocate_attribute("start", "");
     break;
   }
-  case ddsfmu::Unknown:
+  case config::ScalarVariableType::Unknown:
   default: break;
   }
 
@@ -182,4 +185,7 @@ void model_structure_outputs_generator(
     out_node->insert_node(0, unknown);
   }
   root->append_node(ms_node);
+}
+
+}
 }

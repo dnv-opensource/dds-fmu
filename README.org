@@ -61,6 +61,7 @@
 
 ** Implementation tasks
 
+   + [X] Remove shared option, since it is a module always?
    + [X] Remove temporary Trig pub sub compiled types from dds-fmu
    + [X] Add Dynamic Publisher|Subscriber to dds-fmu
    + [X] Load dds types and register through xtypes + converter
@@ -111,10 +112,12 @@
      - the only file not explicitly available before rendering is modelDescription.xml
    + [X] Make documentation target and bundle it with the fmu
    + [X] Add editorconfig and clang-format to unify formatting
-   + [ ] Figure out to properly handle fast-dds log (and xtypes) in conjunction with cppfmu
+   + [ ] Figure out to handle fast-dds log (and xtypes) in conjunction with cppfmu
    + [X] Tidy code and remove temporary stuff
    + [ ] Properly document end user documentation
-
+   + [ ] Add support for keys https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706
+   + [ ] Add support for sequences and other variable size containers.
+     + Figure out which types are not supported
    + [5/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
      2. [X] Parse idls, xml profile and other config files

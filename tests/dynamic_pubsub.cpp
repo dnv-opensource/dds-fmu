@@ -9,14 +9,14 @@
 
 TEST(DynamicPubSub, Initialization) {
   auto resources = std::filesystem::current_path() / "resources";
-  DataMapper data_mapper;
-  DynamicPubSub pubsub;
+  ddsfmu::DataMapper data_mapper;
+  ddsfmu::DynamicPubSub pubsub;
 
   data_mapper.reset(resources);
   pubsub.reset(resources, &data_mapper);
 
-  auto& dyn_write = data_mapper.data_ref("roundtrip", DataMapper::Direction::Write);
-  auto& dyn_read = data_mapper.data_ref("roundtrip", DataMapper::Direction::Read);
+  auto& dyn_write = data_mapper.data_ref("roundtrip", ddsfmu::DataMapper::Direction::Write);
+  auto& dyn_read = data_mapper.data_ref("roundtrip", ddsfmu::DataMapper::Direction::Read);
 
   double d_val(3.14);
 
@@ -47,8 +47,8 @@ TEST(DynamicPubSub, Initialization) {
 
 TEST(DynamicPubSub, Reinitialization) {
   auto resources = std::filesystem::current_path() / "resources";
-  DataMapper data_mapper;
-  DynamicPubSub pubsub;
+  ddsfmu::DataMapper data_mapper;
+  ddsfmu::DynamicPubSub pubsub;
 
   data_mapper.reset(resources);
   pubsub.reset(resources, &data_mapper);

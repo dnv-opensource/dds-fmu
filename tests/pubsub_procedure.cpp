@@ -139,7 +139,7 @@ TEST(PubSub, UsageProcedure) {
     /* A bug with UnionType in Fast DDS Dynamic Types is bypassed. */
     // WORKAROUND START
     dynamic_type_support.auto_fill_type_information(false);
-    dynamic_type_support.auto_fill_type_object(false); // TODO: or true?
+    dynamic_type_support.auto_fill_type_object(false);
     // WORKAROUND END
 
     ASSERT_FALSE(added && !participant->register_type(dynamic_type_support))
@@ -162,7 +162,7 @@ TEST(PubSub, UsageProcedure) {
   eprosima::fastrtps::types::DynamicData* dynamic_data_sub =
     eprosima::fastrtps::types::DynamicDataFactory::get_instance()->create_data(dynamic_type);
 
-  // 6. Create topic (TODO: dds_participant->lookup_topicdescription(topic_name) is it because a participant can have e.g. both reader and writer with a topic? it returns something that can static_cast<Topic*>(ret));
+  // 6. Create topic, use: dds_participant->lookup_topicdescription(topic_name) instead
 
   eprosima::fastdds::dds::Topic* topic =
     participant->create_topic(topic_name, type_name, eprosima::fastdds::dds::TOPIC_QOS_DEFAULT);

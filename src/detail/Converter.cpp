@@ -29,6 +29,7 @@ using eprosima::fastrtps::types::MemberId;
 namespace xtypes = eprosima::xtypes;
 
 // get_union_id() is protected; this class exposes it as public
+/// @private
 class UnionDynamicData : public eprosima::fastrtps::types::DynamicData {
 public:
   UnionDynamicData() = default;
@@ -1922,4 +1923,4 @@ eprosima::xtypes::WritableDynamicDataRef Converter::access_member_data(
   }
 }
 
-} //  namespace ddsfmu
+}

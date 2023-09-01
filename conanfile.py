@@ -14,16 +14,14 @@ class DdsFmuConan(ConanFile):
     description = "DDS-FMU mediator"
     url = "https://gitlab.sintef.no/seaops/dds-fmu"
     topics = ("Co-simulation", "FMU", "DDS", "OMG-DDS")
-    package_type = "library"
+    package_type = "shared-library"
     settings = "os", "arch", "compiler", "build_type"
     options = {
-        "shared": [True, False],
         "fPIC": [True, False],
         "with_tools": [True, False],
         "with_doc": [True, False]
     }
     default_options = {
-        "shared": False,
         "fPIC": True,
         "with_tools": True,
         "with_doc": False
@@ -59,10 +57,6 @@ class DdsFmuConan(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-
-    def configure(self):
-        if self.options.shared:
-            self.options.rm_safe("fPIC")
 
     def layout(self):
         cmake_layout(self)

@@ -10,19 +10,9 @@
 #include "auxiliaries.hpp"
 #include "model-descriptor.hpp"
 
-typedef std::tuple<std::uint32_t, std::string, std::string, ddsfmu::ScalarVariableType> SignalInfo;
+namespace ddsfmu {
 
-/**
-   @brief Resolves the FMI primitive type given an xtypes::DynamicData node
-
-   Internally, a switch case of xtypes::TypeKind types that maps to a ddsfmu::ScalarVariableType
-   In case the type is unsupported: returns ddsfmu::Unknown;
-
-   @param [in] node A node, which is a primitive type or resolvable type (std::string and maybe other)
-   @return The scalar variable type (Real, Integer, Boolean, String)
-
-*/
-ddsfmu::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::ReadableNode& node);
+typedef std::tuple<std::uint32_t, std::string, std::string, config::ScalarVariableType> SignalInfo;
 
 /**
    @brief Signal distributor helper for creating model description
@@ -38,6 +28,20 @@ public:
 
      @param [in] resource_path Path to the FMU resources folder
   */
+
+  /**
+     @brief Resolves the FMI primitive type given an xtypes::DynamicData node
+
+     Internally, a switch case of xtypes::TypeKind types that maps to a ScalarVariableType
+     In case the type is unsupported: returns ddsfmu::config::Unknown;
+
+     @param [in] node A node, which is a primitive type or resolvable type (std::string and maybe other)
+     @return The scalar variable type (Real, Integer, Boolean, String)
+
+  */
+  static config::ScalarVariableType resolve_type(const eprosima::xtypes::DynamicData::ReadableNode& node);
+
+
   void load_idls(const std::filesystem::path& resource_path);
   /**
      @brief Returns true if IDL has the scoped structure topic_type
@@ -68,6 +72,8 @@ public:
   } ///< Returns number of scalar FMU outputs
 private:
   std::uint32_t m_real_idx, m_integer_idx, m_boolean_idx, m_string_idx, m_outputs;
-  eprosima::xtypes::idl::Context m_context;
   std::vector<SignalInfo> m_signal_mapping;
+  eprosima::xtypes::idl::Context m_context;
 };
+
+}

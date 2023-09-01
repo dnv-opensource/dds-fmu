@@ -16,6 +16,8 @@
 #include "Converter.hpp"
 #include "model-descriptor.hpp"
 
+namespace ddsfmu {
+
 DynamicPubSub::DynamicPubSub()
     : m_participant(nullptr)
     , m_subscriber(nullptr)
@@ -160,7 +162,7 @@ void DynamicPubSub::reset(
   rapidxml::xml_document<> doc;
   std::vector<char> buffer;
 
-  load_ddsfmu_mapping(doc, fmu_resources / "config" / "dds" / "ddsfmu_mapping.xml", buffer);
+  ddsfmu::config::load_ddsfmu_mapping(doc, fmu_resources / "config" / "dds" / "ddsfmu_mapping.xml", buffer);
 
   auto root_node = doc.first_node("ddsfmu");
 
@@ -262,7 +264,6 @@ void DynamicPubSub::reset(
         dyn_type_support.auto_fill_type_object(false);      // True causes seg fault with enums
         // WORKAROUND END
 
-        // TODO: fix failure here if type has enum
         m_participant->register_type(dyn_type_support);
       }
 
@@ -339,4 +340,6 @@ void DynamicPubSub::reset(
           dynamic_data_ptr)));
     }
   }
+}
+
 }

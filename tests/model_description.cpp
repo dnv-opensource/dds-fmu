@@ -44,7 +44,7 @@ TEST(ModelDescriptor, NameGenerator) {
     bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
     if (is_leaf || is_string) {
       std::string ret;
-      name_generator(ret, node);
+      ddsfmu::config::name_generator(ret, node);
       names.push_back(ret);
     }
   });
@@ -64,24 +64,32 @@ TEST(ModelDescriptor, ScalarVariable) {
   rapidxml::xml_node<>* root_node = doc.allocate_node(rapidxml::node_element, "ModelVariables");
   doc.append_node(root_node);
 
-  model_variable_generator(doc, root_node, "distance", "output", 0, ddsfmu::Real);
-  model_variable_generator(doc, root_node, "distance", "output", 0, ddsfmu::Integer);
-  model_variable_generator(doc, root_node, "distance", "output", 0, ddsfmu::Boolean);
-  model_variable_generator(doc, root_node, "distance", "output", 0, ddsfmu::String);
-  model_variable_generator(doc, root_node, "distance", "input", 0, ddsfmu::Real);
+  namespace ddsconf = ddsfmu::config;
+  ddsconf::model_variable_generator(
+    doc, root_node, "distance", "output", 0, ddsfmu::config::ScalarVariableType::Real);
+  ddsconf::model_variable_generator(
+    doc, root_node, "distance", "output", 0, ddsfmu::config::ScalarVariableType::Integer);
+  ddsconf::model_variable_generator(
+    doc, root_node, "distance", "output", 0, ddsfmu::config::ScalarVariableType::Boolean);
+  ddsconf::model_variable_generator(
+    doc, root_node, "distance", "output", 0, ddsfmu::config::ScalarVariableType::String);
+  ddsconf::model_variable_generator(
+    doc, root_node, "distance", "input", 0, ddsfmu::config::ScalarVariableType::Real);
 
   // clang-format off
-  EXPECT_EQ(print_xml(doc), std::string("<ModelVariables>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Real start=\"0.0\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Integer start=\"0\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Boolean start=\"false\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<String start=\"\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"input\">\n\t\t<Real start=\"0.0\"/>\n\t</ScalarVariable>\n</ModelVariables>\n\n"));
+  EXPECT_EQ(ddsconf::print_xml(doc), std::string("<ModelVariables>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Real start=\"0.0\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Integer start=\"0\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<Boolean start=\"false\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"output\" initial=\"exact\">\n\t\t<String start=\"\"/>\n\t</ScalarVariable>\n\t<ScalarVariable name=\"distance\" valueReference=\"0\" variability=\"discrete\" causality=\"input\">\n\t\t<Real start=\"0.0\"/>\n\t</ScalarVariable>\n</ModelVariables>\n\n"));
   // clang-format on
 
-  std::cout << print_xml(doc) << std::endl;
+  std::cout << ddsconf::print_xml(doc) << std::endl;
 }
 
 TEST(ModelDescriptor, ModelStructure) {
   rapidxml::xml_document<> doc;
-  model_structure_outputs_generator(doc, &doc, 3);
+  ddsfmu::config::model_structure_outputs_generator(doc, &doc, 3);
 
   // clang-format off
-  EXPECT_EQ(print_xml(doc), std::string("<ModelStructure>\n\t<Outputs>\n\t\t<Unknown index=\"1\"/>\n\t\t<Unknown index=\"2\"/>\n\t\t<Unknown index=\"3\"/>\n\t</Outputs>\n</ModelStructure>\n\n"));
+  EXPECT_EQ(
+    ddsfmu::config::print_xml(doc),
+    std::string("<ModelStructure>\n\t<Outputs>\n\t\t<Unknown index=\"1\"/>\n\t\t<Unknown index=\"2\"/>\n\t\t<Unknown index=\"3\"/>\n\t</Outputs>\n</ModelStructure>\n\n"));
   // clang-format on
 }

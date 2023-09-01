@@ -13,15 +13,17 @@
 
 #include "DataMapper.hpp"
 
+namespace ddsfmu {
 
 /**
    @brief Dynamic Publisher and Subscriber
 
-   This class consists of one each: Domain Participant, dds::Publisher, and dds::Subscriber.
-   It loads a Fast-DDS XML profile, uses IDL files for type specification, and a DDS to FMU mapping configuration file.
-   For each mapping of DDS topic, it registers either a DataWriter or DataReader entity.
-   It has convenience functions to call write or take on all registered entities.
-   By means of a converter, the inbound or outbound DDS data are populated in a connected DataMapper instance.
+   This class consists of one each instances: A DDS Domain Participant, a dds::Publisher,
+   and a dds::Subscriber. It loads a Fast-DDS XML profile, uses IDL files for type
+   specification, and a DDS to FMU mapping configuration file.  For each mapping of DDS
+   topic, it registers either a DataWriter or DataReader entity.  It has convenience
+   functions to call write or take on all registered entities.  By means of a converter,
+   the inbound or outbound DDS data are populated in a connected DataMapper instance.
 
 */
 class DynamicPubSub {
@@ -34,8 +36,7 @@ public:
   /**
      @brief Resets all members of DynamicPubSub
 
-     The function loads configuration files and initializes DDS members, as well as other data structures.
-
+     Calls clear(), then loads configuration files and initializes DDS members, as well as other data structures.
 
      @param [in] fmu_resourcs Path to FMU resources folder
      @param [in] mapper Pointer to DataMapper instance to be used
@@ -58,25 +59,24 @@ public:
   void take();
 
 private:
-  void clear(); ///< Clears and deletes all members in need of cleanup
   typedef std::pair<eprosima::xtypes::DynamicData&, eprosima::fastrtps::types::DynamicData_ptr>
     DynamicDataConnection;
-  enum PubOrSub {
+  enum class PubOrSub {
     PUBLISH,
     SUBSCRIBE
   }; ///< Internal indication whether dealing with publish or subscriber
+  DataMapper* m_data_mapper;
+  inline DataMapper& mapper() { return *m_data_mapper; }
+  void clear(); ///< Clears and deletes all members in need of cleanup
+  bool m_xml_loaded;
   eprosima::fastdds::dds::DomainParticipant* m_participant;
   eprosima::fastdds::dds::Publisher* m_publisher;
   eprosima::fastdds::dds::Subscriber* m_subscriber;
-  DataMapper* m_data_mapper;
-  inline DataMapper& mapper() { return *m_data_mapper; }
-  bool m_xml_loaded;
   std::map<std::string, std::string> m_topic_to_type;
   std::map<std::string, eprosima::fastrtps::types::DynamicPubSubType> m_types;
   std::map<std::string, eprosima::fastdds::dds::Topic*> m_topic_name_ptr;
   std::map<eprosima::fastdds::dds::DataWriter*, DynamicDataConnection> m_write_data;
   std::map<eprosima::fastdds::dds::DataReader*, DynamicDataConnection> m_read_data;
-
-  // m_{read,write}_data (read?) also need to distinguish data for same topic in case of @key (separate data instances)
-  // https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706
 };
+
+}

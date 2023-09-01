@@ -7,6 +7,11 @@
 #include <rapidxml/rapidxml.hpp>
 #include <xtypes/idl/idl.hpp>
 
+
+
+namespace ddsfmu {
+namespace config {
+
 /**
    @brief Finds structured name for a given node
 
@@ -20,12 +25,10 @@
 void name_generator(std::string& name, const eprosima::xtypes::DynamicData::ReadableNode& rnode);
 
 
-namespace ddsfmu {
-
 // TODO: for fmi3 this and related impl need to be extended.
-enum ScalarVariableType { Real, Integer, Boolean, String, Unknown };
+/// Primitive type kinds in FMI
+enum class ScalarVariableType { Real, Integer, Boolean, String, Unknown };
 
-}
 
 /**
    @brief Prints xml document as string
@@ -92,7 +95,7 @@ void write_model_description(
 void model_variable_generator(
   rapidxml::xml_document<>& doc, rapidxml::xml_node<>* model_variables_node,
   const std::string& name, const std::string& causality, const std::uint32_t& value_ref,
-  const ddsfmu::ScalarVariableType& type);
+  const ddsfmu::config::ScalarVariableType& type);
 
 /**
    @brief Create <Outputs> tag with necessary <Unknown>
@@ -106,3 +109,6 @@ void model_variable_generator(
 */
 void model_structure_outputs_generator(
   rapidxml::xml_document<>& doc, rapidxml::xml_node<>* root, const std::uint32_t& num_outputs);
+
+}
+}
