@@ -1,0 +1,65 @@
+skinparam defaultFontName  Helvetica
+'skinparam monochrome true
+skinparam backgroundColor transparent
+
+skinparam activity {
+        ArrowColor Black
+        BorderColor Black
+        BorderThickness 1
+}
+
+skinparam sequence {
+        BackgroundColor #85bbf0
+        ArrowColor Black
+        ActorBorderColor Black
+        LifeLineBorderColor Black
+        LifeLineBackgroundColor #85bbf0
+}
+
+skinparam participant {
+        BorderColor Black
+        BackgroundColor #85bbf0
+}
+
+skinparam actor {
+        BorderColor Black
+        BackgroundColor #85bbf0
+}
+
+skinparam usecase {
+        ArrowColor Black
+        BorderColor Black
+        BorderThickness 1
+}
+
+skinparam class {
+        ArrowColor Black
+
+        BorderColor Black
+        BorderThickness 1
+}
+
+
+skinparam object {
+        ArrowColor Black
+        BorderColor Black
+}
+
+skinparam package {
+        BorderColor Black
+}
+
+skinparam note {
+        BorderColor Black
+}
+
+skinparam state {
+        ArrowColor Black
+        BorderColor Black
+        BackgroundColor Gainsboro
+}
+
+
+skinparam interface {
+        BorderColor Black
+}

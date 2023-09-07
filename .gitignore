@@ -2,3 +2,7 @@ build/
 CMakeUserPresets.json
 docs/index.org
 SeaopsInterface.idl
+_minted-readme/
+*.bbl
+docs/pdf/readme.tex
+docs/pdf/readme.md

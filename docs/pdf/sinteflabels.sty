@@ -1,0 +1,313 @@
+% Package containing common labels and commands to set them for SINTEF templates
+%
+% by Federico Zenith, federico.zenith@sintef.no.
+
+\ProvidesPackage{sinteflabels}
+                [2021/03/05 Labels and commands for SINTEF templates]
+
+% Standard style for labels, small and bold
+\newcommand{\@labeltext}[1]{\textbf{\scriptsize #1}}
+\newcommand{\@LabelText}[1]{\MakeUppercase{\@labeltext{#1}}}
+% Macro to set a helpful default for any command.
+% \@DefaultVar{foo} will create a user \foo command that can set
+% an internal variable \@foo, which is defaulted to a helpful tip,
+% "Set with \foo{}".
+\newcommand{\@DefaultVar}[1]{%
+\expandafter\def\csname @#1\endcsname{Set with \texttt{\textbackslash #1\{\}}}%
+\expandafter\def\csname #1\endcsname{%
+    \expandafter\def\csname @#1\endcsname%
+}%
+}
+
+\newcommand*{\@absentlabel}{\EnglishNorsk{Absent}{Fraværende}}
+
+\newcommand*{\@abstractlabel}{\EnglishNorsk{Abstract}{Sammendrag}}
+\@DefaultVar{abstract}
+
+\newcommand*{\@academiclabel}
+            {\EnglishNorsk{Academic objectives}{Faglig målsetting}}
+\@DefaultVar{academic}
+
+\newcommand*{\@accumulatedlabel}
+            {\EnglishNorsk{Accumulated}{Akkumulerte kostnader}}
+
+\newcommand*{\@addresslabel} {\EnglishNorsk{Postal address}{Postadresse}}
+\@DefaultVar{address}
+
+\newcommand*{\@agreedlabel}{\EnglishNorsk{As agreed}{Etter Avtale}}
+
+\newcommand*{\@attachmentlabel}{\EnglishNorsk{Attachments}{Vedlegg}}
+\@DefaultVar{attachments}
+\newcommand*{\@attachmentpages}
+            {[+ set with \texttt{\textbackslash attachmentpages\{\}]}}
+\newcommand*{\attachmentpages}{\renewcommand*{\@attachmentpages}}
+\newcommand*{\@attachmentrequest}
+            {\EnglishNorsk{If not, explain in an attachment}
+                          {Avvik fra planen kommenteres i vedlegg}}
+
+\newcommand*{\@attentionlabel}{\EnglishNorsk{For your attention}{Behandling}}
+
+\newcommand*{\@approvedlabel}{\EnglishNorsk{Approved by}{Godkjent av}}
+\@DefaultVar{approved}
+
+% No star for \@asplannedlabel, it is on two lines
+\newcommand{\@asplannedlabel}
+           {\EnglishNorsk{As Planned\\Yes~/~No}{Følger plan\\Ja~/~Nei}}
+
+\newcommand*{\@attnlabel}{\EnglishNorsk{For the Attention of}{Ved}}
+\@DefaultVar{attn}
+
+\newcommand*{\@authorlabel}{\EnglishNorsk{Author(s)}{Forfatter(e)}}
+
+\newcommand*{\@Authorlabel}{\EnglishNorsk{Author(s)}{Forfatter(e)}}
+
+\newcommand*{\@checkedlabel}{\EnglishNorsk{Checked by}{Kontroller av}}
+\@DefaultVar{checked}
+
+\newcommand*{\@classificationlabel}{\EnglishNorsk{Classification}{Gradering}}
+
+\newcommand*{\@clientlabel}{\EnglishNorsk{Client(s)}{Oppdragsgiver(e)}}
+\@DefaultVar{client}
+
+\newcommand*{\@clientreflabel}
+            {\EnglishNorsk{Client's Reference}{Oppdragsgivers referanse}}
+\@DefaultVar{clientref}
+
+\newcommand*{\@clientvat}{Set with \texttt{\textbackslash clientvat\{\}}}
+\newcommand*{\clientvat}{\renewcommand*{\@clientvat}}
+
+\newcommand*{\@commentslabel}{\EnglishNorsk{Comments are invited}{Uttalelse}}
+
+\newcommand*{\@completelabel}{\EnglishNorsk{Completion year}{Sluttår}}
+\newcommand*{\@complete}{\texttt{\textbackslash complete\{\}}}
+\newcommand*{\complete}{\renewcommand*{\@complete}}
+
+\newcommand*{\@currency}{kNOK}
+\newcommand*{\currency}[1]{\renewcommand{\@currency}{#1}}
+
+\newcommand*{\@datelabel}{\EnglishNorsk{Date}{Dato}}
+
+\newcommand*{\@datereceivedlabel}
+            {\EnglishNorsk{Test Object Received}{Prøveobjekt mottatt}}
+\@DefaultVar{datereceived}
+
+\@DefaultVar{department}
+
+\newcommand*{\@directlabel}{\EnglishNorsk{Direct line}{Direkte innvalg}}
+\newcommand*{\@direct}{}
+\newcommand*{\direct}[1]{\renewcommand{\@direct}{#1}}
+
+\newcommand*{\@distributionlabel}{\EnglishNorsk{Distribution}{Går til}}
+
+\newcommand*{\@duelabel}{\EnglishNorsk{Due Date}{Frist}}
+
+\newcommand*{\@elapsedlabel}
+            {\EnglishNorsk{Number of Hours Elapsed}{Medgått tid, timer}}
+
+\newcommand*{\@email}{}
+\newcommand*{\email}[1]{\renewcommand{\@email}{#1}}
+
+\newcommand*{\@enclosurelabel}{\EnglishNorsk{Enclosure}{Bilag}}
+
+\newcommand*{\@expenditurelabel}{\EnglishNorsk{Expenditure}{Medgåtte kostnader}}
+\newcommand*{\@expshortlabel}{\EnglishNorsk{Expenditure}{Kostnader}}
+
+\newcommand*{\@faxlabel}{\EnglishNorsk{Telefax}{Telefaks}}
+\newcommand*{\@fax}{}
+\newcommand*{\fax}[1]{\renewcommand{\@fax}{#1}}
+
+\newcommand*{\@faxnumberlabel}{\EnglishNorsk{Fax Number}{Telefaksnummer}}
+\@DefaultVar{faxnumber}
+
+\newcommand*{\@firstexplabel}
+            {\EnglishNorsk{Planned Expenditure\newline
+                           for 1\textsuperscript{st} Year}
+                          {Økonomisk ramme\newline startåret}}
+\newcommand*{\@firstexp}{\texttt{\textbackslash firstexp\{\}}}
+\newcommand*{\firstexp}{\renewcommand*{\@firstexp}}
+
+\newcommand*{\@fromlabel}{\EnglishNorsk{From}{Fra}}
+
+\newcommand*{\@heading}{Set with \texttt{\textbackslash heading\{\}}}
+\newcommand*{\heading}[1]{\renewcommand{\@heading}{#1}}
+
+\newcommand*{\@historylabel}{\EnglishNorsk{Document History}{Historikk}}
+
+\newcommand*{\@informationlabel}
+            {\EnglishNorsk{For your information}{Orientering}}
+
+\newcommand*{\@initiatorlabel}{\EnglishNorsk{Initiated by}{Innkalt av}}
+\@DefaultVar{initiator}
+
+\@DefaultVar{institute}
+
+\newcommand*{\@ISBN}{Set with \texttt{\textbackslash isbn\{\}}}
+\newcommand*{\isbn}{\renewcommand*{\@ISBN}}
+
+\newcommand*{\@keywordlabel}{\EnglishNorsk{Keywords}{Emneord}}
+% No star for \@keywords, it can expand to multiple lines
+\@DefaultVar{keywords}
+
+\newcommand*{\@lastexp}{\texttt{\textbackslash lastexp\{\}}}
+\newcommand*{\lastexp}{\renewcommand*{\@lastexp}}
+
+\newcommand*{\@lasthrs}{\texttt{\textbackslash lasthrs\{\}}}
+\newcommand*{\lasthrs}{\renewcommand*{\@lasthrs}}
+
+\newcommand*{\@lastperiodlabel}{\EnglishNorsk{Last period}{Siste periode}}
+
+\newcommand*{\@locationlabel}{\EnglishNorsk{Location}{Besøksadresse}}
+\@DefaultVar{location}
+
+\newcommand*{\@managerlabel}{\EnglishNorsk{Project Manager}{Prosjektleder}}
+\@DefaultVar{manager}
+
+\newcommand*{\@motto}{\EnglishNorsk{Technology for a better society}
+                                   {Teknologi for et bedre samfunn}}
+
+\newcommand*{\name}{\def\fromname}
+\name{Set with \texttt{\textbackslash name\{\}}}
+
+\newcommand*{\@objectivelabel}{\EnglishNorsk{Objective}{Mål}}
+
+\newcommand*{\@offernumberlabel}{\EnglishNorsk{Offer Number}{Tilbudsnummer}}
+\newcommand*{\@offernumber}{Set with \texttt{\textbackslash offer\{\}}}
+\newcommand*{\offer}{\renewcommand*{\@offernumber}}
+\newcommand*{\proposal}{\renewcommand*{\@offernumber}}
+
+\newcommand*{\@onbudget}{\texttt{\textbackslash onbudget\{\}}}
+\newcommand*{\onbudget}{\renewcommand*{\@onbudget}}
+
+\newcommand*{\@onschedule}{\texttt{\textbackslash onschedule\{\}}}
+\newcommand*{\onschedule}{\renewcommand*{\@onschedule}}
+
+\@DefaultVar{orderreference}
+
+\@DefaultVar{orderdated}
+
+\@DefaultVar{orderby}
+
+\newcommand*{\@ourreflabel}{\EnglishNorsk{Our reference}{Vår referanse}}
+\@DefaultVar{ourref}
+
+\newcommand*{\@pageslabel}
+            {\EnglishNorsk{Number of Pages and Attachments}
+                          {Antall sider og vedlegg}}
+
+\newcommand*{\@participantlabel}{\EnglishNorsk{Participant}{Deltaker}}
+\newcommand*{\@participantslabel}{\EnglishNorsk{Participants}{Deltakere}}
+
+\newcommand*{\@phonelabel}{\EnglishNorsk{Telephone}{Sentralbord}}
+\newcommand*{\@phone}{}
+\newcommand*{\phone}[1]{\renewcommand{\@phone}{#1}}
+
+\newcommand*{\@planexplabel}
+            {\EnglishNorsk{Planned expenditure}{Total kostnadsplan}}
+\newcommand*{\@planexp}{\texttt{\textbackslash planexp\{\}}}
+\newcommand*{\planexp}{\renewcommand*{\@planexp}}
+
+\newcommand*{\@planlabel}{\EnglishNorsk{Planned}{Kostnadsplan}}
+
+\newcommand*{\@preparedlabel}{\EnglishNorsk{Prepared by}{Utarbeidet av}}
+\newcommand*{\@prepared}{Set with \texttt{\textbackslash prepared\{\}}}
+\newcommand*{\prepared}{\renewcommand*{\@prepared}}
+
+\newcommand*{\@presentlabel}{\EnglishNorsk{Present}{Til stede}}
+
+\newcommand*{\@projectlabel}{\EnglishNorsk{Project Number}{Prosjektnummer}}
+\@DefaultVar{project}
+
+\newcommand*{\@projectmemolabel}
+            {\EnglishNorsk{Project Memo Number}{Prosjektnotatnummer}}
+\@DefaultVar{projectmemo}
+
+\@DefaultVar{projectname}
+
+\newcommand*{\@recipientlabel}{\EnglishNorsk{To}{Til}}
+\@DefaultVar{recipient}
+
+\newcommand*{\@referencelabel}{\EnglishNorsk{Reference}{Referanse}}
+
+\newcommand*{\@reportlabel}{\EnglishNorsk{Report}{Rapport}}
+
+\newcommand*{\@reportnumberlabel}{\EnglishNorsk{Report Number}{Rapportnummer}}
+\@DefaultVar{reportnumber}
+
+\newcommand*{\@responsiblelabel}{\EnglishNorsk{Responsible}{Ansvarlig}}
+
+\newcommand*{\@schedulelabel}{\EnglishNorsk{Schedule}{Tidsramme}}
+
+\newcommand*{\signature}{\def\fromsig}
+\signature{}
+\newcommand*{\@signaturelabel}{\EnglishNorsk{Signature}{Signatur}}
+
+\newcommand*{\@startlabel}{\EnglishNorsk{Starting year}{Startår}}
+\newcommand*{\@start}{\texttt{\textbackslash start\{\}}}
+\newcommand*{\start}{\renewcommand*{\@start}}
+
+\newcommand*{\@statuslabel}{Status}
+\newcommand*{\@statusdatelabel}
+            {\EnglishNorsk{Status as of Date}{Status per dato}}
+
+\@DefaultVar{statusdate}
+
+\@DefaultVar{subtitle}
+
+\newcommand*{\@summaryclassificationlabel}
+            {\EnglishNorsk{Classification this Page}{Gradering denne siden}}
+
+\newcommand*{\@tasklistlabel}{\EnglishNorsk{Tasks}{Oppgaveliste}}
+\newcommand*{\@tasknumberlabel}{\#}
+\newcommand*{\@tasklabel}{\EnglishNorsk{Task}{Oppgave}}
+
+\newcommand*{\@testdatelabel}{\EnglishNorsk{Test Date}{Prøvedato}}
+\newcommand*{\@testdate}{\texttt{\textbackslash testdate\{\}}}
+\newcommand*{\testdate}{\renewcommand*{\@testdate}}
+
+\newcommand*{\@testlocationlabel}{\EnglishNorsk{Test Location}{Prøvested}}
+\newcommand*{\@testlocation}{\texttt{\textbackslash testlocation\{\}}}
+\newcommand*{\testlocation}{\renewcommand*{\@testlocation}}
+
+\newcommand*{\@testobjectlabel}{\EnglishNorsk{Test Object}{Prøveobjekt}}
+\@DefaultVar{testobject}
+
+\newcommand*{\@testprogramlabel}{\EnglishNorsk{Test Program}{Prøveprogam}}
+\@DefaultVar{testprogram}
+
+\newcommand*{\@timelabel}{\EnglishNorsk{Time (period/year)}{Tid (periode/år)}}
+
+\@DefaultVar{titlefigure}
+
+\newcommand*{\@totalexplabel}{\EnglishNorsk{Total Planned\newline Expenditure}
+                                           {Økonomisk ramme\newline totalt}}
+\newcommand*{\@totalexp}{\texttt{\textbackslash totalexp\{\}}}
+\newcommand*{\totalexp}{\renewcommand*{\@totalexp}}
+
+\newcommand*{\@totalhrs}{\texttt{\textbackslash totalhrs\{\}}}
+\newcommand*{\totalhrs}{\renewcommand*{\@totalhrs}}
+
+\newcommand*{\@totallabel}{\EnglishNorsk{Total}{Totalt}}
+
+\newcommand*{\@unitlabel}{\EnglishNorsk{SINTEF Unit}{SINTEF-enhet}}
+
+\newcommand*{\@validitylabel}{\EnglishNorsk{Valid until}{Gyldig til}}
+\@DefaultVar{validity}
+
+\newcommand*{\@VATlabel}{\EnglishNorsk{Enterprise Number}{Foretaksregister}}
+\@DefaultVar{vat}
+
+\newcommand*{\@versionlabel}{\EnglishNorsk{Version}{Versjon}}
+\newcommand*{\@versiondescriptionlabel}
+            {\EnglishNorsk{Version Description}{Versjonsbeskrivelse}}
+\@DefaultVar{version}
+
+\newcommand*{\@wageslabel}{\EnglishNorsk{Of which wages}{Herav timekost}}
+\newcommand*{\@wages}{\texttt{\textbackslash wages\{\}}}
+\newcommand*{\wages}{\renewcommand*{\@wages}}
+
+\@DefaultVar{wheremeeting}
+
+\@DefaultVar{whenmeeting}
+
+\newcommand*{\@yourreflabel}{\EnglishNorsk{Your reference}{Deres referanse}}
+\@DefaultVar{yourref}

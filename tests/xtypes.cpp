@@ -122,7 +122,7 @@ TEST(XTypes, DdsEnum) {
     float f_val;
     boolean enabled;
     char ch;
-    EnumState status; // Fails with fastdds
+    EnumState status;
   };
   )~~~";
 
@@ -144,7 +144,7 @@ TEST(XTypes, DdsEnum) {
 
   etypes::DynamicPubSubType dyntype_sup(dyntype);
 
-  dyntype_sup.setName("Menum");
+  dyntype_sup.setName("Message");
   // WORKAROUND START
   dyntype_sup.auto_fill_type_information(false); // True will not work with Cyclone DDS
   dyntype_sup.auto_fill_type_object(false);      // True causes seg fault with enums
@@ -161,4 +161,25 @@ TEST(XTypes, DdsEnum) {
   ASSERT_NE(participant, nullptr);
 
   participant->register_type(dyntype_sup);
+}
+
+
+TEST(XTypes, FloatingTypes) {
+
+  std::string my_idl = R"~~~(
+  enum MyEnum { RELAX, EASY };
+  struct Message
+  {
+    double d_val;
+    float f_val;
+    long double f32;
+  };
+  )~~~";
+
+  eprosima::xtypes::idl::Context context;
+  context.log_level(eprosima::xtypes::idl::log::LogLevel::xDEBUG);
+  context.print_log(true);
+  context = eprosima::xtypes::idl::parse(my_idl, context);
+  EXPECT_TRUE(context.success) << "IDL parsing successful";
+
 }
