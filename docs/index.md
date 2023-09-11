@@ -17,10 +17,11 @@ DDS can be used as a communication middleware for components in a software syste
 
 A typical workflow can be summarised with these main steps:
 
+-   Change directory: `cd /to/path/with/dds-fmu.fmu`
 -   Decompress the FMU: `unzip dds-fmu.fmu`
 -   Edit configuration files in `resources/config/`, see details in @ref sec_configuration.
 -   [ ] Make bundled tool executable (Linux): `chmod +x resources/tools/linux64/repacker`
--   Create a new FMU: `resources/tools/linux64/repacker create -v -o new/dds-fmu.fmu .`
+-   Create a new FMU: `resources/tools/linux64/repacker create -v -o dds-fmu.fmu /to/path/with/`
 
 
 ## Configuration {#sec_configuration}
@@ -80,13 +81,34 @@ The file `ddsfmu_mapping.xml` contains elements that specify which DDS topics to
 </ddsfmu>
 ```
 
+The `repacker` tool generates the `modelDescription.xml` based on this mapping. Suppose the unzipped contents with modified configuration files is located in `/my/custom/fmu`. By running the commands below, the user can inspect the generated `/my/custom/fmu/modelDescription.xml`.
+
+```bash
+cd /my/custom/fmu
+resources/tools/linux64/repacker generate .
+```
+
 
 ### Fast-DDS XML profiles {#sec_profiles}
 
-A user can configure the Fast-DDS to a great extent by means of XML profiles. Central concepts such as domain id, QoS (like durability and reliability), and much more are configured using configuration profiles for various DDS entities. These profiles are loaded by purposefully specifying the `profile_name` attribute for an element type, see the figure below. The profiles for *participant*, *publisher*, and *subscriber* are attempted loaded by `profile_name="dds-fmu-default"`, with fallback to builtin default QoS. Profiles for `data_writer` and `data_reader` elements are attempted loaded by `profile_name="[topic]"`, where *topic* is as defined in <fig:ddsfmu>, with fallback to default QoS. This means that the user can specify custom profiles for specific `data_reader` and `data_writer` topics. XML profile documentation for each DDS entity type can be found on Fast-DDS online documentation @cite eprosima-fast-dds-xml-profiles-2023. The FMU comes with an example `dds_profile.xml`, which can be edited as needed.
+A user can configure the Fast-DDS to a great extent by means of XML profiles. Central concepts such as domain id, QoS (like durability and reliability), and much more are configured using configuration profiles for various DDS entities. These profiles are loaded by purposefully specifying the `profile_name` attribute for an element type, see the figure below. The profiles for *participant*, *publisher*, and *subscriber* are attempted loaded by `profile_name="dds-fmu-default"`, with fallback to builtin default QoS. Profiles for `topic`, `data_writer`, and `data_reader` elements are attempted loaded by `profile_name="[topic]"`, where *topic* is as defined in <fig:ddsfmu>, with fallback to default QoS. This means that the user can specify custom profiles for specific `topic`, `data_reader`, and `data_writer` entities. XML profile documentation for each DDS entity type can be found on Fast-DDS online documentation @cite eprosima-fast-dds-xml-profiles-2023. The FMU comes with an example `dds_profile.xml`, which can be edited as needed.
 
 ![img](images/xml-profiles.svg "`dds_profile` XML layout, where `n_w` is number of data readers and `n_r` is number of data readers.")
 
+Continuing the example from previous sections, it could be necessary to add custom QoS for the `data_writer`. Then, the `dds_profile.xml` would contain an element as indicated below.
+
+```xml
+<dds>
+  ...
+  <data_writer profile_name="ToPublish">
+    <qos>
+      <reliability>
+        <kind>RELIABLE</kind>
+      </reliability>
+    </qos>
+  </data_writer>
+</dds>
+```
 
 # Implementation overview
 
@@ -114,7 +136,7 @@ DDS supports data exchange of user-defined data structures. These are often defi
 
 An IDL data structure can be complex, with non-primitive types and nested data structures. These members needs to be demultiplexed in a way that allows the scalar variable access interface of FMI 2.0 to read or write member variables. This must be done in a manner that correctly casts to their primitive type. While parsing a requested DynamicData variable, `dds-fmu` instantiates visitor functions for read and write, with appropriate reference to the DynamicData's primitive type, as well as casting for input and output types. These visitor functions are stored in vectors in such a way that with so-called value references, they can be directly accessed by FMU setters and getters.
 
-`dds-fmu` comes bundled with an executable command line tool for generating `modelDescription.xml`. In short: given `IDL` files, Fast-DDS configuration files, and a DDS-to-FMU mapping specification, the tool automatically generates `modelDescription.xml`. The output model description creates `<ModelVariables>` elements with `<ScalarVariable>` entries, and `<ModelStructure>` element with `<Outputs>`. All the `<ScalarVariables>` entries have attribute `variability=discrete` and consist solely of inputs and outputs: `causality=input|output`. The generated `<ScalarVariable>` entries have `name` attribute based on the FMI standard's `structured` variable naming convention. The variable name is constructed as `name=[topic name].[structured name]`, where `topic name` is as prescribed in the DDS-to-FMU mapping specification file.
+`dds-fmu` comes bundled with an executable command line tool for generating `modelDescription.xml`. In short: given `IDL` files, Fast-DDS configuration files, and a DDS-to-FMU mapping specification, the tool automatically generates `modelDescription.xml`. The output model description creates `<ModelVariables>` elements with `<ScalarVariable>` entries, and `<ModelStructure>` element with `<Outputs>`. All the `<ScalarVariables>` entries have attribute `variability=discrete` and consist solely of inputs and outputs: `causality=input|output`. The generated `<ScalarVariable>` entries have `name` attribute based on the FMI standard's `structured` variable naming convention. The variable name is constructed as `name=[topic name].[structured name]`, where `topic name` is as prescribed in the DDS-to-FMU mapping specification file, and `pubsub` is `pub` for input and `sub` for output.
 
 
 ## Configuration of DDS entities and QoS settings

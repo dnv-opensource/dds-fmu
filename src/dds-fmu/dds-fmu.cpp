@@ -19,7 +19,7 @@ cppfmu::UniquePtr<cppfmu::SlaveInstance> CppfmuInstantiateSlave(
     std::filesystem::path(std::regex_replace(fmuResourceLocation, std::regex("file://"), ""));
   auto fmu_base_path = resource_dir.parent_path();
   auto evalGUID =
-    ddsfmu::config::generate_uuid(ddsfmu::config::get_uuid_files(fmu_base_path, false));
+    ddsfmu::config::generate_uuid(ddsfmu::config::get_uuid_files(fmu_base_path, true));
 
   if (evalGUID != std::string(fmuGUID)) {
     throw std::runtime_error(

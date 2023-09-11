@@ -22,10 +22,14 @@ void SignalDistributor::add(
   const eprosima::xtypes::DynamicType& message_type(m_context.module().structure(topic_type));
   eprosima::xtypes::DynamicData message_data(message_type);
 
-  std::string in_or_output;
-  if (is_in_not_out) in_or_output = "input";
-  else
+  std::string in_or_output, cardinality_prefix;
+  if (is_in_not_out) {
+    in_or_output = "input";
+    cardinality_prefix = "pub.";
+  } else {
     in_or_output = "output";
+    cardinality_prefix = "sub.";
+  }
 
   message_data.for_each([&](eprosima::xtypes::DynamicData::ReadableNode& node) {
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
@@ -36,7 +40,7 @@ void SignalDistributor::add(
 
       std::string structured_name;
       config::name_generator(structured_name, node);
-      structured_name = topic_name + "." + structured_name;
+      structured_name = cardinality_prefix + topic_name + "." + structured_name;
 
       auto fmi_type = SignalDistributor::resolve_type(node);
 

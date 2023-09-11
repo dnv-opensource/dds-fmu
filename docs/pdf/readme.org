@@ -102,10 +102,12 @@
 * Usage label:sec:quickstart
 
   A typical workflow can be summarised with these main steps:
+  - Change directory: =cd /to/path/with/dds-fmu.fmu=
   - Decompress the FMU: =unzip dds-fmu.fmu=
   - Edit configuration files in =resources/config/=, see details in cref:sec:configuration.
   - [ ] Make bundled tool executable (Linux): =chmod +x resources/tools/linux64/repacker=
-  - Create a new FMU: =resources/tools/linux64/repacker create -v -o new/dds-fmu.fmu .=
+  - Create a new FMU: =resources/tools/linux64/repacker create -v /to/path/with/=
+
 
 ** Configuration label:sec:configuration
 
@@ -215,13 +217,24 @@
     [[file:images/ddsfmu-mapping.svg]]
 
     #+name: code:ddsfmu-example
-    #+caption: An example =ddsfmu_mapping.xml= file.
+    #+caption: An example =ddsfmu_mapping.xml= file using =idl::Klass=, which is defined in the previous section.
     #+begin_src xml :exports code
       <ddsfmu>
         <fmu_in topic="ToPublish" type="idl::Klass" />
         <fmu_out topic="ToSubscribe" type="idl::Klass" />
       </ddsfmu>
     #+end_src
+
+    The =repacker= tool generates the =modelDescription.xml= based on this
+    mapping. Suppose the unzipped contents with modified configuration files is located in
+    =/my/custom/fmu=. By running the commands below, the user can inspect the generated
+    =/my/custom/fmu/modelDescription.xml=.
+
+    #+begin_src bash :exports code
+      cd /my/custom/fmu
+      resources/tools/linux64/repacker generate .
+    #+end_src
+
 
 *** Fast-DDS XML profiles label:sec:profiles
 
@@ -231,11 +244,11 @@
     loaded by purposefully specifying the =profile_name= attribute for an element type,
     see cref:fig:ddsxml. The profiles for /participant/, /publisher/, and /subscriber/ are
     attempted loaded by ~profile_name="dds-fmu-default"~, with fallback to builtin default
-    QoS. Profiles for =data_writer= and =data_reader= elements are attempted loaded by
-    ~profile_name="[topic]"~, where /topic/ is as defined in cref:fig:ddsfmu, with
-    fallback to default QoS. This means that the user can specify custom profiles for
-    specific =data_reader= and =data_writer= topics. XML profile documentation for each
-    DDS entity type can be found on Fast-DDS online documentation
+    QoS. Profiles for =topic=, =data_writer=, and =data_reader= elements are attempted
+    loaded by ~profile_name="[topic]"~, where /topic/ is as defined in cref:fig:ddsfmu,
+    with fallback to default QoS. This means that the user can specify custom profiles for
+    specific =topic=, =data_reader=, and =data_writer= entities. XML profile documentation
+    for each DDS entity type can be found on Fast-DDS online documentation
     cite:eprosima-fast-dds-xml-profiles-2023. The FMU comes with an example
     =dds_profile.xml=, which can be edited as needed.
 
@@ -250,6 +263,8 @@
                profile_name: dds-fmu-default
              <subscriber> [0..1]:
                profile_name: dds-fmu-default
+             <topic> [0..n_w+n_r]:
+               profile_name: "DDS topic name"
              <data_writer> [0..n_w]:
                profile_name: "DDS topic name"
              <data_reader> [0..n_r]:
@@ -263,6 +278,26 @@
     #+attr_latex: :scale 0.70
     #+RESULTS: fig:ddsxml
     [[file:images/xml-profiles.svg]]
+
+    Continuing the example from previous sections, it could be necessary to add custom QoS
+    for the =data_writer=. Then, the =dds_profile.xml= would contain an element as
+    in cref:code:ddsxml-example.
+
+    #+name: code:ddsxml-example
+    #+caption: An example =dds_profile.xml= excerpt for a custom QoS on =data_writer=.
+    #+begin_src xml :exports code
+        <dds>
+          ...
+          <data_writer profile_name="ToPublish">
+            <qos>
+              <reliability>
+                <kind>RELIABLE</kind>
+              </reliability>
+            </qos>
+          </data_writer>
+        </dds>
+    #+end_src
+
 
 * Implementation overview
 
@@ -326,8 +361,9 @@
    and consist solely of inputs and outputs: ~causality=input|output~. The generated
    =<ScalarVariable>= entries have =name= attribute based on the FMI standard's
    =structured= variable naming convention. The variable name is constructed as
-   ~name=[topic name].[structured name]~, where =topic name= is as prescribed in the
-   DDS-to-FMU mapping specification file.
+   ~name=[pubsub].[topic name].[structured name]~, where =topic name= is as prescribed in
+   the DDS-to-FMU mapping specification file, and =pubsub= is =pub= for input and =sub=
+   for output.
 
 ** Configuration of DDS entities and QoS settings
 
@@ -409,6 +445,13 @@
 @@latex:\printbibliography[heading=bibintoc,title={\refname}]@@
 
 * Local Variables :noexport:
+
+  - Precedure for exporting contents to be used in html. =M-x org-export-dispatch g g=,
+    google-flavoured-markdown to file. Output contents are located in =readme.md=, edit
+    changed portions to =index.md=, which is located in =docs/index.md=. It is somewhat
+    cumbersome, regretfully. The citation is not exported correctly, so you will need to
+    edit that. Referencing figures does not work as intended either.
+
 Local Variables:
 org-latex-classes: (("sintefmemo" "\\documentclass{sintefmemo}"
   ("\\section{%s}" . "\\section*{%s}")

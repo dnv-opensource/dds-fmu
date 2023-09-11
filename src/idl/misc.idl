@@ -13,6 +13,13 @@ module idl {
   };
 
   /**
+     @brief Struct to contain a simple signal
+  */
+  struct Signal {
+    double value; ///< A double precision value
+  };
+
+  /**
      @brief Simple struct with both @optional and @key attributes
   */
   struct Info {

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ddsfmu>
-  <!--fmu_in topic="msg" type="Message" /-->
-  <fmu_in topic="DDS_FMI_In" type="idl::Trigonometry" />
-  <fmu_out topic="DDS_FMI_Out" type="idl::Trigonometry" />
+  <fmu_in topic="Roundtrip" type="idl::Signal" />
+  <fmu_out topic="Roundtrip" type="idl::Signal" />
 </ddsfmu>

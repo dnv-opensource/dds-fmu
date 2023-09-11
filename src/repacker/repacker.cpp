@@ -212,8 +212,8 @@ int generate_xml(const ddsfmu::detail::CommandsInfo& info) {
 
   // retrieve guid
   auto guid = ddsfmu::config::generate_uuid(
-    ddsfmu::config::get_uuid_files(info.fmu_path, true),
-    std::vector<std::string>{ddsfmu::config::print_xml(doc)});
+    ddsfmu::config::get_uuid_files(info.fmu_path, false));
+    //,std::vector<std::string>{ddsfmu::config::print_xml(doc)}); // Uncomment and set get_uuid_files true in dds-fmu.cpp
 
   // update guid in model description
   auto guid_attr = root_node->first_attribute("guid");

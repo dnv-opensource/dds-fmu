@@ -61,8 +61,9 @@ public:
      @brief  Adds signal mappings in form of SignalInfo entries
 
      This function resolves the FMU types for each member of a specified topic type.  The
-     structured name used in the ScalarVariable is `[topic].[structured_name]`, where
-     structured_name is defined according to FMU structured name convention.
+     structured name used in the ScalarVariable is `[pubsub].[topic].[structured_name]`, where
+     structured_name is defined according to FMU structured name convention, and`pubsub`
+     is `pub` or `sub`, depending on whether it is a published or subscribed signal.
 
      @param [in] topic_name Topic name
      @param [in] topic_type Type name

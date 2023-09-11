@@ -67,7 +67,7 @@ SpacesInSquareBrackets: 'false'
 UseTab: Never
 # related header, c system headers, c++ std headers, other libraries, project headers
 IncludeCategories:
-  - Regex:           '<(uuid.h|xtypes/|rapidxml/|fastrtps/|fastdds/|cppfmu_cs.hpp|args.hxx|zip/|gtest/)'
+  - Regex:           '<(uuid.h|xtypes/|rapidxml/|fastrtps/|fastdds/|cppfmu_cs.hpp|cppfmu_common.hpp|args.hxx|zip/|gtest/)'
     Priority:        3
   - Regex:           '<[[:alnum:]_.]+\.h>' # c system headers
     Priority:        1

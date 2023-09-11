@@ -40,13 +40,23 @@
     </qos>
   </subscriber>
 
-  <data_writer profile_name="DDSDynHelloWorld">
+  <topic profile_name="Roundtrip" />
+
+  <data_writer profile_name="Roundtrip">
     <qos>
       <reliability>
-        <kind>BEST_EFFORT</kind>
+        <kind>RELIABLE</kind>
       </reliability>
     </qos>
   </data_writer>
+
+  <data_reader profile_name="Roundtrip">
+    <qos>
+      <reliability>
+        <kind>RELIABLE</kind>
+      </reliability>
+    </qos>
+  </data_reader>
 
 </profiles>
 
