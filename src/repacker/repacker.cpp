@@ -35,15 +35,15 @@ struct CommandsInfo {
 
   int prepare_for_zip(const fs::path& alternative_output) {
     if (!fs::is_directory(fmu_path)) {
-      std::cerr << "Directory does not exist: " << fmu_path << std::endl;
+      std::cerr << "ERROR: Directory does not exist: " << fmu_path << std::endl;
       return 1;
     }
     if (!fs::is_directory(resources_path)) {
-      std::cerr << "Directory does not exist: " << resources_path << std::endl;
+      std::cerr << "ERROR: Directory does not exist: " << resources_path << std::endl;
       return 1;
     }
     if (!fs::is_directory(binaries_path)) {
-      std::cerr << "Directory does not exist: " << binaries_path << std::endl;
+      std::cerr << "ERROR: Directory does not exist: " << binaries_path << std::endl;
       return 1;
     }
 
@@ -55,7 +55,7 @@ struct CommandsInfo {
 
     if (zip_output.has_extension() && zip_output.extension() != ".fmu") {
       zip_output.replace_extension("fmu");
-      std::cout << "Warning: Forcing .fmu extension for " << zip_output << std::endl;
+      std::cout << "WARNING: Forcing .fmu extension for " << zip_output << std::endl;
     }
 
     return 0;
@@ -63,26 +63,26 @@ struct CommandsInfo {
 
   int prepare_for_generate() {
     if (!fs::is_directory(fmu_path)) {
-      std::cerr << "Directory does not exist: " << fmu_path << std::endl;
+      std::cerr << "ERROR: Directory does not exist: " << fmu_path << std::endl;
       return 1;
     }
     if (!fs::is_directory(resources_path)) {
-      std::cerr << "Directory does not exist: " << resources_path << std::endl;
+      std::cerr << "ERROR: Directory does not exist: " << resources_path << std::endl;
       return 1;
     }
 
 
     if (!fs::exists(model_description_tmpl)) {
-      std::cerr << "ModelDescription template file does not exist: " << model_description_tmpl
-                << std::endl;
+      std::cerr << "ERROR: ModelDescription template file does not exist: "
+                << model_description_tmpl << std::endl;
       return 1;
     }
     if (!fs::exists(ddsfmu_mapping)) {
-      std::cerr << "DDS FMU mapping file does not exist: " << ddsfmu_mapping << std::endl;
+      std::cerr << "ERROR: DDS FMU mapping file does not exist: " << ddsfmu_mapping << std::endl;
       return 1;
     }
     if (!fs::exists(ddsfmu_idl)) {
-      std::cerr << "Main IDL file does not exist: " << ddsfmu_idl << std::endl;
+      std::cerr << "ERROR: Main IDL file does not exist: " << ddsfmu_idl << std::endl;
       return 1;
     }
 
@@ -96,12 +96,12 @@ struct CommandsInfo {
 int zip_fmu(const fs::path& fmu_root, const fs::path& out_file, bool verbose, bool force) {
   if (fs::exists(out_file)) {
     if (!force) {
-      std::cerr << "File already exists: " << out_file << std::endl
+      std::cerr << "ERROR: File already exists: " << out_file << std::endl
                 << "Force overwriting file with -f flag" << std::endl;
       return 1;
     }
 
-    if (verbose) std::cout << "Info: Overwriting existing file" << std::endl;
+    if (verbose) std::cout << "INFO: Overwriting existing file" << std::endl;
   }
 
   if (verbose) {
@@ -112,7 +112,7 @@ int zip_fmu(const fs::path& fmu_root, const fs::path& out_file, bool verbose, bo
   struct zip_t* zip = zip_open(out_file.c_str(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
 
   if (zip == nullptr) {
-    std::cerr << "Unable to open zip file for writing: " << out_file << std::endl;
+    std::cerr << "ERROR: Unable to open zip file for writing: " << out_file << std::endl;
     return 1;
   }
 
@@ -127,15 +127,15 @@ int zip_fmu(const fs::path& fmu_root, const fs::path& out_file, bool verbose, bo
       }
       auto relative_entry = fs::relative(dir_entry, fmu_root).generic_string();
       if (zip_entry_open(zip, relative_entry.c_str()) != 0) {
-        std::cerr << "Unable to open zip entry for writing: " << relative_entry << std::endl;
+        std::cerr << "ERROR: Unable to open zip entry for writing: " << relative_entry << std::endl;
         return 1;
       } else if (zip_entry_fwrite(zip, fs::path(dir_entry).c_str()) != 0) {
         // TODO: figure out why permissions are lost
         // Confirm working on windows: What kind of slashes does it want?
-        std::cerr << "Unable to write zip entry: " << relative_entry << std::endl;
+        std::cerr << "ERROR: Unable to write zip entry: " << relative_entry << std::endl;
         return 1;
       } else if (zip_entry_close(zip) != 0) {
-        std::cerr << "Unable to close zip entry " << relative_entry << std::endl;
+        std::cerr << "ERROR: Unable to close zip entry " << relative_entry << std::endl;
         return 1;
       }
     }
@@ -176,7 +176,7 @@ int generate_xml(const ddsfmu::detail::CommandsInfo& info) {
       auto topic = fmu_node->first_attribute("topic");
       auto type = fmu_node->first_attribute("type");
       if (!topic || !type) {
-        std::cerr << "<ddsfmu><" << node_name
+        std::cerr << "ERROR: <ddsfmu><" << node_name
                   << "> must specify attributes 'topic' and 'type'. Got: 'topic': "
                   << std::boolalpha << (topic != nullptr) << " and 'type': " << std::boolalpha
                   << (type != nullptr) << std::endl;
@@ -186,7 +186,7 @@ int generate_xml(const ddsfmu::detail::CommandsInfo& info) {
       std::string topic_type(type->value());
 
       if (!distributor.has_structure(topic_type)) {
-        std::cerr << "Got non-existing 'type': " << topic_type << std::endl;
+        std::cerr << "ERROR: Got non-existing 'type': " << topic_type << std::endl;
         throw std::runtime_error("Unknown idl type");
       }
 
@@ -211,9 +211,8 @@ int generate_xml(const ddsfmu::detail::CommandsInfo& info) {
   ddsfmu::config::model_structure_outputs_generator(doc, root_node, distributor.outputs());
 
   // retrieve guid
-  auto guid = ddsfmu::config::generate_uuid(
-    ddsfmu::config::get_uuid_files(info.fmu_path, false));
-    //,std::vector<std::string>{ddsfmu::config::print_xml(doc)}); // Uncomment and set get_uuid_files true in dds-fmu.cpp
+  auto guid = ddsfmu::config::generate_uuid(ddsfmu::config::get_uuid_files(info.fmu_path, false));
+  //,std::vector<std::string>{ddsfmu::config::print_xml(doc)}); // Uncomment and set get_uuid_files true in dds-fmu.cpp
 
   // update guid in model description
   auto guid_attr = root_node->first_attribute("guid");
@@ -253,7 +252,7 @@ int main(int argc, const char* argv[]) {
       try {
         return zip_fmu(info.fmu_path, info.zip_output, verbose, force);
       } catch (const std::runtime_error& e) {
-        std::cerr << "Unable to zip FMU: " << e.what() << std::endl;
+        std::cerr << "ERROR: Unable to zip FMU: " << e.what() << std::endl;
       }
       return 1;
     });
@@ -272,7 +271,8 @@ int main(int argc, const char* argv[]) {
       try {
         return generate_xml(info);
       } catch (const std::runtime_error& e) {
-        std::cerr << "Unable to generate model description for FMU: " << e.what() << std::endl;
+        std::cerr << "ERROR: Unable to generate model description for FMU: " << e.what()
+                  << std::endl;
       }
       return 1;
     });
@@ -300,7 +300,7 @@ int main(int argc, const char* argv[]) {
         if (res_1 != 0) { return 1; }
         return zip_fmu(info.fmu_path, info.zip_output, verbose, force);
       } catch (const std::runtime_error& e) {
-        std::cerr << "Unable to create FMU: " << e.what() << std::endl;
+        std::cerr << "ERROR: Unable to create FMU: " << e.what() << std::endl;
       }
       return 1;
     });

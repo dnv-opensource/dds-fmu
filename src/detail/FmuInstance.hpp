@@ -3,11 +3,13 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <string>
 
 #include <cppfmu_cs.hpp>
 
 #include "DataMapper.hpp"
 #include "DynamicPubSub.hpp"
+#include "LoggerAdapters.hpp"
 
 namespace ddsfmu {
 
@@ -22,7 +24,8 @@ namespace ddsfmu {
 */
 class FmuInstance : public cppfmu::SlaveInstance {
 public:
-  FmuInstance(const std::filesystem::path& resource_path) : m_resource_path(resource_path) {
+  FmuInstance(const std::string& name, const std::filesystem::path& resource_path, cppfmu::Logger& logger)
+      : m_name(name), m_resource_path(resource_path), m_logger(logger) {
     FmuInstance::Reset();
   }
 
@@ -98,14 +101,17 @@ public:
   void Reset() override {
     m_time = 0.0;
     m_mapper.reset(m_resource_path);
-    m_pubsub.reset(m_resource_path, &m_mapper);
+    m_pubsub.reset(m_resource_path, &m_mapper, m_name);//, &m_logger);
+
   }
 
 private:
   cppfmu::FMIReal m_time;
+  std::string m_name;
   std::filesystem::path m_resource_path;
   ddsfmu::DataMapper m_mapper;
   ddsfmu::DynamicPubSub m_pubsub;
+  cppfmu::Logger& m_logger;
 };
 
 }

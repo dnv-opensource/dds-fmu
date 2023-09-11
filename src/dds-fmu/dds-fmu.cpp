@@ -11,10 +11,10 @@
 #include "auxiliaries.hpp"
 
 cppfmu::UniquePtr<cppfmu::SlaveInstance> CppfmuInstantiateSlave(
-  cppfmu::FMIString /*instanceName*/, cppfmu::FMIString fmuGUID,
+  cppfmu::FMIString instanceName, cppfmu::FMIString fmuGUID,
   cppfmu::FMIString fmuResourceLocation, cppfmu::FMIString /*mimeType*/,
   cppfmu::FMIReal /*timeout*/, cppfmu::FMIBoolean /*visible*/, cppfmu::FMIBoolean /*interactive*/,
-  cppfmu::Memory memory, cppfmu::Logger /*logger*/) {
+  cppfmu::Memory memory, cppfmu::Logger logger) {
   auto resource_dir =
     std::filesystem::path(std::regex_replace(fmuResourceLocation, std::regex("file://"), ""));
   auto fmu_base_path = resource_dir.parent_path();
@@ -27,5 +27,5 @@ cppfmu::UniquePtr<cppfmu::SlaveInstance> CppfmuInstantiateSlave(
       + std::string(", but evaluated: ") + evalGUID);
   }
 
-  return cppfmu::AllocateUnique<ddsfmu::FmuInstance>(memory, resource_dir);
+  return cppfmu::AllocateUnique<ddsfmu::FmuInstance>(memory, std::string(instanceName), resource_dir, logger);
 }

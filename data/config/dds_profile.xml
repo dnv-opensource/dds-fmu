@@ -57,7 +57,10 @@
       </reliability>
     </qos>
   </data_reader>
-
 </profiles>
+
+<log>
+  <!-- dds-fmu implements a custom LogConsumer to output fast-dds logs to FMI -->
+</log>
 
 </dds>

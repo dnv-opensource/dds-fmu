@@ -2,7 +2,9 @@
 
 #include <tuple>
 
+#include <cppfmu_common.hpp>
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <fastdds/dds/log/Log.hpp>
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/qos/PublisherQos.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
@@ -14,6 +16,7 @@
 #include <fastrtps/xmlparser/XMLProfileManager.h>
 
 #include "Converter.hpp"
+#include "LoggerAdapters.hpp"
 #include "model-descriptor.hpp"
 
 namespace ddsfmu {
@@ -119,15 +122,23 @@ void DynamicPubSub::clear() {
   m_topic_name_ptr.clear();
   m_write_data.clear();
   m_read_data.clear();
+  eprosima::fastdds::dds::Log::ClearConsumers(); // Both standard stdcout and custom logger
 }
 
 void DynamicPubSub::reset(
-  const std::filesystem::path& fmu_resources, DataMapper* const mapper_ptr) {
+  const std::filesystem::path& fmu_resources, DataMapper* const mapper_ptr,
+  const std::string& name,
+  cppfmu::Logger* const logger) {
   clear();
   m_data_mapper = mapper_ptr;
 
-
   // Load and create new instances
+
+  if (logger) {
+    eprosima::fastdds::dds::Log::SetVerbosity(eprosima::fastdds::dds::Log::Kind::Warning);
+    eprosima::fastdds::dds::Log::RegisterConsumer(
+      std::make_unique<ddsfmu::FmiLogger>(*logger, name));
+  }
 
   if (!m_xml_loaded) {
     // only load once
@@ -162,7 +173,8 @@ void DynamicPubSub::reset(
   rapidxml::xml_document<> doc;
   std::vector<char> buffer;
 
-  ddsfmu::config::load_ddsfmu_mapping(doc, fmu_resources / "config" / "dds" / "ddsfmu_mapping.xml", buffer);
+  ddsfmu::config::load_ddsfmu_mapping(
+    doc, fmu_resources / "config" / "dds" / "ddsfmu_mapping.xml", buffer);
 
   auto root_node = doc.first_node("ddsfmu");
 

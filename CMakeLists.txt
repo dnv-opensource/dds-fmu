@@ -130,6 +130,7 @@ target_link_libraries(detail
     eprosima::xtypes
     fastdds::fastrtps
     configuration
+    cppfmu::cppfmu
   PRIVATE
     rapidxml::rapidxml
     "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"

@@ -13,6 +13,10 @@
 
 #include "DataMapper.hpp"
 
+namespace cppfmu {
+class Logger;
+}
+
 namespace ddsfmu {
 
 /**
@@ -42,7 +46,9 @@ public:
      @param [in] mapper Pointer to DataMapper instance to be used
 
   */
-  void reset(const std::filesystem::path& fmu_resources, DataMapper* const mapper);
+  void reset(
+    const std::filesystem::path& fmu_resources, DataMapper* const mapper,
+    const std::string& name = "dds-fmu", cppfmu::Logger* const logger = nullptr);
 
   /**
      @brief Writes DDS data by using data from DataMapper

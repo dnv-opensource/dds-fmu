@@ -7,6 +7,7 @@
 #include <iterator>
 #include <regex>
 #include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -92,14 +93,19 @@ eprosima::xtypes::idl::Context load_fmu_idls(
     throw std::runtime_error("Could not find IDL file: " + entry_idl.string());
   }
 
-  context.log_level(ex::idl::log::LogLevel::xWARNING); // DEBUG
-  context.print_log(true);
+  context.log_level(ex::idl::log::LogLevel::xDEBUG); // WARNING
+  context.print_log(false);
   context.include_paths.push_back(idl_dir.string());
   context = ex::idl::parse_file((entry_idl).string(), context);
 
   //std::cout << "IDL parsing: " << (context.success ? "Successful" : "Failed!") << std::endl;
 
-  if (!context.success) { throw std::runtime_error("Failed to parse IDL files"); }
+  if (!context.success) {
+    std::ostringstream oss;
+    oss << std::endl;
+    for (auto& entry : context.log()) { oss << entry.to_string() << std::endl; }
+    throw std::runtime_error("Failed to parse IDL files!" + oss.str());
+  }
 
   if (print) {
     for (auto [name, type] : context.get_all_scoped_types()) {
