@@ -38,7 +38,9 @@ TEST(XTypes, BasicUsage) {
 
 )~~~";
   // Parse an idl
-  eprosima::xtypes::idl::Context context = eprosima::xtypes::idl::parse(my_idl);
+  eprosima::xtypes::idl::Context context;
+  context.preprocess = false;
+  context = eprosima::xtypes::idl::parse(my_idl, context);
 
   for (auto [name, type] : context.get_all_scoped_types()) { std::cout << name << std::endl; }
 
@@ -70,6 +72,7 @@ TEST(XTypes, Annotations) {
 
   eprosima::xtypes::idl::Context context;
   context.log_level(eprosima::xtypes::idl::log::LogLevel::xDEBUG);
+  context.preprocess = false;
   context.print_log(true);
 
   context = eprosima::xtypes::idl::parse(my_idl, context);
@@ -128,6 +131,7 @@ TEST(XTypes, DdsEnum) {
 
   eprosima::xtypes::idl::Context context;
   context.log_level(eprosima::xtypes::idl::log::LogLevel::xDEBUG);
+  context.preprocess = false;
   context.print_log(true);
   context = eprosima::xtypes::idl::parse(my_idl, context);
   EXPECT_TRUE(context.success) << "IDL parsing successful";
@@ -178,6 +182,7 @@ TEST(XTypes, FloatingTypes) {
 
   eprosima::xtypes::idl::Context context;
   context.log_level(eprosima::xtypes::idl::log::LogLevel::xDEBUG);
+  context.preprocess = false;
   context.print_log(true);
   context = eprosima::xtypes::idl::parse(my_idl, context);
   EXPECT_TRUE(context.success) << "IDL parsing successful";

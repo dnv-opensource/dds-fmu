@@ -5,7 +5,7 @@
     modelName="no.sintef.dds-fmu"
     description="DDS-FMI inter-communication"
     author="Joakim Haugen and Stian Skjong"
-    copyright="© 2023 SINTEF Ocean"
+    copyright="2023 SINTEF Ocean"
     license="BSD-3-Clause"
     version="@CMAKE_PROJECT_VERSION@"
     variableNamingConvention="structured"

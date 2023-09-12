@@ -43,7 +43,9 @@ TEST(Visitors, Principle) {
 
 )~~~";
   // Parse an idl
-  eprosima::xtypes::idl::Context context = eprosima::xtypes::idl::parse(my_idl);
+  eprosima::xtypes::idl::Context context;
+  context.preprocess = false;
+  context = eprosima::xtypes::idl::parse(my_idl, context);
 
   ASSERT_TRUE(context.success) << "Successful parsing";
 
