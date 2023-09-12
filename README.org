@@ -84,8 +84,7 @@
        + [X] Use converter to register types instead of xml-based
    + [X] Figure out why registering enum fails
    + [X] Take all samples on reading
-   + [ ] Clarify in doc that there will be a sample lag
-   + [ ] Add support for key (perhaps manually?) -> how will data structures change?
+   + [X] Clarify in doc that there will be a sample lag
    + [X] Create mapping from dds topic primitive types to fmu value references
    + [X] Generate modelDescription from mapping
      + [X] version, guid, CoSimulation
@@ -93,7 +92,7 @@
      + [X] ModelStructure auto-populate
    + [X] Create publishers/subscribers from mapping
    + [X] Add GTest for systematic tests of functionality
-   + [ ] Run valgrind on functionality
+   + [X] Run valgrind on functionality
    + [X] File loader with staging directory (std::filesystem)
    + [X] GUID functionality (replicate CMake target) with stduuid
      - hard-code which files to hash
@@ -109,16 +108,19 @@
    + [-] Zip staging directory
      - [X] zip the staged/binary and generated files
      - [ ] Figure out why permissions are lost
-     - the only file not explicitly available before rendering is modelDescription.xml
+       - https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396
    + [X] Make documentation target and bundle it with the fmu
    + [X] Add editorconfig and clang-format to unify formatting
-   + [ ] Figure out to handle fast-dds log (and xtypes) in conjunction with cppfmu
-     + [ ] Print out report on number of inputs and outputs when generating modelDescription
+   + [X] Figure out to handle fast-dds log (and xtypes) in conjunction with cppfmu
    + [X] Tidy code and remove temporary stuff
-   + [ ] Properly document end user documentation
+   + [X] Properly document end user documentation
+   + [ ] Add support for key (perhaps manually?) -> how will data structures change?
    + [ ] Add support for keys https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706
    + [ ] Add support for sequences other variable size containers and missing types.
      + Figure out which types are not supported
+   + [ ] Import all license files of dependencies and generate license.txt
+   + [X] Loading two FMUs, each with static linking of fast-dds, what happens with singletons? Works if not same Domain ID
+   + [X] Will the fmu work if the filename changes? Or is this something that must relate to something? Works
    + [5/5] Repackaging
      1. [X] Command line tool: positional arg: point to folder to be packaged
      2. [X] Parse idls, xml profile and other config files
@@ -127,6 +129,8 @@
         - Allow tweaking e.g. ModelStructure as long as consistency is retained?
      4. [X] Write modelDescription from XML tree and evaluated GUID
      5. [X] Zip files into fmu
+   + [ ] Check if it can be built with Windows.
+   +
 
 ** Description of signal mapping
 

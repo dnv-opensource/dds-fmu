@@ -96,8 +96,17 @@
   the different APIs. One option is to integrate the DDS component directly in an FMU, but
   this requires access to the software code for proper integration. An alternative, less
   invasive, approach is to use an adaptation layer that translates between DDS and
-  FMI. =dds-fmu= implements the latter approach and is inspired by eProsima's Integration
-  Service cite:eprosima-integration-service-2023.
+  FMI.
+
+  =dds-fmu= implements the latter approach and is inspired by eProsima's Integration
+  Service cite:eprosima-integration-service-2023. =dds-fmu= is *extensible*: the user can
+  create a customised FMU by providing new IDL files and mappings between DDS pub/sub
+  types and FMI inputs/outputs. =dds-fmu= is *configurable*: it comes bundled with all
+  necessary tools to generate =modelDescription.xml=, which is consistent with the custom
+  configuration. =dds-fmu= customisation has no need for a code compiler and no new binary
+  files are created.
+
+
 
 * Usage label:sec:quickstart
 

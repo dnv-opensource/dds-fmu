@@ -128,13 +128,24 @@ struct Converter {
   static eprosima::xtypes::WritableDynamicDataRef access_member_data(
     eprosima::xtypes::WritableDynamicDataRef membered_data, const std::string& path);
 
+  /**
+     @brief Clear converter data structures
+
+     Clear internal std::maps. It is useful to call this before deleting DDS participants
+     to avoid invalid reads of deleted log resources.
+
+  */
+  static void clear_data_structures() {
+    m_types.clear();
+    m_registered_types.clear();
+    m_builders.clear();
+  }
 
 private:
   ~Converter() = default;
   static std::map<std::string, eprosima::xtypes::DynamicType::Ptr> m_types;
   static std::map<std::string, eprosima::fastrtps::types::DynamicPubSubType*> m_registered_types;
   static std::map<std::string, eprosima::fastrtps::types::DynamicTypeBuilder_ptr> m_builders;
-  // TODO: add reference to cppfmu::Logger or some adapter
 
   static const eprosima::xtypes::DynamicType&
     resolve_type(const eprosima::xtypes::DynamicType& type);

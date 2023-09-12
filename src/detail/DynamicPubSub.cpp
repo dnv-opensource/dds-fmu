@@ -113,6 +113,8 @@ void DynamicPubSub::clear() {
 
   auto operation_ok = eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK;
 
+  ddsfmu::Converter::clear_data_structures();
+
   if (m_participant && operation_ok != participant_factory->delete_participant(m_participant)) {
     throw std::runtime_error("Could not successfully delete DDS domain participant");
   }
@@ -126,8 +128,7 @@ void DynamicPubSub::clear() {
 }
 
 void DynamicPubSub::reset(
-  const std::filesystem::path& fmu_resources, DataMapper* const mapper_ptr,
-  const std::string& name,
+  const std::filesystem::path& fmu_resources, DataMapper* const mapper_ptr, const std::string& name,
   cppfmu::Logger* const logger) {
   clear();
   m_data_mapper = mapper_ptr;
@@ -135,6 +136,7 @@ void DynamicPubSub::reset(
   // Load and create new instances
 
   if (logger) {
+    // This adds a custom FMI logger to fast-dds
     eprosima::fastdds::dds::Log::SetVerbosity(eprosima::fastdds::dds::Log::Kind::Warning);
     eprosima::fastdds::dds::Log::RegisterConsumer(
       std::make_unique<ddsfmu::FmiLogger>(*logger, name));
