@@ -95,7 +95,7 @@ eprosima::xtypes::idl::Context load_fmu_idls(
 
   context.log_level(ex::idl::log::LogLevel::xDEBUG); // WARNING
   context.print_log(false);
-  //context.preprocess = false; // Requires a compiler preprocessor (gcc or cl)
+  context.preprocess = false; // Requires a compiler preprocessor (gcc or cl)
   context.include_paths.push_back(idl_dir.string());
   context = ex::idl::parse_file((entry_idl).string(), context);
 

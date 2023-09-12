@@ -44,6 +44,8 @@ public:
 
      @param [in] fmu_resources Path to FMU resources folder
      @param [in] mapper Pointer to DataMapper instance to be used
+     @param [in] name Instance name of FMU
+     @param [in] logger Pointer to FMI logger dispatcher
 
   */
   void reset(

@@ -138,7 +138,6 @@
      ++++ dds_profile.xml
      +++ idl
      ++++ dds-fmu.idl
-     ++++ misc.idl
      +++ modelDescription.xml
      ++ tools
      +++ linux64
@@ -188,8 +187,7 @@
       };
     #+end_src
 
-    Suppose the contents in cref:code:idl-example are added to a new file
-    =resources/config/idl/mine.idl=. By writing =#include "mine.idl"= in =dds-fmu.idl=,
+    Suppose the contents in cref:code:idl-example are added to =dds-fmu.idl=,
     the file will be parsed by the FMU, and =idl::Klass= becomes available as a type.
 
 *** DDS-to-FMU mapping label:sec:ddsfmu
@@ -197,7 +195,7 @@
     The file =ddsfmu_mapping.xml= contains elements that specify which DDS topics to map
     to FMU inputs and outputs, see cref:fig:ddsfmu. The /topic/ attribute is a name
     identifier for a DDS Topic entity. Each topic is associated with a data /type/, which
-    in our case is defined by our IDL files. Note that *FMU outputs* are *subscribed* DDS
+    in our case is defined by our IDL file. Note that *FMU outputs* are *subscribed* DDS
     signals, and *FMU inputs* are *published* DDS signals. *DDS input = FMU output* and
     *DDS output = FMU inputs*.  The user defines the necessary of FMU inputs and outputs
     using =<fmu_in>= and =<fmu_out>= elements, respectively. See cref:code:ddsfmu-example
@@ -447,6 +445,7 @@
 ** Missing features
 
    + Integration of fast-dds/xtypes logging into cppfmu logging if possible
+   + Allow using preprocessor when parsing IDL files (e.g. use =#include "file.idl"= in the IDL).
    + Sequence types, e.g. =std::vector<TYPE>=
    + Exploiting IDL attributions, especially =@key= and =@optional=.
    + FMI 3.0 support

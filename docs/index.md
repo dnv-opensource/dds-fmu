@@ -67,12 +67,12 @@ module idl {
 };
 ```
 
-Suppose the contents above are added to a new file `resources/config/idl/mine.idl`. By writing `#include "mine.idl"` in `dds-fmu.idl`, the file will be parsed by the FMU, and `idl::Klass` becomes available as a type.
+Suppose the contents above are added to `dds-fmu.idl`, the file will be parsed by the FMU, and `idl::Klass` becomes available as a type.
 
 
 ### DDS-to-FMU mapping {#sec_ddsfmu}
 
-The file `ddsfmu_mapping.xml` contains elements that specify which DDS topics to map to FMU inputs and outputs, see figure below. The *topic* attribute is a name identifier for a DDS Topic entity. Each topic is associated with a data *type*, which in our case is defined by our IDL files. Note that **FMU outputs** are **subscribed** DDS signals, and **FMU inputs** are **published** DDS signals. **DDS input = FMU output** and **DDS output = FMU inputs**. The user defines the necessary of FMU inputs and outputs using `<fmu_in>` and `<fmu_out>` elements, respectively. See the listing below for an example. For each element of `<fmu_in>` a DDS DataWriter is created, and likewise, for each `<fmu_out>` a DDS DataReader.
+The file `ddsfmu_mapping.xml` contains elements that specify which DDS topics to map to FMU inputs and outputs, see figure below. The *topic* attribute is a name identifier for a DDS Topic entity. Each topic is associated with a data *type*, which in our case is defined by our IDL file. Note that **FMU outputs** are **subscribed** DDS signals, and **FMU inputs** are **published** DDS signals. **DDS input = FMU output** and **DDS output = FMU inputs**. The user defines the necessary of FMU inputs and outputs using `<fmu_in>` and `<fmu_out>` elements, respectively. See the listing below for an example. For each element of `<fmu_in>` a DDS DataWriter is created, and likewise, for each `<fmu_out>` a DDS DataReader.
 
 ![img](images/ddsfmu-mapping.svg "`ddsfmu_mapping` XML specification.")
 
@@ -164,6 +164,7 @@ There are some things the user should be aware of to avoid unnecessary frustrati
 ## Missing features
 
 -   Integration of fast-dds/xtypes logging into cppfmu logging if possible
+-   Allow using preprocessor when parsing IDL files (e.g. use `#include "file.idl"` in the IDL).
 -   Sequence types, e.g. `std::vector<TYPE>`
 -   Exploiting IDL attributions, especially `@key` and `@optional`.
 -   FMI 3.0 support
