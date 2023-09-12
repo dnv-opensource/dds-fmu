@@ -109,7 +109,7 @@ int zip_fmu(const fs::path& fmu_root, const fs::path& out_file, bool verbose, bo
     std::cout << "Writing to file: " << out_file << std::endl;
   }
 
-  struct zip_t* zip = zip_open(out_file.c_str(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
+  struct zip_t* zip = zip_open(out_file.string().c_str(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
 
   if (zip == nullptr) {
     std::cerr << "ERROR: Unable to open zip file for writing: " << out_file << std::endl;
@@ -129,7 +129,7 @@ int zip_fmu(const fs::path& fmu_root, const fs::path& out_file, bool verbose, bo
       if (zip_entry_open(zip, relative_entry.c_str()) != 0) {
         std::cerr << "ERROR: Unable to open zip entry for writing: " << relative_entry << std::endl;
         return 1;
-      } else if (zip_entry_fwrite(zip, fs::path(dir_entry).c_str()) != 0) {
+      } else if (zip_entry_fwrite(zip, fs::path(dir_entry).string().c_str()) != 0) {
         // TODO: figure out why permissions are lost
         // Confirm working on windows: What kind of slashes does it want?
         std::cerr << "ERROR: Unable to write zip entry: " << relative_entry << std::endl;

@@ -63,7 +63,7 @@ std::vector<std::filesystem::path>
     std::cerr << "Expected path does not exist: " << idl_path << std::endl;
   } else {
     for (const fs::directory_entry& dir_entry : fs::recursive_directory_iterator(idl_path)) {
-      if (dir_entry.is_regular_file() && exts.count(dir_entry.path().extension()) != 0) {
+      if (dir_entry.is_regular_file() && exts.count(dir_entry.path().extension().string()) != 0) {
         uuid_files.emplace_back(dir_entry);
         //std::cout << "added: " << dir_entry << std::endl;
       }
@@ -95,6 +95,7 @@ eprosima::xtypes::idl::Context load_fmu_idls(
 
   context.log_level(ex::idl::log::LogLevel::xDEBUG); // WARNING
   context.print_log(false);
+  //context.preprocess = false; // Requires a compiler preprocessor (gcc or cl)
   context.include_paths.push_back(idl_dir.string());
   context = ex::idl::parse_file((entry_idl).string(), context);
 

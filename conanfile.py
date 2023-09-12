@@ -4,6 +4,7 @@ from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.scm import Git, Version
+from conan.tools.env import Environment
 from conan.tools.files import copy, load, update_conandata
 
 required_conan_version = ">=1.53.0"
@@ -66,7 +67,7 @@ class DdsFmuConan(ConanFile):
         self.requires("fast-dds/2.11.1")
         self.requires("stduuid/1.2.3")
         self.requires("rapidxml/1.13")
-        self.requires("xtypes/cci.20230530")
+        self.requires("xtypes/cci.20230615")
 
         if self.options.with_tools:
             self.requires("kuba-zip/0.2.6")
@@ -111,4 +112,7 @@ class DdsFmuConan(ConanFile):
         cmake.build()
 
         if self._with_tests:
-            cmake.test()
+            env = Environment()
+            env.define("CTEST_OUTPUT_ON_FAILURE", "ON")
+            with env.vars(self).apply():
+                cmake.test()
