@@ -1,6 +1,6 @@
 * Development
 
-  You will need conan 2. The compiler profile should specify =compiler.cppstd=17=. There
+  You will need [[https://conan.io/][conan 2]]. The compiler profile should specify =compiler.cppstd=17=. There
   are conan packages not available in =conancenter=, you will need to build them yourself.
   They are available as recipes, which are located in [[https://gitlab.sintef.no/seaops/equipment][seaops/equipment]] under
   tools/recipes, and [[https://gitlab.sintef.no/cppfmu/cppfmu][cppfmu/cppfmu]]. The following packages should be built: =fmi1=,
@@ -8,205 +8,24 @@
 
   #+begin_src bash
     cd dds-fmu
-    conan install . -u -b missing -o dds-fmu/*:with_doc=True
+    conan install . -u -b missing -o dds-fmu/*:with_doc=True -c tools.build:skip_test=False
     conan build . -o dds-fmu/*:with_doc=True -c tools.build:skip_test=False
-    # Repeat previous command, because the test currently fails
   #+end_src
 
   The created FMU is located in =build/Release/fmus/= on Linux.
 
-* DDS FMU Mediator
+* Implementation tasks and known issues
 
-  + Create a mediator between cosim/FMU and DDS
-  + There are several avenues for accomplishing interoperability between FMU and DDS
-   | No. | Option                     | Has been attempted   | Flexibility | Downsides                         |
-   |-----+----------------------------+----------------------+-------------+-----------------------------------|
-   |   1 | Cosim observer/manipulator | Yes in FKIN project  | Medium      | Changes to libcosim, compilations |
-   |   2 | With cosim slave interface | Yes in SFI MOVE      | Medium      | Changes to libcosim, compilations |
-   |   3 | As an FMU                  | Some, using Ratatosk | High        | Implementation effort             |
-
-  + Option 3 is most sought, since it can be used by any FMU co-simulator and does not
-    require source code changes to libcosim
-  + Feature requirements
-    + Given an idl-file, ability to dynamically create publishers/subscribers of these at runtime
-    + Could be sufficient to run an idl parser for the dds types plus appropriate config
-    + Configuration file with a mapping from DDS topics and fields to FMU inputs/outputs.
-    + Should be able to create appropriate publishers/subscribers according to config file
-    + Auto-generate modelDescription.xml (and ospDescription.xml? No) from config file(s)
-    + Could use yaml as auxiliary configuration file
-    + Should resources/ bundle necessary stuff for reconfiguration, or should there be a compilable project?
-      + The FMU should be able to repackage itself
-  + Suggested approaches for Option 3
-    + C/C++
-      + [X] Fundamendals :: CMake, conan, viproma/cppfmu to create an FMU
-      + [X] DDS mediation :: Hand-code an FMU with simple DDS publish/subscribe
-      + Configurability :: Tools for generating  modelDescription.xml and FMU necessities
-        + Signal mapping DDS topic/type to/from FMU input/output defined in a yaml
-          file. Note that fast-dds profiles probably serves this purpose.
-        + Static linking of runtime dependencies if possible (idlc static lib?, static libddsc?) (cyclone-dds, fast-dds)
-          + we are going for fast-dds
-      + Extensible :: Deal with new IDL-files and new signal mappings. Repackaging of FMU needed. Without recompilation.
-      + Complications :: Recompilation is needed unless parsing can be done runtime
-      + Consistency :: UUID of IDL file, config file and modelDescription to ensure unique FMU
-      + Checking :: Signal connections should be checked for existence (members exists and such)
-      + YAML :: Use yaml instead of xml for human input, use and bundle yq tool if needed (!)
-    + Python
-      + Use a python fmu library, unifmu, pyfmu, pythonfmu
-      + Use Cyclonedds-python for DDS side
-      + Perhaps PyOxidizer for packaging
-      + May be easier to handle dynamic types at runtime
-      + How to parse IDL?
-      + There are several inconveniences too, especially related to packaging
-        + python runtime and transitive dependencies, bundled appropriately
-
-** Implementation tasks
-
-   + [X] Remove shared option, since it is a module always?
-   + [X] Remove temporary Trig pub sub compiled types from dds-fmu
-   + [X] Add Dynamic Publisher|Subscriber to dds-fmu
-   + [X] Load dds types and register through xtypes + converter
-   + [X] Store data as xtypes DynamicData instead of DDS DynamicData
-   + [X] For a given type, iterate through its primitive types
-   + [X] Define real reference structure to map between dynamic types for dds/idl and fmu
-   + [X] Load idl files
-   + [X] Basic dynamic real publisher/subscriber
-     + [X] Iterate xtypes to populate fmu structures
-     + [X] Use dynamic pubsub to load idl types and publish on fmu
-   + [6/6] Load xml profiles as common for Fast-DDS (how many participants?)
-     + [X] Load participant profiles (one for pub and one for sub)
-     + [X] Load publisher profile
-     + [X] Load subscriber profile
-     + [X] Load topic profiles (topic names and their qos), if they exist
-     + [X] If the qos is different -> separate participant is needed? Split into multiple fmus
-     + [X] Load dynamic type profiles (TO BE REPLACED with those loaded from idl)
-       + [X] Use XML first
-       + [X] Use converter to populate instead
-       + [X] Use converter to register types instead of xml-based
-   + [X] Figure out why registering enum fails
-   + [X] Take all samples on reading
-   + [X] Clarify in doc that there will be a sample lag
-   + [X] Create mapping from dds topic primitive types to fmu value references
-   + [X] Generate modelDescription from mapping
-     + [X] version, guid, CoSimulation
-     + [X] ModelVariables auto-populate
-     + [X] ModelStructure auto-populate
-   + [X] Create publishers/subscribers from mapping
-   + [X] Add GTest for systematic tests of functionality
-   + [X] Run valgrind on functionality
-   + [X] File loader with staging directory (std::filesystem)
-   + [X] GUID functionality (replicate CMake target) with stduuid
-     - hard-code which files to hash
-     - do not hash line with hash in model description
-     - model description contains a version tag, which is acquired from API compile def/configure_file (version.txt)
-     - hash all idl files in idl folder (resource) *.idl
-     - hash fast-dds config file(s) (resource) dds-fmu-profile.xml
-     - eval GUID must be possible given model description and mentioned files
-   + [X] CMake Target to generate GUID using stduuid functionality
-   + [X] Generate modelDescription.xml
-     - given idl files and xml, model description must be generate-able
-     - must be possible through bundled library API
-   + [-] Zip staging directory
-     - [X] zip the staged/binary and generated files
-     - [ ] Figure out why permissions are lost
-       - https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396
-   + [X] Make documentation target and bundle it with the fmu
-   + [X] Add editorconfig and clang-format to unify formatting
-   + [X] Figure out to handle fast-dds log (and xtypes) in conjunction with cppfmu
-   + [X] Tidy code and remove temporary stuff
-   + [X] Properly document end user documentation
-   + [ ] Add support for key (perhaps manually?) -> how will data structures change?
-   + [ ] Add support for keys https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706
-   + [ ] Add support for sequences other variable size containers and missing types.
-     + Figure out which types are not supported
-   + [ ] Import all license files of dependencies and generate license.txt
-   + [X] Replace [3][2] with [3,2], i.e. ][ with , to closer follow structured naming convention
-   + [X] Loading two FMUs, each with static linking of fast-dds, what happens with singletons? Works if not same Domain ID
-   + [X] Will the fmu work if the filename changes? Or is this something that must relate to something? Works
-   + [5/5] Repackaging
-     1. [X] Command line tool: positional arg: point to folder to be packaged
-     2. [X] Parse idls, xml profile and other config files
-        - [X] Create mock-up parser with placeholders for each step
-     3. [X] Produce GUID based on modelDescription template info and config files
-        - Allow tweaking e.g. ModelStructure as long as consistency is retained?
-     4. [X] Write modelDescription from XML tree and evaluated GUID
-     5. [X] Zip files into fmu
-   + [X] Check if it can be built with Windows.
-
-** Description of signal mapping
-
-   + Let T(type) := {R(eal), I(nteger), B(oolean), S(tring)} be the set of FMI reference types
-   + V_{r,t} is a value reference (uint_32 := U_32), which is unique for each type t in T
-   + For each value reference, there exist a value f(V_{r,t}) = y_t in t.
-   + y_t is a mapping from a value reference to a value of type t.
-
-   + For each instance of <fmu_in, fmu_out>:
-     + Acquire the DynamicData type and iterate through its primitive types (leaf nodes)
-     + Auxiliary information known is:
-       + The iterated DynamicData type and its Readable|WritableDynamicDataRef instance
-       + All info provided by DynamicData (type, member index?)
-       + A way to generate structured name ./[i] notation
-     + For each leaf node (l) with type P:
-       + There is a mapping $P \to T \cup\, U(\text{nsupported})$ that dictates the appropriate FMI
-         setter/getter for which a node is to be associated.
-       + The mapping P to T may require a cast from one primitive type to another.
-       + In some cases the mapping from P is in U(nsupported). These primitive types are
-         not allowed and will raise runtime error during setup.
-       + If Leaf node in fmu_in, dds_out:
-         + Calls FMU Setters (SetT): FMU to DDS (set data from FMU, write to DDS)
-         + DDS to publish data
-         + The value pointed to by y(V_{r,t}) is to be set on the DDS primitive type,
-           which later will be sent.
-         + We need a way to set correct DDS member given V_{r,t} and y_t as input.
-         + *Note*: It is practical to work with XTypes DynamicType instances instead,
-           which can be converted to corresponding DDS type just before publishing.
-         + Let v_{i,t}(x,y) \in U_32 x t -> Ø be a visitor writer function for type t.
-           + It takes a V_{r,t}, y_t and writes to the right dynamic type member of type P
-           + We bind information so that the arguments and return types are known at compile-time
-         + Increment V_{r,t} once a new v_{i,t} has been defined
-       + If Leaf node in fmu_out, dds_in:
-         + Calls FMU Getters (GetT): DDS to FMU (read from DDS, put to FMU)
-         + DDS to subscribe data
-         + From the received DDS type instance, the correct member shall be retrieved and
-           set on the value pointed to by value reference V_{r,t}.
-         + Also here it is practical to work with XTypes DynamicType instances. Once read
-           from DDS, convert to XTypes dynamic type
-         + Let v_{o,t}(x) \in U_32 -> t be a visitor reader function for type t.
-           + It takes a V_{r,t} and returns the right dynamic type member of type t
-           + We bind information so that the arguments and return types are known at compile-time
-
-** User configuration insight
-
-   + A mapping from FMU signals to DDS signals is to be made possible
-   + Knowledge of both FMU signals and DDS types&topics to be interconnected is assumed
-   + The user writes configuration files to generate necessary config files for both FMU and DDS
-     + The IDL file parsed by xtypes is used to convert/generate DynamicData types in fast-dds -> i.e. no idl compiler needed
-       + Need to confirm that this is possible. It is, with some limitations to annotations.
-       + Alternatively, the IDL must be compiled into a dynamic library with type definitions that can be loaded at runtime (fallback)
-   + The user writes XML profiles for DDS-related configuration
-     + General configuration of participant, etc.
-     + Settings for publishers and subscribers, including topic name, data type, qos (esp. durability and reliability)
-   + The user or some program writes a mapping between FMU signals and DDS topic members
-     + The provided information must be sufficient so that a mapping between primitive types are possible
-     + FMU source type may not be the same as DDS destination primitive type
-     + Must be possible to construct nested topic member variable names to create function mapping from fmu signal
-     + Data types in DDS dictates the most closely related type on the FMI side
-     + There are conventions on with =.= and =[]= for referencing non-primitive types
-       + It is possible to auto-generate FMU inputs and outputs based on DDS topics and their types
-
-** Research notes
-   + Given an IDL-file, convert to xtypes, achieved with eprosima/xtypes header only library
-   + [[https://github.com/eProsima/FastDDS-SH/blob/main/src/Conversion.hpp][This converts from xtypes to Dynamic Types]] in Fast DDS -> perhaps useful
-   + [[https://github.com/eProsima/xtypes/issues/82#issuecomment-785089279][This issue indicates conversion of xtypes to Dynamic Types]]
-     + [X] Investigate if xtypes has been integrated properly, of if this conversion is still needed. NEEDED
-     + [X] If not integrated: load IDL file with xtypes library, convert to Dynamic Types
-     + The mapping from FMU input/output to DDS publish/subscribe still need the
-       information provided by the xtypes in order to reference these.
-   + [[https://github.com/eProsima/Fast-DDS-Gen/issues/63][It seems fast dds does not support =@optional=?]]
-   + [X] Specification of subscribers and publishers using Fast-DDS XML profiles
-     + Important to retain configurability of the profiles made possible with the XML files
-     + We will not use dynamic types from xml, since it is redundant with idl and xtypes with converter to dds
-
-* References
-
-  + [[https://www.spectric.com/post/multicast-within-kubernetes][Multicast within kubernetes]]
-  + [[https://k3s.io/][k3s]]
+  + [ ] Import all license files of dependencies and generate license.txt
+  + [ ] No support for multi-config builds in same build folder, i.e. debug and release.
+  + [-] Zip staging directory
+    - [X] zip the staged/binary and generated files
+    - [ ] Figure out why permissions are lost
+      - Perhaps a clue found here: [[https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396][permissions in kuba zip function used]].
+  + [ ] Add support for key annotations, see [[https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706][this]].
+    + Will data structures change?
+    + Should a content filter be used?
+    + Is key support strictly needed?
+  + [ ] Add support for sequences other variable size containers and missing types.
+    + Figure out which types are not supported
+    + Perhaps wait until fmi 3
