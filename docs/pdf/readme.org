@@ -34,7 +34,7 @@
   + For *Quick start*: jump to cref:sec:quickstart.
 
   #+name: fig:system-context
-  #+begin_src plantuml :exports results :file images/system-overview.svg
+  #+begin_src plantuml :exports results :file images/diagram.svg
     !include style.puml
     skinparam linetype polyline
     skinparam nodesep 50
@@ -73,7 +73,7 @@
   #+attr_org: :width 700
   #+attr_latex: :width 0.76\textwidth
   #+RESULTS: fig:system-context
-  [[file:images/system-overview.svg]]
+  [[file:images/diagram.svg]]
 
   OMG DDS cite:omg-dds-2015 is a standard for a data-centric publish and subscribe scheme,
   which is devised by the Object Management Group (OMG). It defines a set of quality of
@@ -458,6 +458,8 @@
     changed portions to =index.md=, which is located in =docs/index.md=. It is somewhat
     cumbersome, regretfully. The citation is not exported correctly, so you will need to
     edit that. Referencing figures does not work as intended either.
+  - Exporting to pdf is also supported if required tools are installed run the following
+    command: =M-x org-export-dispatch l p=.
 
 Local Variables:
 org-latex-classes: (("sintefmemo" "\\documentclass{sintefmemo}"

@@ -5,7 +5,7 @@
 -   **No need for code compilation**: Just 1) decompress the FMU; 2) configure it; 3) zip it back to an FMU.
 -   For **Quick start**: jump to @ref sec_quickstart.
 
-![img](images/system-overview.svg "System overview for DDS-FMU.")
+![img](images/diagram.png "System overview for DDS-FMU.")
 
 OMG DDS @cite omg-dds-2015 is a standard for a data-centric publish and subscribe scheme, which is devised by the Object Management Group (OMG). It defines a set of quality of services (QoS) for data distribution service (DDS). This includes APIs and communication semantics, where real-time publish subscribe (RTPS) @cite omg-dds-rtps-2022 is one such protocol that aims to provide interoperability between DDS implementations from different vendors.
 
