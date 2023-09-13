@@ -19,6 +19,7 @@ target_link_libraries(unit-tests
   fastdds::fastrtps
   detail
   configuration
+  filesystem::libs
   )
 
 gtest_discover_tests(unit-tests

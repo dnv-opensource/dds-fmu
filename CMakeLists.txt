@@ -23,6 +23,14 @@ find_package(args CONFIG REQUIRED)
 
 enable_testing()
 
+# Target: link filesystem libraries for older compilers
+add_library(filesystem::libs INTERFACE IMPORTED)
+set_property(TARGET filesystem::libs
+  PROPERTY INTERFACE_LINK_LIBRARIES
+  $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>
+  $<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>
+  APPEND)
+
 if(BUILD_TESTING)
   find_package(FMUComplianceChecker REQUIRED)
   find_package(GTest REQUIRED)
@@ -109,8 +117,7 @@ target_link_libraries(configuration
   eprosima::xtypes
   rapidxml::rapidxml
   PRIVATE
-  "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
-  "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
+  filesystem::libs
   stduuid::stduuid)
 
 target_include_directories(configuration
@@ -133,8 +140,7 @@ target_link_libraries(detail
     cppfmu::cppfmu
   PRIVATE
     rapidxml::rapidxml
-    "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
-    "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
+    filesystem::libs
   )
 
 target_include_directories(detail
@@ -150,8 +156,7 @@ target_link_libraries(${fmuRepackerTarget}
   zip::zip
   configuration
   detail
-  "$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.1>>:-lstdc++fs>"
-  "$<$<AND:$<CXX_COMPILER_ID:Clang>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:-lc++fs>"
+  filesystem::libs
   )
 
 # Target: stage FMU contents phase 1
