@@ -5,7 +5,7 @@ from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.scm import Git, Version
 from conan.tools.env import Environment
-from conan.tools.files import copy, load, update_conandata
+from conan.tools.files import copy, load, save, update_conandata
 
 required_conan_version = ">=1.53.0"
 
@@ -13,6 +13,7 @@ class DdsFmuConan(ConanFile):
     name = "dds-fmu"
     author = "Joakim Haugen"
     description = "DDS-FMU mediator"
+    license = "MPL-2.0"
     url = "https://gitlab.sintef.no/seaops/dds-fmu"
     topics = ("Co-simulation", "FMU", "DDS", "OMG-DDS")
     package_type = "shared-library"
@@ -100,6 +101,25 @@ class DdsFmuConan(ConanFile):
             deps.build_context_activated = ["fmu-compliance-checker"]
             deps.build_context_build_modules = ["fmu-compliance-checker"]
         deps.generate()
+
+        deplist = []
+        for require, dep in self.dependencies.items():
+            if require.build or require.test:
+                continue
+            deplist.append((dep.ref.name, dep.license))
+            if dep.package_folder and path.exists(path.join(dep.package_folder, "licenses")):
+                copy(self, "*", path.join(dep.package_folder, "licenses"),
+                     path.join(self.build_folder, "licenses", dep.ref.name), keep_path=True)
+
+        license_txt = path.join(self.build_folder, "licenses", "licenses.txt")
+        save(self, license_txt,
+             "Licenses for dds-fmu and dependencies are listed below.\n")
+
+        save(self, license_txt, f"{self.name}: {self.license}\n\n", append=True)
+        copy(self, "LICENSE", self.recipe_folder, path.join(self.build_folder, "licenses"))
+
+        for dep, lic in sorted(deplist):
+            save(self, license_txt, f"{dep}: {lic}\n", append=True)
 
     def build(self):
         cmake = CMake(self)

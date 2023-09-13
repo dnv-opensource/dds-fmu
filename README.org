@@ -16,12 +16,14 @@
 
 * Implementation tasks and known issues
 
-  + [ ] Import all license files of dependencies and generate license.txt
-  + [ ] No support for multi-config builds in same build folder, i.e. debug and release.
-  + [-] Zip staging directory
-    - [X] zip the staged/binary and generated files
-    - [ ] Figure out why permissions are lost
-      - Perhaps a clue found here: [[https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396][permissions in kuba zip function used]].
+  + Executable permission for =repacker= tool is lost with the bundled zip tool
+  + There is no support for building multi-configuration in the same build folder (e.g. debug and release)
+  + =@key= annotations are not supported yet
+  + Sequence types (e.g. =std::vector=) and other complex types are not supported
+
+  + [ ] Add proper support for multi-config builds
+  + [ ] Fix zipping tool with executable permissions
+    - Perhaps a clue found here: [[https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396][permissions in kuba zip function used]].
   + [ ] Add support for key annotations, see [[https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706][this]].
     + Will data structures change?
     + Should a content filter be used?

@@ -1,6 +1,9 @@
-// Copyright 2023-2023, SINTEF Ocean.
-// Distributed under the 3-Clause BSD License.
-// See accompanying file LICENSE
+/*
+  Copyright 2023, SINTEF Ocean
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 
 #include <filesystem>
 #include <regex>
