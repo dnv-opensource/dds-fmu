@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <vector>
 
 #include <rapidxml/rapidxml.hpp>
@@ -110,6 +111,7 @@ void name_generator(std::string& name, const eprosima::xtypes::DynamicData::Read
       name.pop_back(); // remove trailing '.'
     }
   }
+  name = std::regex_replace(name, std::regex("\\]\\["), ",");
 }
 
 

@@ -163,7 +163,6 @@ There are some things the user should be aware of to avoid unnecessary frustrati
 
 ## Missing features
 
--   Integration of fast-dds/xtypes logging into cppfmu logging if possible
 -   Allow using preprocessor when parsing IDL files (e.g. use `#include "file.idl"` in the IDL).
 -   Sequence types, e.g. `std::vector<TYPE>`
 -   Exploiting IDL attributions, especially `@key` and `@optional`.

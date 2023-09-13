@@ -119,6 +119,7 @@
    + [ ] Add support for sequences other variable size containers and missing types.
      + Figure out which types are not supported
    + [ ] Import all license files of dependencies and generate license.txt
+   + [X] Replace [3][2] with [3,2], i.e. ][ with , to closer follow structured naming convention
    + [X] Loading two FMUs, each with static linking of fast-dds, what happens with singletons? Works if not same Domain ID
    + [X] Will the fmu work if the filename changes? Or is this something that must relate to something? Works
    + [5/5] Repackaging
@@ -129,8 +130,7 @@
         - Allow tweaking e.g. ModelStructure as long as consistency is retained?
      4. [X] Write modelDescription from XML tree and evaluated GUID
      5. [X] Zip files into fmu
-   + [ ] Check if it can be built with Windows.
-   +
+   + [X] Check if it can be built with Windows.
 
 ** Description of signal mapping
 

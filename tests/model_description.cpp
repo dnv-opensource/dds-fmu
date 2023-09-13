@@ -27,6 +27,7 @@ TEST(ModelDescriptor, NameGenerator) {
          int32 distance;
          Outer universe[2];
          string name;
+         uint32 matrix[3][2];
        };
     };
 
@@ -51,11 +52,18 @@ TEST(ModelDescriptor, NameGenerator) {
 
   for (const auto& name : names) { std::cout << name << std::endl; }
 
-  ASSERT_EQ(names.size(), 4);
+  ASSERT_EQ(names.size(), 10);
   EXPECT_EQ(names[0], std::string("distance"));
   EXPECT_EQ(names[1], std::string("universe[0].my_inner.my_uint32"));
   EXPECT_EQ(names[2], std::string("universe[1].my_inner.my_uint32"));
   EXPECT_EQ(names[3], std::string("name"));
+  EXPECT_EQ(names[4], std::string("matrix[0,0]"));
+  EXPECT_EQ(names[5], std::string("matrix[0,1]"));
+  EXPECT_EQ(names[6], std::string("matrix[1,0]"));
+  EXPECT_EQ(names[7], std::string("matrix[1,1]"));
+  EXPECT_EQ(names[8], std::string("matrix[2,0]"));
+  EXPECT_EQ(names[9], std::string("matrix[2,1]"));
+
   // TODO: support sequence type, wstring type, map type
 }
 

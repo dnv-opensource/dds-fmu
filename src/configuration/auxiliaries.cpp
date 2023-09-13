@@ -40,14 +40,14 @@ std::string generate_uuid(
   // Copy extra strings into buffer
   for (const std::string& in_str : strings) {
     //std::cout << in_str << std::endl;
-    copy(in_str.begin(), in_str.end(), back_inserter(to_uuid));
+    std::copy(in_str.begin(), in_str.end(), back_inserter(to_uuid));
   }
 
   // Strips all whitespace CR LF and the section: guid="<uuid>" in modelDescription.xml
   std::regex strip_re("\\s+|\r|\n|guid *= *\"[-0-9a-f]{36}\"|guid *= *\"[-0-9a-z]{36}\"");
   // Generate uuid from filtered buffer contents
 
-  std::string contents = regex_replace(to_uuid, strip_re, "");
+  std::string contents = std::regex_replace(to_uuid, strip_re, "");
   //std::cout << contents << std::endl;
   return uuids::to_string(generator(contents));
 }
