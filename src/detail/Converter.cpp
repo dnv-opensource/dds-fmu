@@ -1,6 +1,8 @@
 /*
  * Copyright 2019 - present Proyectos y Sistemas de Mantenimiento SL (eProsima).
  *
+ * There are no functional changes done in dds-fmu, only changing namespace and formatting.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at

@@ -4,6 +4,8 @@
  * Copyright 2019 - present Proyectos y Sistemas de Mantenimiento SL (eProsima).
  *
  * This implementation is based on https://github.com/eProsima/FastDDS-SH/blob/main/src/Conversion.hpp
+ * There are no functional changes done in dds-fmu, only changing namespace and formatting.
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
