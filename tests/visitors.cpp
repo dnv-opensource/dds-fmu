@@ -122,6 +122,8 @@ TEST(DataMapper, Visitors) {
 
   auto& dyn_data = data_mapper.data_ref("msg_read", ddsfmu::DataMapper::Direction::Read);
   auto& dyn_data2 = data_mapper.data_ref("msg_write", ddsfmu::DataMapper::Direction::Write);
+  ddsfmu::DataMapper::IndexOffsets data1_offsets = data_mapper.index_offsets("msg_read", ddsfmu::DataMapper::Direction::Read);
+  ddsfmu::DataMapper::IndexOffsets data2_offsets = data_mapper.index_offsets("msg_write", ddsfmu::DataMapper::Direction::Write);
 
   bool with_enum = true;
   try {
@@ -160,6 +162,10 @@ TEST(DataMapper, Visitors) {
   std::int32_t ui8, i8, ui16, i16, i32, i32_2, status;         // 7 int
 
   std::int32_t dbl_idx(0), str_idx(0), int_idx(0), bool_idx(0);
+  dbl_idx = std::get<0>(data1_offsets);
+  int_idx = std::get<1>(data1_offsets);
+  bool_idx = std::get<2>(data1_offsets);
+  str_idx = std::get<3>(data1_offsets);
 
   data_mapper.get_int(int_idx++, ui8);
   data_mapper.get_int(int_idx++, i8);
@@ -207,11 +213,12 @@ TEST(DataMapper, Visitors) {
 
   // Set these data (write data) using setters into dds outbound data buffers (Direction::Write)
 
-  // This only usable if the msg_read and msg_write placement assumptions at the start of this function hold.
-  int_idx = data_mapper.int_offset();
-  dbl_idx = data_mapper.real_offset();
-  str_idx = data_mapper.string_offset();
-  bool_idx = data_mapper.bool_offset();
+  // Outputs have inititial='exact', so we have setters for these all input/output, i.e. same offsets
+  dbl_idx = std::get<0>(data2_offsets);
+  int_idx = std::get<1>(data2_offsets);
+  bool_idx = std::get<2>(data2_offsets);
+  str_idx = std::get<3>(data2_offsets);
+  std::int32_t str_off(str_idx), bool_off(bool_idx);
 
   data_mapper.set_int(int_idx++, ui8);
   data_mapper.set_int(int_idx++, i8);
@@ -247,7 +254,7 @@ TEST(DataMapper, Visitors) {
   // Test set_string with char*, not string, usage pattern being used in cpp-fmu
   const char* something = "yeah";
   std::string other;
-  data_mapper.set_string(data_mapper.string_offset(), something); // msg_read str
+  data_mapper.set_string(str_off /* data_mapper.string_offset()*/, something); // msg_read str
   dyn_data["str"] = std::string(something);
   data_mapper.get_string(0, other); // msg_write str
 
@@ -259,7 +266,7 @@ TEST(DataMapper, Visitors) {
   // Test set_bool with int32, not bool, usage pattern being used in cpp-fmu
   std::int32_t my_bool(1);
   bool my_other_bool;
-  data_mapper.set_bool(data_mapper.bool_offset(), static_cast<bool>(my_bool));
+  data_mapper.set_bool(bool_off /* data_mapper.bool_offset() */, static_cast<bool>(my_bool));
   dyn_data["enabled"] = bool(my_bool);
   data_mapper.get_bool(0, my_other_bool);
   EXPECT_EQ(dyn_data["enabled"].value<bool>(), dyn_data2["enabled"].value<bool>());

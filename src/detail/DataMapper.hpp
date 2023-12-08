@@ -43,6 +43,14 @@ public:
     Write ///< Write to DDS, FMU input
   };
 
+  /**
+     Start index offsets for readers/writers functions for a given topic and direction.
+     This is useful if you know all the data types for a type and want to access readers/writers directly.
+     Order of indexes in tuple: double, integer, bool, string
+     See index_offsets().
+  */
+  typedef std::tuple<std::int32_t, std::int32_t, std::int32_t, std::int32_t> IndexOffsets;
+
   DataMapper() = default;
   DataMapper(const DataMapper&) = delete;            ///< Copy constructor
   DataMapper& operator=(const DataMapper&) = delete; ///< Copy assignment
@@ -58,25 +66,25 @@ public:
   void reset(const std::filesystem::path& fmu_resources);
 
   inline void set_double(const std::int32_t value_ref, const double& value) {
-    m_real_writer.at(value_ref - m_real_offset)(value);
+    m_real_writer.at(value_ref)(value);
   }
   inline void get_double(const std::int32_t value_ref, double& value) const {
     m_real_reader.at(value_ref)(value);
   }
   inline void set_int(const std::int32_t value_ref, const std::int32_t& value) {
-    m_int_writer.at(value_ref - m_int_offset)(value);
+    m_int_writer.at(value_ref)(value);
   }
   inline void get_int(const std::int32_t value_ref, std::int32_t& value) const {
     m_int_reader.at(value_ref)(value);
   }
   inline void set_bool(const std::int32_t value_ref, const bool& value) {
-    m_bool_writer.at(value_ref - m_bool_offset)(value);
+    m_bool_writer.at(value_ref)(value);
   }
   inline void get_bool(const std::int32_t value_ref, bool& value) const {
     m_bool_reader.at(value_ref)(value);
   }
   inline void set_string(const std::int32_t value_ref, const std::string& value) {
-    m_string_writer.at(value_ref - m_string_offset)(value);
+    m_string_writer.at(value_ref)(value);
   }
   inline void get_string(const std::int32_t value_ref, std::string& value) const {
     m_string_reader.at(value_ref)(value);
@@ -92,16 +100,16 @@ public:
 
   inline eprosima::xtypes::idl::Context& idl_context() { return m_context; }
 
-  inline std::int32_t int_offset() { return m_int_offset; }
-  inline std::int32_t real_offset() { return m_real_offset; }
-  inline std::int32_t bool_offset() { return m_bool_offset; }
-  inline std::int32_t string_offset() { return m_string_offset; }
-
+  inline IndexOffsets index_offsets(const std::string& topic, Direction read_write) const {
+    // We have the same number of readers and writers, so the same index applies to both
+    return m_offsets.at(std::make_tuple(topic, read_write));
+  }
 private:
   typedef std::tuple<std::string, Direction> StoreKey;
   void add(const std::string& topic_name, const std::string& topic_type, Direction read_write);
   void clear(); ///< Clears internal data structures
   std::int32_t m_int_offset, m_real_offset, m_bool_offset, m_string_offset;
+  std::map<StoreKey, IndexOffsets> m_offsets;
   std::vector<std::function<void(const std::int32_t&)>> m_int_writer;
   std::vector<std::function<void(std::int32_t&)>> m_int_reader;
   std::vector<std::function<void(const double&)>> m_real_writer;
