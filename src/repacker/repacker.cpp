@@ -172,11 +172,13 @@ int generate_xml(const ddsfmu::detail::CommandsInfo& info) {
 
   auto mapper_ddsfmu = signal_mapping.first_node("ddsfmu");
 
-  auto mapper_iterator = [&](bool is_in_not_out) {
+  auto mapper_iterator = [&](ddsfmu::SignalDistributor::Cardinality cardinal) {
     std::string node_name;
-    if (is_in_not_out) node_name = "fmu_in";
-    else
+    if (cardinal == ddsfmu::SignalDistributor::Cardinality::INPUT) {
+      node_name = "fmu_in";
+    } else {
       node_name = "fmu_out";
+    }
 
     for (rapidxml::xml_node<>* fmu_node = mapper_ddsfmu->first_node(node_name.c_str()); fmu_node;
          fmu_node = fmu_node->next_sibling(node_name.c_str())) {
@@ -192,19 +194,33 @@ int generate_xml(const ddsfmu::detail::CommandsInfo& info) {
       std::string topic_name(topic->value());
       std::string topic_type(type->value());
 
+      bool do_key_filtering = false;
+
+      if (cardinal == ddsfmu::SignalDistributor::Cardinality::OUTPUT) {
+        auto key_filter = fmu_node->first_attribute("key_filter");
+        if (key_filter) {
+          std::istringstream(key_filter->value()) >> std::boolalpha >> do_key_filtering;
+        }
+      }
+
       if (!distributor.has_structure(topic_type)) {
         std::cerr << "ERROR: Got non-existing 'type': " << topic_type << std::endl;
         throw std::runtime_error("Unknown idl type");
       }
 
       //std::cout << "Topic: " << topic_name << " Type: " << topic_type << std::endl;
-      distributor.add(topic_name, topic_type, is_in_not_out);
+      distributor.add(topic_name, topic_type, cardinal);
+      if (cardinal == ddsfmu::SignalDistributor::Cardinality::OUTPUT && do_key_filtering) {
+        distributor.queue_for_key_parameter(topic_name, topic_type);
+      }
     }
   };
 
   // out before in since this is assumed in module_structure_outputs further below!
-  mapper_iterator(false); // out
-  mapper_iterator(true);  // in
+  mapper_iterator(ddsfmu::SignalDistributor::Cardinality::OUTPUT);
+  mapper_iterator(ddsfmu::SignalDistributor::Cardinality::INPUT);
+
+  distributor.process_key_queue();
 
   // populate the model description file
   const auto& mapping = distributor.get_mapping();

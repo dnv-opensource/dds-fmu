@@ -87,6 +87,10 @@ public:
     }
   }
 
+  virtual void ExitInitializationMode() override {
+    m_pubsub.init_key_filters();
+  }
+
   ~FmuInstance() = default;
 
   void SetupExperiment(

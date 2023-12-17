@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ddsfmu>
   <fmu_in topic="Roundtrip" type="idl::Signal" />
-  <fmu_out topic="Roundtrip" type="idl::Signal" />
+  <fmu_out topic="Roundtrip" type="idl::Signal" key_filter="true" />
 </ddsfmu>

@@ -81,6 +81,21 @@ struct Converter {
   }
 
   /**
+     @brief Registers a xtypes type with provided type name
+
+     Registers DynamicType in a map, associating it with the given type name.
+
+     @param [in] type_name Name of type to register
+     @param [in] type Reference to dynamic type to be registered
+
+  */
+  static void register_xtype(
+      const std::string& type_name, const eprosima::xtypes::DynamicType& type) {
+    m_types.insert_or_assign(type_name, type);
+  }
+
+
+  /**
        @brief Return fastdds DynamicTypeBuilder given xtypes DynamicType
 
        Retrieves a DynamicTypeBuilder and internally creates it if not already created by the DynamicTypeBuilderFactory. The xtypes dynamic type is converted into fast-dds dynamic type. This function makes necessary API calls to ensure that many xtypes type kinds are mapped out as analogous fast-dds dynamic types, including arrays, structured types, and union types.

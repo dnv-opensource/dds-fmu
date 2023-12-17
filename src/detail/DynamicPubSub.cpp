@@ -7,7 +7,10 @@
 
 #include "DynamicPubSub.hpp"
 
+#include <sstream>
+#include <string>
 #include <tuple>
+#include <vector>
 
 #include <cppfmu_common.hpp>
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
@@ -44,6 +47,88 @@ void DynamicPubSub::write() {
 
 DynamicPubSub::~DynamicPubSub() { clear(); }
 
+void DynamicPubSub::init_key_filters() {
+  // Once DataReader has been created, update filter with Reader GUID
+  // This call should also be done once we know that initialization
+  // has updated parameter values with writer visitors
+
+  for (auto& [reader, filter] : m_reader_topic_filter) {
+    std::stringstream guid;
+    guid << reader->guid();
+    std::vector<std::string> new_params;
+    new_params.emplace_back(guid.str()); // Reader GUID
+
+    auto parameter_data = m_filter_data.at(filter);
+
+    // Acquire and convert from DynamicData into string
+    parameter_data.for_each([&](const eprosima::xtypes::DynamicData::ReadableNode& node) {
+      bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
+      bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
+      if ((is_leaf || is_string) && node.from_member() && node.from_member()->is_key()) {
+        switch (node.type().kind()) {
+        case eprosima::xtypes::TypeKind::BOOLEAN_TYPE: {
+          std::ostringstream oss;
+          oss << std::boolalpha << node.data().value<bool>();
+          new_params.emplace_back(oss.str());
+          break;
+        }
+        case eprosima::xtypes::TypeKind::INT_8_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::int8_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::UINT_8_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::uint8_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::INT_16_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::int16_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::UINT_16_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::uint16_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::INT_32_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::int32_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::FLOAT_32_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<float>()));
+          break;
+        case eprosima::xtypes::TypeKind::FLOAT_64_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<double>()));
+          break;
+        case eprosima::xtypes::TypeKind::STRING_TYPE:
+          new_params.emplace_back(node.data().value<std::string>());
+          break;
+        case eprosima::xtypes::TypeKind::CHAR_8_TYPE:
+          new_params.emplace_back(std::string(1, node.data().value<char>()));
+          break;
+        case eprosima::xtypes::TypeKind::ENUMERATION_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::uint32_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::UINT_32_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::uint32_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::INT_64_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::int64_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::UINT_64_TYPE:
+          new_params.emplace_back(std::to_string(node.data().value<std::uint64_t>()));
+          break;
+        case eprosima::xtypes::TypeKind::FLOAT_128_TYPE:
+        case eprosima::xtypes::TypeKind::CHAR_16_TYPE:
+        case eprosima::xtypes::TypeKind::WIDE_CHAR_TYPE:
+        case eprosima::xtypes::TypeKind::BITSET_TYPE:
+        case eprosima::xtypes::TypeKind::ALIAS_TYPE:
+        case eprosima::xtypes::TypeKind::SEQUENCE_TYPE:
+        case eprosima::xtypes::TypeKind::WSTRING_TYPE:
+        case eprosima::xtypes::TypeKind::MAP_TYPE:
+        default:
+          throw std::runtime_error("Tried to set parameter of unsupported TypeKind");
+        }
+      }
+    });
+
+    filter->set_expression_parameters(new_params);
+  }
+}
+
 void DynamicPubSub::take() {
   for (auto& reads : m_read_data) {
     auto have_data = eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK;
@@ -56,38 +141,6 @@ void DynamicPubSub::take() {
         ddsfmu::Converter::fastdds_to_xtypes(reads.second.second.get(), reads.second.first);
       }
     }
-
-    /* TODO: figure out how to use take(..) instead of repeated take_next_sample
-
-    eprosima::fastdds::dds::SampleInfoSeq infos;
-    // What is the correct template type here?:
-    eprosima::fastdds::dds::LoanableSequence<eprosima::fastrtps::types::DynamicPubSubType> data_values;
-    //eprosima::fastdds::dds::LoanableSequence<eprosima::fastrtps::types::DynamicData_ptr> data_values;
-
-    exec_result = have_data;
-    while (exec_result == have_data) {
-      exec_result = reads.first->take(data_values, infos);
-
-      int samples=0;
-      for(eprosima::fastdds::dds::LoanableCollection::size_type i = 0; i < infos.length(); ++i){
-        if (infos[i].valid_data)
-        {
-          const auto& sample = data_values[i];
-
-          ++samples;
-          std::cout << "Sample received (count=" << samples
-                    << ") at address " << &sample << std::endl;
-
-          // Unclear how to access dynamic type with LoanableSequence
-          // Want to fetch data into reads.second.second.get() (etypes::DynamicData*) like take_next_sample
-          //ddsfmu::Converter::fastdds_to_xtypes(reads.second.second.get(), reads.second.first);
-          //ddsfmu::Converter::fastdds_to_xtypes(data_values[i].get(), reads.second.first);
-        }
-      }
-      reads.first->return_loan(data_values, infos);
-      infos.unloan();
-    }
-    */
   }
 }
 
@@ -117,6 +170,11 @@ void DynamicPubSub::clear() {
 
   for (auto& item : m_topic_name_ptr) { m_participant->delete_topic(item.second); }
 
+  for (auto& item : m_reader_topic_filter) {
+    m_participant->delete_contentfilteredtopic(item.second);
+  }
+
+  if (m_participant) m_participant->delete_contained_entities(); // e.g filter factory
 
   auto operation_ok = eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK;
 
@@ -129,6 +187,7 @@ void DynamicPubSub::clear() {
   m_topic_to_type.clear();
   m_types.clear();
   m_topic_name_ptr.clear();
+  m_reader_topic_filter.clear();
   m_write_data.clear();
   m_read_data.clear();
   eprosima::fastdds::dds::Log::ClearConsumers(); // Both standard stdcout and custom logger
@@ -177,6 +236,12 @@ void DynamicPubSub::reset(
 
   if (!m_publisher) { throw std::runtime_error("Could not create publisher"); }
   if (!m_subscriber) { throw std::runtime_error("Could not create subscriber"); }
+
+  if (
+    eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK
+    != m_participant->register_content_filter_factory("CUSTOM_KEY_FILTER", &m_filter_factory)) {
+    throw std::runtime_error("Could not register custom key filter factory");
+  }
 
   // load ddsfmu mapping
   rapidxml::xml_document<> doc;
@@ -282,15 +347,17 @@ void DynamicPubSub::reset(
         // A bug with UnionType in Fast DDS Dynamic Types is bypassed.
         // WORKAROUND START
         dyn_type_support.auto_fill_type_information(false); // True will not work with CycloneDDS
-        dyn_type_support.auto_fill_type_object(false);      // True causes seg fault with enums
+        dyn_type_support.auto_fill_type_object(
+          false); // True causes seg fault with enums and other complex types, etc sequences of structs
         // WORKAROUND END
 
         m_participant->register_type(dyn_type_support);
       }
 
       if (added) {
-        // Is this needed?
-        ddsfmu::Converter::register_type(std::get<0>(topic_type), &dyn_type_support);
+        // Is this really needed?
+        ddsfmu::Converter::register_type(std::get<1>(topic_type), &dyn_type_support);
+        ddsfmu::Converter::register_xtype(std::get<1>(topic_type), message_type);
       }
     }
 
@@ -342,16 +409,67 @@ void DynamicPubSub::reset(
           std::ref(mapper().data_ref(std::get<0>(topic_type), DataMapper::Direction::Write)),
           dynamic_data_ptr)));
     } else {
-      edds::DataReader* tmp_reader =
+      bool need_filter = false;
+
+      try {
+        // If user has requested key_filter=True, it is registered in DataMapper
+        auto parameter_data =
+          mapper().data_ref(std::get<0>(topic_type), DataMapper::Direction::Parameter);
+
+        // Iterate members to see if at least one member is key
+        parameter_data.for_each([&](const eprosima::xtypes::DynamicData::ReadableNode& a_node) {
+          bool a_is_leaf =
+            (a_node.type().is_primitive_type() || a_node.type().is_enumerated_type());
+          bool a_is_string = a_node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
+          if (
+            (a_is_leaf || a_is_string) && a_node.from_member() && a_node.from_member()->is_key()) {
+            need_filter = true;
+            throw false; // Found at least one key, so break for_each
+          }
+        });
+      } catch (const std::out_of_range& no_key) {
+        /* Not registered in DataMapper, no key filtering */
+      }
+
+      eprosima::fastdds::dds::ContentFilteredTopic* filter_topic = nullptr;
+
+      if (need_filter) {
+        filter_topic = m_participant->create_contentfilteredtopic(
+          std::get<0>(topic_type) + "Filtered", tmp_topic, " ", {"|GUID UNKNOWN|", "0"},
+          "CUSTOM_KEY_FILTER");
+
+        if (filter_topic == nullptr) {
+          throw std::runtime_error(
+            "Unable to create filtered topic for: " + std::get<1>(topic_type));
+        }
+      }
+
+      edds::DataReader* tmp_reader = nullptr;
+
+      if (!need_filter) {
         m_subscriber->create_datareader_with_profile(tmp_topic, std::get<0>(topic_type));
+      } else {
+        m_subscriber->create_datareader_with_profile(filter_topic, std::get<0>(topic_type));
+      }
 
       if (!tmp_reader) {
         // TODO: add log entry about using default datareader qos
-        tmp_reader = m_subscriber->create_datareader(tmp_topic, edds::DATAREADER_QOS_DEFAULT);
+        if (!need_filter) {
+          tmp_reader = m_subscriber->create_datareader(tmp_topic, edds::DATAREADER_QOS_DEFAULT);
+        } else {
+          tmp_reader = m_subscriber->create_datareader(filter_topic, edds::DATAREADER_QOS_DEFAULT);
+        }
       }
       if (!tmp_reader) {
         throw std::runtime_error(
           "Unable to create DataReader for topic: " + std::get<1>(topic_type));
+      }
+
+      if (need_filter) {
+        m_reader_topic_filter.emplace(tmp_reader, filter_topic);
+        m_filter_data.emplace(
+          filter_topic,
+          std::ref(mapper().data_ref(std::get<0>(topic_type), DataMapper::Direction::Parameter)));
       }
 
       m_read_data.emplace(std::make_pair(

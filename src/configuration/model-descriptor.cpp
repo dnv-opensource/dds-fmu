@@ -130,10 +130,18 @@ void model_variable_generator(
   char* ref_val = doc.allocate_string(std::to_string(value_ref).c_str());
   char* caus_val = doc.allocate_string(causality.c_str());
 
+  char* varia_var;
+  if (causality == "parameter") {
+    varia_var = doc.allocate_string("fixed");
+  } else {
+    varia_var = doc.allocate_string("discrete");
+  }
+
   rapidxml::xml_node<>* node = doc.allocate_node(rapidxml::node_element, "ScalarVariable");
   rapidxml::xml_attribute<>* name_attr = doc.allocate_attribute("name", name_val);
   rapidxml::xml_attribute<>* ref_attr = doc.allocate_attribute("valueReference", ref_val);
-  rapidxml::xml_attribute<>* variability_attr = doc.allocate_attribute("variability", "discrete");
+
+  rapidxml::xml_attribute<>* variability_attr = doc.allocate_attribute("variability", varia_var);
   rapidxml::xml_attribute<>* causality_attr = doc.allocate_attribute("causality", caus_val);
   rapidxml::xml_attribute<>* initial_attr = doc.allocate_attribute("initial", "exact");
 
@@ -142,7 +150,7 @@ void model_variable_generator(
   node->append_attribute(variability_attr);
   node->append_attribute(causality_attr);
 
-  if (causality == "output") { node->append_attribute(initial_attr); }
+  if (causality == "output" || causality == "parameter") { node->append_attribute(initial_attr); }
 
   rapidxml::xml_node<>* child = nullptr;
   rapidxml::xml_attribute<>* start = nullptr;

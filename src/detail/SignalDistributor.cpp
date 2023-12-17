@@ -14,10 +14,6 @@ SignalDistributor::SignalDistributor()
 
 void SignalDistributor::load_idls(const std::filesystem::path& resource_path) {
   m_context = ddsfmu::config::load_fmu_idls(resource_path);
-
-  /*for (auto [name, type] : m_context.get_all_scoped_types()) {
-    std::cout << name << std::endl;
-  }*/
 }
 
 bool SignalDistributor::has_structure(const std::string& topic_type) {
@@ -25,25 +21,36 @@ bool SignalDistributor::has_structure(const std::string& topic_type) {
 }
 
 void SignalDistributor::add(
-  const std::string& topic_name, const std::string& topic_type, bool is_in_not_out) {
+  const std::string& topic_name, const std::string& topic_type, Cardinality cardinal) {
   const eprosima::xtypes::DynamicType& message_type(m_context.module().structure(topic_type));
   eprosima::xtypes::DynamicData message_data(message_type);
 
-  std::string in_or_output, cardinality_prefix;
-  if (is_in_not_out) {
-    in_or_output = "input";
+  std::string cardinal_string, cardinality_prefix;
+  switch (cardinal) {
+  case Cardinality::INPUT:
+    cardinal_string = "input";
     cardinality_prefix = "pub.";
-  } else {
-    in_or_output = "output";
+    break;
+  case Cardinality::OUTPUT:
+    cardinal_string = "output";
     cardinality_prefix = "sub.";
+    break;
+  case Cardinality::PARAMETER:
+    cardinal_string = "parameter";
+    cardinality_prefix = "key.sub.";
+    break;
   }
 
   message_data.for_each([&](eprosima::xtypes::DynamicData::ReadableNode& node) {
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
     bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
+    bool is_leaf_or_string = is_leaf || is_string;
+    bool is_not_parameter = cardinal != Cardinality::PARAMETER;
+    bool is_a_key_parameter = is_leaf_or_string && !is_not_parameter
+     && (node.from_member() && node.from_member()->is_key());
 
-    if (is_leaf || is_string) {
-      if (!is_in_not_out) { m_outputs++; }
+    if ((is_leaf_or_string && is_not_parameter) || is_a_key_parameter) {
+      if (cardinal == Cardinality::OUTPUT) { m_outputs++; }
 
       std::string structured_name;
       config::name_generator(structured_name, node);
@@ -54,25 +61,33 @@ void SignalDistributor::add(
       switch (fmi_type) {
       case config::ScalarVariableType::Real:
         m_signal_mapping.emplace_back(
-          std::make_tuple(m_real_idx++, structured_name, in_or_output, fmi_type));
+          std::make_tuple(m_real_idx++, structured_name, cardinal_string, fmi_type));
         break;
       case config::ScalarVariableType::Integer:
         m_signal_mapping.emplace_back(
-          std::make_tuple(m_integer_idx++, structured_name, in_or_output, fmi_type));
+          std::make_tuple(m_integer_idx++, structured_name, cardinal_string, fmi_type));
         break;
       case config::ScalarVariableType::Boolean:
         m_signal_mapping.emplace_back(
-          std::make_tuple(m_boolean_idx++, structured_name, in_or_output, fmi_type));
+          std::make_tuple(m_boolean_idx++, structured_name, cardinal_string, fmi_type));
         break;
       case config::ScalarVariableType::String:
         m_signal_mapping.emplace_back(
-          std::make_tuple(m_string_idx++, structured_name, in_or_output, fmi_type));
+          std::make_tuple(m_string_idx++, structured_name, cardinal_string, fmi_type));
         break;
       default: break;
       }
     }
   });
 }
+
+void SignalDistributor::process_key_queue() {
+  for (; !m_potential_keys.empty(); m_potential_keys.pop()) {
+    const auto& couple = m_potential_keys.front();
+    add(couple.first, couple.second, Cardinality::PARAMETER);
+  }
+}
+
 
 ddsfmu::config::ScalarVariableType
   SignalDistributor::resolve_type(const eprosima::xtypes::DynamicData::ReadableNode& node) {

@@ -49,17 +49,18 @@ void DataMapper::reset(const std::filesystem::path& fmu_resources) {
     throw std::runtime_error("<ddsfmu> not found in ddsfmu_mapping.xml");
   }
 
-  auto mapper_iterator = [&](bool is_in_not_out) {
+  auto mapper_iterator = [&](DataMapper::Direction direction) {
     std::string node_name;
-    Direction direction;
-    if (is_in_not_out) {
+    switch (direction) {
+    case DataMapper::Direction::Write:
       // fmu input aka writer aka Setter aka DDS Publisher
       node_name = "fmu_in";
-      direction = Direction::Write;
-    } else {
+      break;
+    case DataMapper::Direction::Read:
       // fmu output aka reader aka Getter aka DDS Subscriber
       node_name = "fmu_out";
-      direction = Direction::Read;
+      break;
+    default: throw std::logic_error("DataMapper direction must be Read or Write");
     }
 
     for (rapidxml::xml_node<>* fmu_node = mapper_ddsfmu->first_node(node_name.c_str()); fmu_node;
@@ -75,6 +76,14 @@ void DataMapper::reset(const std::filesystem::path& fmu_resources) {
       }
       std::string topic_name(topic->value());
       std::string topic_type(type->value());
+      bool do_key_filtering = false;
+
+      if (direction == DataMapper::Direction::Read) {
+        auto key_filter = fmu_node->first_attribute("key_filter");
+        if (key_filter) {
+          std::istringstream(key_filter->value()) >> std::boolalpha >> do_key_filtering;
+        }
+      }
 
       if (!m_context.module().has_structure(topic_type)) {
         std::cerr << "Got non-existing 'type': " << topic_type << std::endl;
@@ -82,27 +91,39 @@ void DataMapper::reset(const std::filesystem::path& fmu_resources) {
       }
 
       add(topic_name, topic_type, direction);
+      if (direction == DataMapper::Direction::Read && do_key_filtering) {
+        queue_for_key_parameter(topic_name, topic_type);
+      }
     }
   };
 
-  mapper_iterator(false); // outputs
-  mapper_iterator(true); // inputs
+  mapper_iterator(DataMapper::Direction::Read);  // outputs
+  mapper_iterator(DataMapper::Direction::Write); // inputs
 
+  process_key_queue(); // parameters
+}
+
+void DataMapper::process_key_queue() {
+  for (; !m_potential_keys.empty(); m_potential_keys.pop()) {
+    const auto& couple = m_potential_keys.front();
+    add(couple.first, couple.second, DataMapper::Direction::Parameter);
+  }
 }
 
 void DataMapper::add(
-  const std::string& topic_name, const std::string& topic_type, Direction read_write) {
+  const std::string& topic_name, const std::string& topic_type, Direction read_write_param) {
   const eprosima::xtypes::DynamicType& message_type(m_context.module().structure(topic_type));
-  DataMapper::StoreKey key = std::make_tuple(topic_name, read_write);
+  DataMapper::StoreKey key = std::make_tuple(topic_name, read_write_param);
 
   auto item = m_data_store.emplace(key, eprosima::xtypes::DynamicData(message_type));
 
   if (!item.second) {
     std::string dir;
-    if (read_write == DataMapper::Direction::Write) {
-      dir = "input";
-    } else {
-      dir = "output";
+    switch (read_write_param) {
+    case DataMapper::Direction::Write: dir = "input"; break;
+    case DataMapper::Direction::Read: dir = "output"; break;
+    case DataMapper::Direction::Parameter: dir = "parameter"; break;
+    default: break;
     }
 
     throw std::runtime_error(
@@ -120,22 +141,33 @@ void DataMapper::add(
   // switch on type kind must be identical to the one in SignalDistributor
 
   // FMU output
-  // for each output: register dynamicdata store for requested type in a map (key: topic ) TODO: support @key
+  // for each output: register dynamicdata store for requested type in a map (key: topic and Direction)
   //   for each type (primitive/string): register reader_visitor (read from dds into fmu, i.e. Get{Real,Integer..})
-  //     valueRef is index of registered visitor
-  //     Note: we also register reader_visitor for FMU inputs.
+  //     valueRef is index of registered visitor for that type
+  //     Note: we also register reader_visitor for FMU inputs (they are initial=exact by default).
 
   // FMU input
-  // for each input: register dynamicdata store for requested type in a map (key: topic) TODO: support @key
+  // for each input: register dynamicdata store for requested type in a map (key: topic and Direction)
   //   for each type (primitive/string): register writer_visitor (write from fmu into dds, i.e. Set{Real,Integer..})
-  //     valueRef is index of registered visitor
-  //     Note: we also register writer_visitor for FMU outputs, since they have initial=exact
+  //     valueRef is index of registered visitor for that type
+  //     Note: we also register reader_visitor for FMU outputs, since they have initial=exact
+
+  // FMU parameters
+  // for each output: register dynamicdata store for requested type in a map (key: topic and Direction)
+  //   for each type (primitive/string): register visitors if element is key
+  //     valueRef is index of registered visitor for that type
+  //     We register both reader and writer visitor for FMU parameters, initial=exact
+
 
   dyn_data.for_each([&](eprosima::xtypes::DynamicData::WritableNode& node) {
     bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
     bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
+    bool is_leaf_or_string = is_leaf || is_string;
+    bool is_not_parameter = read_write_param != DataMapper::Direction::Parameter;
+    bool is_a_key_parameter = is_leaf_or_string && !is_not_parameter
+                              && (node.from_member() && node.from_member()->is_key());
 
-    if (is_leaf || is_string) {
+    if ((is_leaf_or_string && is_not_parameter) || is_a_key_parameter) {
       auto fmi_type = SignalDistributor::resolve_type(node);
 
       switch (fmi_type) {

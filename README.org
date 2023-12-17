@@ -3,8 +3,8 @@
   You will need [[https://conan.io/][conan 2]]. The compiler profile should specify =compiler.cppstd=17=. There
   are conan packages not available in =conancenter=, you will need to build them yourself.
   They are available as recipes, which are located in [[https://gitlab.sintef.no/seaops/equipment][seaops/equipment]] under
-  tools/recipes, and [[https://gitlab.sintef.no/cppfmu/cppfmu][cppfmu/cppfmu]]. The following packages should be built: =fmi1=,
-  =fmi2=, =cppfmu=, =fmilibrary=, =fmu-compliance-checker=, =xtypes=.
+  tools/recipes, and [[https://gitlab.sintef.no/cppfmu/cppfmu][cppfmu/cppfmu]]. The following packages should be built: =cppfmu=,
+  =fmilibrary= (to appear on CCI), =fmu-compliance-checker=, =xtypes=.
 
   #+begin_src bash
     cd dds-fmu
@@ -18,16 +18,12 @@
 
   + Executable permission for =repacker= tool is lost with the bundled zip tool
   + There is no support for building multi-configuration in the same build folder (e.g. debug and release)
-  + =@key= annotations are not supported yet
   + Sequence types (e.g. =std::vector=) and other complex types are not supported
 
   + [ ] Add proper support for multi-config builds
   + [ ] Fix zipping tool with executable permissions
     - Perhaps a clue found here: [[https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396][permissions in kuba zip function used]].
-  + [ ] Add support for key annotations, see [[https://readthedocs.org/projects/eprosima-fast-rtps/downloads/pdf/latest/#page=237&zoom=100,96,706][this]].
-    + Will data structures change?
-    + Should a content filter be used?
-    + Is key support strictly needed?
-  + [ ] Add support for sequences other variable size containers and missing types.
+  + [ ] Add support for sequences and other variable size containers and missing types.
+    + Would benefit from some annotation indicating max length
     + Figure out which types are not supported
-    + Perhaps wait until fmi 3
+    + Wait until FMI 3 with binary support

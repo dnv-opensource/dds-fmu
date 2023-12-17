@@ -15,7 +15,6 @@
 #include <xtypes/idl/idl.hpp>
 
 
-
 namespace ddsfmu {
 namespace config {
 
@@ -92,7 +91,7 @@ void write_model_description(
    @param [in,out] doc XML document to work on
    @param [in,out] model_variables_node ModelVariables node to be appended
    @param [in] name Name attribute
-   @param [in] causality Causality attribute input|output
+   @param [in] causality Causality attribute input|output|parameter
    @param [in] value_ref valueReference attribute
    @param [in] type ScalarVariable type: Real|Integer|Boolean|String
 

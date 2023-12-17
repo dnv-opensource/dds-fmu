@@ -94,7 +94,7 @@ add_custom_target(
 # Target: build module library
 add_library(${fmuModuleTarget} MODULE
   ${fmuSourceFiles}
-  ${CPPFMU_ROOT}/src/fmi_functions.cpp
+  ${cppfmu_PACKAGE_FOLDER_DEBUG}${cppfmu_PACKAGE_FOLDER_RELEASE}/src/fmi_functions.cpp
   )
 
 target_link_libraries(${fmuModuleTarget}

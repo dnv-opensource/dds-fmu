@@ -18,6 +18,7 @@
 #include <fastdds/dds/subscriber/Subscriber.hpp>
 #include <fastrtps/types/DynamicPubSubType.h>
 
+#include "CustomKeyFilterFactory.hpp"
 #include "DataMapper.hpp"
 
 namespace cppfmu {
@@ -73,6 +74,14 @@ public:
   */
   void take();
 
+  /**
+     @brief Initialize content filters for keyed topics
+
+     For each ContentFilteredTopic: Update filter parameters with reader GUID and key
+     valuesfor which filtering will occur
+  */
+  void init_key_filters();
+
 private:
   typedef std::pair<eprosima::xtypes::DynamicData&, eprosima::fastrtps::types::DynamicData_ptr>
     DynamicDataConnection;
@@ -90,8 +99,13 @@ private:
   std::map<std::string, std::string> m_topic_to_type;
   std::map<std::string, eprosima::fastrtps::types::DynamicPubSubType> m_types;
   std::map<std::string, eprosima::fastdds::dds::Topic*> m_topic_name_ptr;
+  std::map<eprosima::fastdds::dds::DataReader*, eprosima::fastdds::dds::ContentFilteredTopic*>
+    m_reader_topic_filter;
+  std::map<eprosima::fastdds::dds::ContentFilteredTopic*, eprosima::xtypes::DynamicData&>
+    m_filter_data;
   std::map<eprosima::fastdds::dds::DataWriter*, DynamicDataConnection> m_write_data;
   std::map<eprosima::fastdds::dds::DataReader*, DynamicDataConnection> m_read_data;
+  ddsfmu::detail::CustomKeyFilterFactory m_filter_factory;
 };
 
 }

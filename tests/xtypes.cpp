@@ -96,8 +96,7 @@ TEST(XTypes, Annotations) {
 
   auto inner = context.module().structure("Inner");
 
-  // These will fail.
-  GTEST_SKIP(); // Remove this once fixed
+  // These will fail unless xtypes is patched
   EXPECT_EQ(inner.member(0).is_key(), inner2.member(0).is_key())
     << "my_uint32 is @key"; // false, true
   EXPECT_EQ(inner.member(1).is_optional(), inner2.member(1).is_optional())

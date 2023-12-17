@@ -1712,6 +1712,9 @@ eprosima::xtypes::DynamicData Converter::dynamic_data(const std::string& type_na
     /*logger_ << utils::Logger::Level::ERROR
                 << "Error getting data from dynamic type '"
                 << type_name << "' (not registered)" << std::endl;*/
+    throw std::runtime_error(
+      std::string("Error getting data from dynamic type '") + type_name
+      + std::string("' (not registered)"));
   }
 
   return ::xtypes::DynamicData(*it->second.get());
@@ -1861,6 +1864,9 @@ DynamicTypeBuilder_ptr Converter::get_builder(const eprosima::xtypes::DynamicTyp
       DynamicTypeBuilder* builder = static_cast<DynamicTypeBuilder*>(member_builder.get());
       DynamicTypeBuilder* result_ptr = static_cast<DynamicTypeBuilder*>(result.get());
       result_ptr->add_member(static_cast<MemberId>(idx), member.name(), builder);
+      if (member.is_key()) {
+        result_ptr->apply_annotation_to_member(static_cast<MemberId>(idx), "key", "value", "true");
+      }
     }
     return result;
   }

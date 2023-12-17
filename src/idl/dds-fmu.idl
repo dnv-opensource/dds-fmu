@@ -10,11 +10,17 @@ module idl {
     double cosine; ///< Cosine value
   };
 
+
+  enum MyIndex { FIRST, SECOND };
+
   /**
      @brief Struct to contain a simple signal
   */
   struct Signal {
-    double value; ///< A double precision value
+    double value;
+    @key uint16 my_key;
+    boolean is_pos;
+    MyIndex my_enum;
   };
 
   /**

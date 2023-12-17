@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <queue>
 #include <tuple>
 #include <vector>
 
@@ -33,6 +34,9 @@ typedef std::tuple<std::uint32_t, std::string, std::string, config::ScalarVariab
 */
 class SignalDistributor {
 public:
+
+  enum class Cardinality { INPUT, OUTPUT, PARAMETER };
+
   SignalDistributor(); ///< Constructor that sets integer members to 0;
   /**
      @brief Resolves the FMI primitive type given an xtypes::DynamicData node
@@ -74,9 +78,36 @@ public:
 
      @param [in] topic_name Topic name
      @param [in] topic_type Type name
-     @param [in] is_in_not_out Whether the signal is input and not output
+     @param [in] cardinal Whether the signal is input, output, or parameter
   */
-  void add(const std::string& topic_name, const std::string& topic_type, bool is_in_not_out);
+  void add(const std::string& topic_name, const std::string& topic_type, Cardinality cardinal);
+
+  /**
+     @brief  Queues signal mappings in form of SignalInfo entries for key parameters, if any
+
+     This function resolves the FMU types for each member of a specified topic type.  The
+     structured name used in the ScalarVariable is `key.sub.[topic].[structured_name]`,
+     where structured_name is defined according to FMU structured name convention,
+     and 'key' indicate that it is a key parameter to be selected.
+
+     The user must run process_key_queue() after this function has been run for all
+     outputs.
+
+     @param [in] topic_name Topic name
+     @param [in] topic_type Type name
+  */
+  inline void queue_for_key_parameter(const std::string& topic_name, const std::string& topic_type){
+    m_potential_keys.push(std::make_pair(topic_name, topic_type));
+  }
+
+  /**
+     @brief  Processes queued output data by adding them to the signal mapping
+
+     This function creates SignalInfo and appends them to the vector, which can be
+     retrieved by get_mapping(). Parameters are added after outputs and inputs.
+  */
+  void process_key_queue();
+
   inline const std::vector<SignalInfo>& get_mapping() const {
     return m_signal_mapping;
   } ///< Returns reference to the vector of SignalInfo.
@@ -84,6 +115,7 @@ public:
     return m_outputs;
   } ///< Returns number of scalar FMU outputs
 private:
+  std::queue<std::pair<std::string, std::string>> m_potential_keys;
   std::uint32_t m_real_idx, m_integer_idx, m_boolean_idx, m_string_idx, m_outputs;
   std::vector<SignalInfo> m_signal_mapping;
   eprosima::xtypes::idl::Context m_context;
