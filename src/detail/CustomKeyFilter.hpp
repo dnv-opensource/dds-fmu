@@ -2,8 +2,8 @@
 
 #include <fastdds/dds/topic/IContentFilter.hpp>
 #include <fastdds/dds/topic/TopicDataType.hpp>
-#include <fastrtps/types/DynamicPubSubType.h>
 #include <fastrtps/types/DynamicDataFactory.h>
+#include <fastrtps/types/DynamicPubSubType.h>
 
 #include "Converter.hpp"
 // properly include used stuff
@@ -11,6 +11,15 @@
 namespace ddsfmu {
 namespace detail {
 
+/**
+   @brief A helper to hold dynamic data type information
+
+   A content filter gets the DynamicPubSubType, which are instantiated as both fastdds and
+   xtypes DynamicData. The fastdds DynamicData is first used to serialize the candidate
+   sample, and the ddsfmu::Converter creates the xtypes DynamicData. This instance is used
+   to compare key member values against those provided by the user.
+
+*/
 struct FilterMemberType {
   FilterMemberType() = delete;
   FilterMemberType(
@@ -53,15 +62,7 @@ struct FilterMemberType {
           bool b_is_string = b_node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
           if (
             (b_is_leaf || b_is_string) && b_node.from_member() && b_node.from_member()->is_key()) {
-            if (key_a == key_b) {
-              is_equal &= (a_node.data() == b_node.data());
-              // Setting it once in the constructor causes segmentation fault
-              /*comparisons.emplace_back([&](){
-                std::cout << "Comparing ";
-                std::cout << a_node.data().to_string() << " vs. ";
-                std::cout << b_node.data().to_string() << std::endl;
-                return a_node.data() == b_node.data(); });*/
-            }
+            if (key_a == key_b) { is_equal &= (a_node.data() == b_node.data()); }
             key_b++;
           }
         });
@@ -71,11 +72,6 @@ struct FilterMemberType {
         throw false; // all keys compared
       }
     });
-
-    /*for(auto& comp : comparisons){
-      is_equal &= comp();
-    }*/
-
     return is_equal;
   }
 
@@ -84,7 +80,9 @@ struct FilterMemberType {
   }
 };
 
-/// Custom filter class
+/**
+   @brief Custom key filter for dynamic data topics
+*/
 class CustomKeyFilter : public eprosima::fastdds::dds::IContentFilter {
 private:
   std::map<std::string, std::unique_ptr<FilterMemberType>> member_types;
@@ -93,6 +91,9 @@ public:
   /**
      @brief Construct a new CustomKeyFilter object
 
+     @param [in] data_type A DynamicPubSubType pointer
+     @param [in] type_name Dynamic data type name
+     @param [in] parameters List of string parameters [Reader GUID | "|GUID UNKNOWN|", key1, .., keyN]
   */
   CustomKeyFilter(
     const eprosima::fastdds::dds::TopicDataType* data_type, const std::string& type_name,
@@ -102,154 +103,40 @@ public:
     }
   }
 
-  bool has_reader_GUID(const std::string& guid) {
+  /**
+     @brief Check if the filter has registered reader with given GUID
+     @param [in] guid Reader GUID
+     @return Boolean whether it is registered or not
+  */
+  inline bool has_reader_GUID(const std::string& guid) {
     return static_cast<bool>(member_types.count(guid));
   }
 
+  /**
+     @brief Registers a new data type with associated dynamic data type pointer
+
+     @param [in] data_type Dynamic data type to be registered
+     @param [in] type_name Name of type to be registered
+     @param [in] parameters List of string parameters [Reader GUID | "|GUID UNKNOWN|", key1, .., keyN]
+  */
   bool add_type(
     const eprosima::fastdds::dds::TopicDataType* data_type, const std::string& type_name,
-    const eprosima::fastdds::dds::LoanableTypedCollection<const char*>& parameters) {
-    if (std::string(parameters[0]) == "|GUID UNKNOWN|") {
-      //std::cout << "Skipped registering: invalid reader GUID is given" << std::endl;
-      return false;
-    } else {
-      auto a_member = member_types.insert_or_assign(
-        parameters[0], std::make_unique<FilterMemberType>(data_type, type_name));
-      //std::cout << "Registered GUID: '" << parameters[0] << "'" << std::endl;
+    const eprosima::fastdds::dds::LoanableTypedCollection<const char*>& parameters);
 
-      // parameters[key_member] must be cast from std::string to member type
-      std::int32_t key_member = 1;
-
-      std::ostringstream oss;
-      a_member.first->second->key_data.for_each(
-        [&](eprosima::xtypes::DynamicData::WritableNode& node) {
-          bool is_leaf = (node.type().is_primitive_type() || node.type().is_enumerated_type());
-          bool is_string = node.type().kind() == eprosima::xtypes::TypeKind::STRING_TYPE;
-
-          if (is_leaf || is_string) {
-            if (node.from_member()) {
-              oss << node.from_member()->name() << ": is key " << std::boolalpha
-                  << node.from_member()->is_key() << std::endl;
-            }
-            if (node.from_member() && node.from_member()->is_key()) {
-              if (key_member == parameters.length()) {
-                throw std::runtime_error(
-                  type_name + std::string(" has more @key members than parameter data provided"));
-              }
-              switch (node.type().kind()) {
-              case eprosima::xtypes::TypeKind::BOOLEAN_TYPE: {
-                bool b;
-                std::istringstream(parameters[key_member++]) >> b;
-                node.data() = b;
-                break;
-              }
-              case eprosima::xtypes::TypeKind::UINT_8_TYPE:
-                node.data() = static_cast<std::uint8_t>(std::stoul(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::UINT_16_TYPE:
-                node.data() = static_cast<std::uint16_t>(std::stoul(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::UINT_32_TYPE:
-                node.data() = static_cast<std::uint32_t>(std::stoul(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::UINT_64_TYPE:
-                node.data() = std::stoull(parameters[key_member++]);
-                break;
-              case eprosima::xtypes::TypeKind::INT_8_TYPE:
-                node.data() = static_cast<std::int8_t>(std::stoi(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::INT_16_TYPE:
-                node.data() = static_cast<std::int16_t>(std::stoi(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::INT_32_TYPE:
-                node.data() = static_cast<std::int32_t>(std::stoi(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::INT_64_TYPE:
-                node.data() = static_cast<std::int64_t>(std::stoll(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::FLOAT_32_TYPE:
-                node.data() = std::stof(parameters[key_member++]);
-                break;
-              case eprosima::xtypes::TypeKind::FLOAT_64_TYPE:
-                node.data() = std::stod(parameters[key_member++]);
-                break;
-              case eprosima::xtypes::TypeKind::STRING_TYPE:
-                node.data() = parameters[key_member++];
-                break;
-              case eprosima::xtypes::TypeKind::CHAR_8_TYPE:
-                node.data() = parameters[key_member++][0];
-                break;
-              case eprosima::xtypes::TypeKind::ENUMERATION_TYPE:
-                node.data() = static_cast<std::uint32_t>(std::stoul(parameters[key_member++]));
-                break;
-              case eprosima::xtypes::TypeKind::FLOAT_128_TYPE:
-              case eprosima::xtypes::TypeKind::CHAR_16_TYPE:
-              case eprosima::xtypes::TypeKind::WIDE_CHAR_TYPE:
-              case eprosima::xtypes::TypeKind::BITSET_TYPE:
-              case eprosima::xtypes::TypeKind::ALIAS_TYPE:    // Needed?
-              case eprosima::xtypes::TypeKind::SEQUENCE_TYPE: // std::vector
-              case eprosima::xtypes::TypeKind::WSTRING_TYPE:
-              case eprosima::xtypes::TypeKind::MAP_TYPE:
-                // unsupported
-              default: break;
-              }
-            }
-          }
-        });
-      a_member.first->second->key_count = key_member - 1;
-
-      //std::cout << oss.str();
-    }
-    return true;
-  }
-
-  virtual ~CustomKeyFilter() {}
+  virtual ~CustomKeyFilter() = default;
 
   /**
      @brief Evaluate filter discriminating whether the sample is relevant or not, i.e. whether it meets the filtering
      criteria
 
-     @param payload Serialized sample
+     @param [in] payload Serialized sample
+     @param [in] sample_info FilterSampleInfo (unused)
+     @param [in] reader_guid Reader GUID
      @return true if sample meets filter requirements. false otherwise.
   */
   bool evaluate(
     const SerializedPayload& payload, const FilterSampleInfo& sample_info,
-    const GUID_t& reader_guid) const override {
-    std::ostringstream guid;
-    guid << reader_guid; // The only useful identifier for a data reader
-
-    try {
-      //std::cout << "Retrieving GUID: " << guid.str() << std::endl;
-      FilterMemberType* member_type = member_types.at(guid.str()).get();
-      //std::cout << "Got filter member: " << member_type->type_name << std::endl;
-      SerializedPayload payload_copy(payload.length);
-      if (!payload_copy.copy(&payload)) {
-        std::cerr << "Could not copy serialized payload." << std::endl;
-        return false;
-      }
-      if (!member_type->pubsub_type->deserialize(&payload_copy, member_type->dyn_data)) {
-        std::cerr << "Could not deserialize payload to dynamic type" << std::endl;
-        return false;
-      }
-
-      if (!member_type->pubsub_type->m_isGetKeyDefined) {
-        std::cerr << "Type has not GetKeyDefined - A nested member?" << std::endl;
-        // Keep sample
-        return true;
-      } else {
-        bool ok_conversion =
-          ddsfmu::Converter::fastdds_to_xtypes(member_type->dyn_data, member_type->sample_data);
-        if (!ok_conversion) { return false; }
-        //std::cout << member_type->sample_data << std::endl;
-        return member_type->compare_keys(); // Key comparison is done here
-      }
-
-    } catch (const std::out_of_range& e) {
-      // DataReader in question is not registered and thus irrelevant
-    }
-
-    return false; // return false if sample is rejected, true otherwise
-  }
+    const GUID_t& reader_guid) const override;
 };
 
 }

@@ -37,12 +37,12 @@ class DataMapper {
 public:
   /**
      Internal indication whether the mapped signal it is intended for reading (FMU output)
-     or writing (FMU input). Parameter is a special case for @key filtering used by readers.
+     or writing (FMU input). Parameter is a special case for \@key filtering used by readers.
   */
   enum class Direction {
     Read,     ///< Read from DDS, FMU output
     Write,    ///< Write to DDS, FMU input
-    Parameter ///< Used for Read content filter of @key
+    Parameter ///< Used for Read content filter of \@key
   };
 
   /**

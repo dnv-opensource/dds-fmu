@@ -14,7 +14,7 @@ module idl {
   enum MyIndex { FIRST, SECOND };
 
   /**
-     @brief Struct to contain a simple signal
+     @brief Struct to contain a simple signal with \@key
   */
   struct Signal {
     double value;
@@ -24,13 +24,13 @@ module idl {
   };
 
   /**
-     @brief Simple struct with both @optional and @key attributes
+     @brief Simple struct with both \@optional and \@key attributes
   */
   struct Info {
     double number; ///< float64 value
     @optional
-    boolean active; ///< a boolean value, which is @optional
-    @key uint32 id; ///< unsigned int identifier, which is @key
+    boolean active; ///< a boolean value, which is \@optional
+    @key uint32 id; ///< unsigned int identifier, which is \@key
   };
 
   /**

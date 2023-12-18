@@ -7,7 +7,8 @@ from conan.tools.scm import Git, Version
 from conan.tools.env import Environment
 from conan.tools.files import copy, load, save, update_conandata
 
-required_conan_version = ">=1.53.0"
+required_conan_version = ">=2.0.0"
+
 
 class DdsFmuConan(ConanFile):
     name = "dds-fmu"

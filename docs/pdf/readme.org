@@ -28,10 +28,10 @@
 
 * Introduction
 
-  + *=dds-fmu= main rationale*: integrate DDS-based software in FMI simulations.
+  + *=dds-fmu= main rationale*: Integrate DDS-based software in FMI simulations.
   + *Core feature*: Incorporates DDS signals in FMI simulations in a simple manner.
   + *No need for code compilation*: Just 1) decompress the FMU; 2) configure it; 3) zip it back to an FMU.
-  + For *Quick start*: jump to cref:sec:quickstart.
+  + For *Quick start*: Jump to cref:sec:quickstart.
 
   #+name: fig:system-context
   #+begin_src plantuml :exports results :file images/diagram.svg
@@ -173,7 +173,7 @@
         /// A class with member variables
         struct Klass {
           string str;      ///< A std::string
-          uint8 ui8;       ///< Unsigned integer 8-bit
+          @key uint8 ui8;  ///< Unsigned integer 8-bit
           int32 i32;       ///< Signed integer 32-bit
           int64 i64;       ///< 8, 16, 32, 64, int and uint, are supported
           double d_val;    ///< Double precision floating point float64
@@ -200,7 +200,11 @@
     *DDS output = FMU inputs*.  The user defines the necessary of FMU inputs and outputs
     using =<fmu_in>= and =<fmu_out>= elements, respectively. See cref:code:ddsfmu-example
     for an example. For each element of =<fmu_in>= a DDS DataWriter is created, and
-    likewise, for each =<fmu_out>= a DDS DataReader.
+    likewise, for each =<fmu_out>= a DDS DataReader. The attribute *key_filter* of the
+    =<fmu_out>= node indicates whether the FMU should perform key filtering on the output
+    signals. This is disabled by default, which would result in all data on the topic
+    being processed by the DDS DataReader. If it is enabled, on the other hand,
+    corresponding FMU parameters will be generated in the =modelDescription.xml=.
 
     #+name: fig:ddsfmu
     #+begin_src plantuml :exports results :file images/ddsfmu-mapping.svg
@@ -213,6 +217,7 @@
              <fmu_out> [0..*]:
                topic: "DDS topic name (string)"
                type: "DDS type name (string)"
+               key_filter: "Do key filtering (boolean)"
       @endyaml
     #+end_src
 
@@ -228,7 +233,7 @@
     #+begin_src xml :exports code
       <ddsfmu>
         <fmu_in topic="ToPublish" type="idl::Klass" />
-        <fmu_out topic="ToSubscribe" type="idl::Klass" />
+        <fmu_out topic="ToSubscribe" type="idl::Klass" key_filter="true" />
       </ddsfmu>
     #+end_src
 
@@ -263,7 +268,7 @@
     #+begin_src plantuml :exports results :file images/xml-profiles.svg
       @startyaml
         dds_profile.xml:
-           <dds>:
+           <dds><profiles>:
              <participant> [0..1]:
                profile_name: dds-fmu-default
              <publisher> [0..1]:
@@ -293,7 +298,8 @@
     #+name: code:ddsxml-example
     #+caption: An example =dds_profile.xml= excerpt for a custom QoS on =data_writer=.
     #+begin_src xml :exports code
-        <dds>
+      <dds>
+        <profiles>
           ...
           <data_writer profile_name="ToPublish">
             <qos>
@@ -302,7 +308,8 @@
               </reliability>
             </qos>
           </data_writer>
-        </dds>
+        </profiles>
+      </dds>
     #+end_src
 
 
@@ -365,12 +372,14 @@
    =modelDescription.xml=. The output model description creates =<ModelVariables>=
    elements with =<ScalarVariable>= entries, and =<ModelStructure>= element with
    =<Outputs>=. All the =<ScalarVariables>= entries have attribute ~variability=discrete~
-   and consist solely of inputs and outputs: ~causality=input|output~. The generated
-   =<ScalarVariable>= entries have =name= attribute based on the FMI standard's
-   =structured= variable naming convention. The variable name is constructed as
-   ~name=[pubsub].[topic name].[structured name]~, where =topic name= is as prescribed in
-   the DDS-to-FMU mapping specification file, and =pubsub= is =pub= for input and =sub=
-   for output.
+   when they consist solely of inputs and outputs: ~causality=input|output~. If there are
+   any =@key= variables, additional entries with ~causality=parameter~ and
+   ~variability=fixed~ will be created. The generated =<ScalarVariable>= entries have
+   =name= attribute based on the FMI standard's =structured= variable naming
+   convention. The variable name is constructed as ~name=[pubsub].[topic name].[structured
+   name]~, where =topic name= is as prescribed in the DDS-to-FMU mapping specification
+   file, and =pubsub= is =pub= for input and =sub= for output. For =@key= parameters, they
+   will have naming ~name=key.sub.[topic name].[structured name]~.
 
 ** Configuration of DDS entities and QoS settings
 
@@ -429,9 +438,10 @@
 ** Limitations and caveats
 
    There are some things the user should be aware of to avoid unnecessary
-   frustration. Below we list several points and in some cases suggest workarounds.
+   troubleshooting. Below we list several points and in some cases suggest workarounds.
    - Lost samples :: Only the last read sample is kept. Samples may therefore be lost, decrease step size.
    - Old samples lingers :: There is no expiration of sampled data. Frozen signals are not detected.
+     - =key_filter= :: With key filtering this can become particularly evident.
    - Sending to itself is possible :: The data flow is implemented so that write occurs
      before read; there will be a sample lag.
    - Loss of precision :: Some data types cannot easily be represented with available FMI
@@ -446,7 +456,11 @@
 
    + Allow using preprocessor when parsing IDL files (e.g. use =#include "file.idl"= in the IDL).
    + Sequence types, e.g. =std::vector<TYPE>=
-   + Exploiting IDL attributions, especially =@key= and =@optional=.
+   + Limited support for IDL annotations.
+     + =@key= partially supported: primitive types, string and enumerations. This excludes
+       directly on structs, or array-like members
+     + =@optional= and =@id= is supported by the IDL parser via a patch, but ignored by
+       our implementation
    + FMI 3.0 support
 
 @@latex:\printbibliography[heading=bibintoc,title={\refname}]@@

@@ -10,6 +10,15 @@
 namespace ddsfmu {
 namespace detail {
 
+/**
+   @brief A custom content filter factory for dynamic types
+
+   This filter implements the fastdds IContentFilterFactory interface.  It is designed
+   specifically as a workaround for https://github.com/eProsima/Fast-DDS/issues/3296. This
+   implementation allows the user to register content filters for key annotated dynamic
+   types, where a sample is dropped unless the key members match the user-provided values.
+
+*/
 class CustomKeyFilterFactory : public eprosima::fastdds::dds::IContentFilterFactory {
 public:
   /**
@@ -20,6 +29,7 @@ public:
 
     @param filter_class_name Custom filter name
     @param type_name Data type name
+    @param data_type Data type pointer, which must be DynamicPubSubType*
     @param filter_parameters Parameters required by the filter
     @param filter_instance Instance of the filter to be evaluated
 

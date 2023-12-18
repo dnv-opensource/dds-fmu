@@ -1,9 +1,9 @@
 # Introduction
 
--   **dds-fmu main rationale**: integrate DDS-based software in FMI simulations.
+-   **dds-fmu main rationale**: Integrate DDS-based software in FMI simulations.
 -   **Core feature**: Incorporates DDS signals in FMI simulations in a simple manner.
 -   **No need for code compilation**: Just 1) decompress the FMU; 2) configure it; 3) zip it back to an FMU.
--   For **Quick start**: jump to @ref sec_quickstart.
+-   For **Quick start**: Jump to @ref sec_quickstart.
 
 ![img](images/diagram.png "System overview for DDS-FMU.")
 
@@ -53,7 +53,7 @@ module idl {
   /// A class with member variables
   struct Klass {
     string str;      ///< A std::string
-    uint8 ui8;       ///< Unsigned integer 8-bit
+    @key uint8 ui8;  ///< Unsigned integer 8-bit
     int32 i32;       ///< Signed integer 32-bit
     int64 i64;       ///< 8, 16, 32, 64, int and uint, are supported
     double d_val;    ///< Double precision floating point float64
@@ -72,14 +72,14 @@ Suppose the contents above are added to `dds-fmu.idl`, the file will be parsed b
 
 ### DDS-to-FMU mapping {#sec_ddsfmu}
 
-The file `ddsfmu_mapping.xml` contains elements that specify which DDS topics to map to FMU inputs and outputs, see figure below. The *topic* attribute is a name identifier for a DDS Topic entity. Each topic is associated with a data *type*, which in our case is defined by our IDL file. Note that **FMU outputs** are **subscribed** DDS signals, and **FMU inputs** are **published** DDS signals. **DDS input = FMU output** and **DDS output = FMU inputs**. The user defines the necessary of FMU inputs and outputs using `<fmu_in>` and `<fmu_out>` elements, respectively. See the listing below for an example. For each element of `<fmu_in>` a DDS DataWriter is created, and likewise, for each `<fmu_out>` a DDS DataReader.
+The file `ddsfmu_mapping.xml` contains elements that specify which DDS topics to map to FMU inputs and outputs, see figure below. The *topic* attribute is a name identifier for a DDS Topic entity. Each topic is associated with a data *type*, which in our case is defined by our IDL file. Note that **FMU outputs** are **subscribed** DDS signals, and **FMU inputs** are **published** DDS signals. **DDS input = FMU output** and **DDS output = FMU inputs**. The user defines the necessary of FMU inputs and outputs using `<fmu_in>` and `<fmu_out>` elements, respectively. See the listing below for an example. For each element of `<fmu_in>` a DDS DataWriter is created, and likewise, for each `<fmu_out>` a DDS DataReader. The attribute *key_filter* of the `<fmu_out>` node indicates whether the FMU should perform key filtering on the output signals. This is disabled by default, which would result in all data on the topic being processed by the DDS DataReader. If it is enabled, on the other hand, corresponding FMU parameters will be generated in the `modelDescription.xml`.
 
 ![img](images/ddsfmu-mapping.svg "`ddsfmu_mapping` XML specification.")
 
 ```xml
 <ddsfmu>
   <fmu_in topic="ToPublish" type="idl::Klass" />
-  <fmu_out topic="ToSubscribe" type="idl::Klass" />
+  <fmu_out topic="ToSubscribe" type="idl::Klass" key_filter="true" />
 </ddsfmu>
 ```
 
@@ -101,14 +101,16 @@ Continuing the example from previous sections, it could be necessary to add cust
 
 ```xml
 <dds>
-  ...
-  <data_writer profile_name="ToPublish">
-    <qos>
-      <reliability>
-        <kind>RELIABLE</kind>
-      </reliability>
-    </qos>
-  </data_writer>
+  <profiles>
+    ...
+    <data_writer profile_name="ToPublish">
+      <qos>
+        <reliability>
+          <kind>RELIABLE</kind>
+        </reliability>
+      </qos>
+    </data_writer>
+  </profiles>
 </dds>
 ```
 
@@ -138,7 +140,7 @@ DDS supports data exchange of user-defined data structures. These are often defi
 
 An IDL data structure can be complex, with non-primitive types and nested data structures. These members needs to be demultiplexed in a way that allows the scalar variable access interface of FMI 2.0 to read or write member variables. This must be done in a manner that correctly casts to their primitive type. While parsing a requested DynamicData variable, `dds-fmu` instantiates visitor functions for read and write, with appropriate reference to the DynamicData's primitive type, as well as casting for input and output types. These visitor functions are stored in vectors in such a way that with so-called value references, they can be directly accessed by FMU setters and getters.
 
-`dds-fmu` comes bundled with an executable command line tool for generating `modelDescription.xml`. In short: given `IDL` files, Fast-DDS configuration files, and a DDS-to-FMU mapping specification, the tool automatically generates `modelDescription.xml`. The output model description creates `<ModelVariables>` elements with `<ScalarVariable>` entries, and `<ModelStructure>` element with `<Outputs>`. All the `<ScalarVariables>` entries have attribute `variability=discrete` and consist solely of inputs and outputs: `causality=input|output`. The generated `<ScalarVariable>` entries have `name` attribute based on the FMI standard's `structured` variable naming convention. The variable name is constructed as `name=[topic name].[structured name]`, where `topic name` is as prescribed in the DDS-to-FMU mapping specification file, and `pubsub` is `pub` for input and `sub` for output.
+`dds-fmu` comes bundled with an executable command line tool for generating `modelDescription.xml`. In short: given `IDL` files, Fast-DDS configuration files, and a DDS-to-FMU mapping specification, the tool automatically generates `modelDescription.xml`. The output model description creates `<ModelVariables>` elements with `<ScalarVariable>` entries, and `<ModelStructure>` element with `<Outputs>`. All the `<ScalarVariables>` entries have attribute `variability=discrete` when they consist solely of inputs and outputs: `causality=input|output`. If there are any `@key` variables, additional entries with `causality=parameter` and `variability=fixed` will be created. The generated `<ScalarVariable>` entries have `name` attribute based on the FMI standard's `structured` variable naming convention. The variable name is constructed as `name=[pubsub].[topic name].[structured name]`, where `topic name` is as prescribed in the DDS-to-FMU mapping specification file, and `pubsub` is `pub` for input and `sub` for output. For `@key` parameters, they will have naming `name=key.sub.[topic name].[structured name]`.
 
 
 ## Configuration of DDS entities and QoS settings
@@ -153,10 +155,11 @@ The interaction with DDS reader and writer entities are done in each call to DoS
 
 ## Limitations and caveats
 
-There are some things the user should be aware of to avoid unnecessary frustration. Below we list several points and in some cases suggest workarounds.
+There are some things the user should be aware of to avoid unnecessary troubleshooting. Below we list several points and in some cases suggest workarounds.
 
 -   **Lost samples:** Only the last read sample is kept. Samples may therefore be lost, decrease step size.
 -   **Old samples lingers:** There is no expiration of sampled data. Frozen signals are not detected.
+    - `key_filter` With key filtering this can become particularly evident.
 -   **Sending to itself is possible:** The data flow is implemented so that write occurs before read; there will be a sample lag.
 -   **Loss of precision:** Some data types cannot easily be represented with available FMI 2.0 types. In such cases, another data type is used, which may lead to loss of precision.
 -   **Several FMU instances is conditionally possible:** Do not use multiple `dds-fmu` instances in the simulator instance if they are on the same DDS Domain ID. There are workarounds for some simulators. In the case of `cosim` @cite cosim-2023 you can use `proxyfmu` @cite cosim-2023-proxyfmu on additional `dds-fmu` instances.
@@ -165,5 +168,7 @@ There are some things the user should be aware of to avoid unnecessary frustrati
 
 -   Allow using preprocessor when parsing IDL files (e.g. use `#include "file.idl"` in the IDL).
 -   Sequence types, e.g. `std::vector<TYPE>`
--   Exploiting IDL attributions, especially `@key` and `@optional`.
+-   Limited support for IDL annotations.
+    - `@key` partially supported: primitive types, string and enumerations. This excludes directly on structs, or array-like members.
+    - `@optional` and `@id` is supported by the IDL parser via a patch, but ignored by our implementation
 -   FMI 3.0 support

@@ -127,6 +127,7 @@ target_include_directories(configuration
 
 add_library(detail OBJECT
   ${CMAKE_SOURCE_DIR}/src/detail/Converter.cpp
+  ${CMAKE_SOURCE_DIR}/src/detail/CustomKeyFilter.cpp
   ${CMAKE_SOURCE_DIR}/src/detail/DynamicPubSub.cpp
   ${CMAKE_SOURCE_DIR}/src/detail/SignalDistributor.cpp
   ${CMAKE_SOURCE_DIR}/src/detail/DataMapper.cpp
@@ -219,6 +220,7 @@ if(DDSFMU_WITH_DOC)
   add_subdirectory(docs)
 endif()
 
+set(ignored ${CMAKE_POLICY_DEFAULT_CMP0091})
 
 source_group("Metadata" REGULAR_EXPRESSION "modelDescription.xml")
 set_target_properties(${fmuGuidTarget} PROPERTIES FOLDER ${fmuName})

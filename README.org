@@ -14,16 +14,14 @@
 
   The created FMU is located in =build/Release/fmus/= on Linux.
 
-* Implementation tasks and known issues
+* Known issues
 
   + Executable permission for =repacker= tool is lost with the bundled zip tool
-  + There is no support for building multi-configuration in the same build folder (e.g. debug and release)
-  + Sequence types (e.g. =std::vector=) and other complex types are not supported
-
-  + [ ] Add proper support for multi-config builds
-  + [ ] Fix zipping tool with executable permissions
-    - Perhaps a clue found here: [[https://github.com/kuba--/zip/blob/f8e112927646a44674cfa57ff44ab59c7cf4fa41/src/zip.c#L1396][permissions in kuba zip function used]].
-  + [ ] Add support for sequences and other variable size containers and missing types.
-    + Would benefit from some annotation indicating max length
-    + Figure out which types are not supported
-    + Wait until FMI 3 with binary support
+    + On Linux, the user will need to use =chmod= on the =repacker= tool.
+  + There is no support for building multi-configuration in the same build folder
+    (e.g. debug and release with Microsoft Visual Compiler)
+  + Several complex types are not yet supported
+    + *Unsupported*: sequence (=std::vector=), map, and union
+  + =@key= /IDL annotations/ are not fully supported
+    + *Supported*: primitive types, =string= and =Enumeration=
+    + *Unsupported*: structs, arrays
