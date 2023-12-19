@@ -31,7 +31,7 @@ namespace ddsfmu {
 */
 class FmuInstance : public cppfmu::SlaveInstance {
 public:
-  FmuInstance(const std::string& name, const std::filesystem::path& resource_path, cppfmu::Logger& logger)
+  FmuInstance(const std::string& name, const std::filesystem::path& resource_path, cppfmu::Logger logger)
       : m_name(name), m_resource_path(resource_path), m_logger(logger) {
     FmuInstance::Reset();
   }
@@ -112,7 +112,7 @@ public:
   void Reset() override {
     m_time = 0.0;
     m_mapper.reset(m_resource_path);
-    m_pubsub.reset(m_resource_path, &m_mapper, m_name);//, &m_logger);
+    m_pubsub.reset(m_resource_path, &m_mapper, m_name, &m_logger);
 
   }
 
@@ -122,7 +122,7 @@ private:
   std::filesystem::path m_resource_path;
   ddsfmu::DataMapper m_mapper;
   ddsfmu::DynamicPubSub m_pubsub;
-  cppfmu::Logger& m_logger;
+  cppfmu::Logger m_logger;
 };
 
 }

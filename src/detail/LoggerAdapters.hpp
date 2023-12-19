@@ -30,12 +30,17 @@ public:
     cppfmu::FMIStatus status;
 
     switch (entry.kind) {
-    case eprosima::fastdds::dds::Log::Kind::Info: status = cppfmu::FMIOK;
+    case eprosima::fastdds::dds::Log::Kind::Info:
+      status = cppfmu::FMIOK;
+      break;
     case eprosima::fastdds::dds::Log::Kind::Warning:
-    case eprosima::fastdds::dds::Log::Kind::Error: status = cppfmu::FMIWarning;
+    case eprosima::fastdds::dds::Log::Kind::Error:
+      status = cppfmu::FMIWarning;
+      break;
     }
 
-    m_logger.Log(status, "", m_str.str().c_str()); // TODO: should category be set differently?
+    // TODO: What is correct category here (not m_name?)
+    m_logger.Log(status, m_name.c_str(), m_str.str().c_str());
     m_str.str("");
     m_str.clear();
   }

@@ -119,8 +119,7 @@ void DynamicPubSub::init_key_filters() {
         case eprosima::xtypes::TypeKind::SEQUENCE_TYPE:
         case eprosima::xtypes::TypeKind::WSTRING_TYPE:
         case eprosima::xtypes::TypeKind::MAP_TYPE:
-        default:
-          throw std::runtime_error("Tried to set parameter of unsupported TypeKind");
+        default: throw std::runtime_error("Tried to set parameter of unsupported TypeKind");
         }
       }
     });
@@ -146,6 +145,10 @@ void DynamicPubSub::take() {
 
 void DynamicPubSub::clear() {
   auto* participant_factory = eprosima::fastdds::dds::DomainParticipantFactory::get_instance();
+
+  eprosima::fastdds::dds::Log::ClearConsumers(); // Clear both default stdcout and custom logger
+
+  if (m_participant) { m_participant->set_listener(nullptr); }
 
   // Clean-up old instances, if they exist
   for (auto& item : m_write_data) {
@@ -190,7 +193,6 @@ void DynamicPubSub::clear() {
   m_reader_topic_filter.clear();
   m_write_data.clear();
   m_read_data.clear();
-  eprosima::fastdds::dds::Log::ClearConsumers(); // Both standard stdcout and custom logger
 }
 
 void DynamicPubSub::reset(
@@ -203,7 +205,8 @@ void DynamicPubSub::reset(
 
   if (logger) {
     // This adds a custom FMI logger to fast-dds
-    eprosima::fastdds::dds::Log::SetVerbosity(eprosima::fastdds::dds::Log::Kind::Warning);
+    eprosima::fastdds::dds::Log::SetVerbosity(eprosima::fastdds::dds::Log::Kind::Info);
+    eprosima::fastdds::dds::Log::ReportFunctions(false);
     eprosima::fastdds::dds::Log::RegisterConsumer(
       std::make_unique<ddsfmu::FmiLogger>(*logger, name));
   }
