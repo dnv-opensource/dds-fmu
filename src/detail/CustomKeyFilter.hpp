@@ -1,12 +1,25 @@
 #pragma once
 
+/*
+  Copyright 2023, SINTEF Ocean
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+#include <memory>
+#include <string>
+#include <vector>
+
 #include <fastdds/dds/topic/IContentFilter.hpp>
 #include <fastdds/dds/topic/TopicDataType.hpp>
+#include <fastrtps/types/DynamicData.h>
 #include <fastrtps/types/DynamicDataFactory.h>
 #include <fastrtps/types/DynamicPubSubType.h>
+#include <fastrtps/types/DynamicTypePtr.h>
+#include <xtypes/xtypes.hpp>
 
 #include "Converter.hpp"
-// properly include used stuff
 
 namespace ddsfmu {
 namespace detail {

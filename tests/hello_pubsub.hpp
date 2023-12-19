@@ -1,5 +1,12 @@
 #pragma once
 
+/*
+  Copyright 2023, SINTEF Ocean
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -157,7 +164,5 @@ public:
     int n_matched;
     uint32_t n_samples;
     HelloPubSub* subscriber_;
-    eprosima::fastdds::dds::InstanceHandle_t previous_handle;
-    std::map<eprosima::fastdds::dds::InstanceHandle_t, uint32_t> handles;
   } m_sub_listener;
 };
