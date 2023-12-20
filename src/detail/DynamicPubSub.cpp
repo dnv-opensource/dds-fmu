@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <cppfmu_common.hpp>
+#include <fastdds/dds/core/policy/QosPolicies.hpp>
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
 #include <fastdds/dds/log/Log.hpp>
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
@@ -30,6 +31,47 @@
 #include "model-descriptor.hpp"
 
 namespace ddsfmu {
+
+//typedef eprosima::fastdds::dds::QosPolicyId_t PolicyID;
+const std::map<uint32_t /*eprosima::fastdds::dds::QosPolicyId_t*/, std::string>
+  DomainListener::QosPolicyString{
+    {0 /*PolicyID::INVALID_QOS_POLICY*/, "Does not refer to any valid QosPolicy"},
+    {1 /*PolicyID::USERDATA_QOS_POLICY*/, "UserDataQosPolicy"},
+    {2 /*PolicyID::DURABILITY_QOS_POLICY*/, "DurabilityQosPolicy"},
+    {3 /*PolicyID::PRESENTATION_QOS_POLICY*/, "PresentationQosPolicy"},
+    {4 /*PolicyID::DEADLINE_QOS_POLICY*/, "DeadlineQosPolicy"},
+    {5 /*PolicyID::LATENCYBUDGET_QOS_POLICY*/, "LatencyBudgetQosPolicy"},
+    {6 /*olicyID::OWNERSHIP_QOS_POLICY*/, "OwnershipQosPolicy"},
+    {7 /*PolicyID::OWNERSHIPSTRENGTH_QOS_POLICY*/, "OwnershipStrengthQosPolicy"},
+    {8 /*PolicyID::LIVELINESS_QOS_POLICY*/, "LivelinessQosPolicy"},
+    {9 /*PolicyID::TIMEBASEDFILTER_QOS_POLICY*/, "TimeBasedFilterQosPolicy"},
+    {10 /*PolicyID::PARTITION_QOS_POLICY*/, "PartitionQosPolicy"},
+    {11 /*PolicyID::RELIABILITY_QOS_POLICY*/, "ReliabilityQosPolicy"},
+    {12 /*PolicyID::DESTINATIONORDER_QOS_POLICY*/, "DestinationOrderQosPolicy"},
+    {13 /*PolicyID::HISTORY_QOS_POLICY*/, "HistoryQosPolicy"},
+    {14 /*PolicyID::RESOURCELIMITS_QOS_POLICY*/, "ResourceLimitsQosPolicy"},
+    {15 /*PolicyID::ENTITYFACTORY_QOS_POLICY*/, "EntityFactoryQosPolicy"},
+    {16 /*PolicyID::WRITERDATALIFECYCLE_QOS_POLICY*/, "WriterDataLifecycleQosPolicy"},
+    {17 /*PolicyID::READERDATALIFECYCLE_QOS_POLICY*/, "ReaderDataLifecycleQosPolicy"},
+    {18 /*PolicyID::TOPICDATA_QOS_POLICY*/, "TopicDataQosPolicy"},
+    {19 /*PolicyID::GROUPDATA_QOS_POLICY*/, "GroupDataQosPolicy"},
+    {20 /*PolicyID::TRANSPORTPRIORITY_QOS_POLICY*/, "TransportPriorityQosPolicy"},
+    {21 /*PolicyID::LIFESPAN_QOS_POLICY*/, "LifespanQosPolicy"},
+    {22 /*PolicyID::DURABILITYSERVICE_QOS_POLICY*/, "DurabilityServiceQosPolicy"},
+    {23 /*PolicyID::DATAREPRESENTATION_QOS_POLICY*/, "DataRepresentationQosPolicy"},
+    {24 /*PolicyID::TYPECONSISTENCYENFORCEMENT_QOS_POLICY*/, "TypeConsistencyEnforcementQosPolicy"},
+    {25 /*PolicyID::DISABLEPOSITIVEACKS_QOS_POLICY*/, "DisablePositiveACKsQosPolicy"},
+    {26 /*PolicyID::PARTICIPANTRESOURCELIMITS_QOS_POLICY*/, "ParticipantResourceLimitsQos"},
+    {27 /*PolicyID::PROPERTYPOLICY_QOS_POLICY*/, "PropertyPolicyQos"},
+    {28 /*PolicyID::PUBLISHMODE_QOS_POLICY*/, "PublishModeQosPolicy"},
+    {29 /*PolicyID::READERRESOURCELIMITS_QOS_POLICY*/, "Reader ResourceLimitsQos"},
+    {30 /*PolicyID::RTPSENDPOINT_QOS_POLICY*/, "RTPSEndpointQos"},
+    {31 /*PolicyID::RTPSRELIABLEREADER_QOS_POLICY*/, "RTPSReliableReaderQos"},
+    {32 /*PolicyID::RTPSRELIABLEWRITER_QOS_POLICY*/, "RTPSReliableWriterQos"},
+    {33 /*PolicyID::TRANSPORTCONFIG_QOS_POLICY*/, "TransportConfigQos"},
+    {34 /*PolicyID::TYPECONSISTENCY_QOS_POLICY*/, "TipeConsistencyQos"},
+    {35 /*PolicyID::WIREPROTOCOLCONFIG_QOS_POLICY*/, "WireProtocolConfigQos"},
+    {36 /*PolicyID::WRITERRESOURCELIMITS_QOS_POLICY*/, "WriterResourceLimitsQos"}};
 
 DynamicPubSub::DynamicPubSub()
     : m_participant(nullptr)
@@ -234,6 +276,19 @@ void DynamicPubSub::reset(
 
   if (!m_participant) { throw std::runtime_error("Could not create domain participant"); }
 
+  eprosima::fastdds::dds::StatusMask par_mask =
+    eprosima::fastdds::dds::StatusMask::offered_incompatible_qos()
+    << eprosima::fastdds::dds::StatusMask::requested_incompatible_qos()
+    << eprosima::fastdds::dds::StatusMask::inconsistent_topic();
+  //eprosima::fastdds::dds::StatusMask::none();
+
+
+  if (
+    eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK
+    != m_participant->set_listener(&m_listener, par_mask)) {
+    std::cerr << "Could not set domain participant listener" << std::endl;
+    throw std::runtime_error("Could not set domain participant listener");
+  }
   m_publisher = m_participant->create_publisher_with_profile("dds-fmu-default");
   m_subscriber = m_participant->create_subscriber_with_profile("dds-fmu-default");
 

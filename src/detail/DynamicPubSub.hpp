@@ -12,6 +12,7 @@
 #include <map>
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
+#include <fastdds/dds/domain/DomainParticipantListener.hpp>
 #include <fastdds/dds/publisher/DataWriter.hpp>
 #include <fastdds/dds/publisher/Publisher.hpp>
 #include <fastdds/dds/subscriber/DataReader.hpp>
@@ -26,6 +27,62 @@ class Logger;
 }
 
 namespace ddsfmu {
+
+class DomainListener : public eprosima::fastdds::dds::DomainParticipantListener {
+  static const std::map<uint32_t /*eprosima::fastdds::dds::QosPolicyId_t*/, std::string>
+    QosPolicyString;
+
+public:
+  DomainListener() = default;
+  ~DomainListener() override = default;
+
+  void on_requested_incompatible_qos(
+    eprosima::fastdds::dds::DataReader* reader,
+    const eprosima::fastdds::dds::RequestedIncompatibleQosStatus& status) override {
+    std::ostringstream oss;
+    oss << "The data reader " << reader->guid() << " with topic name '"
+        << reader->get_topicdescription()->get_name() << "' of type '"
+        << reader->get_topicdescription()->get_type_name()
+        << "' has requested incompatible QoS with the one offered by the writer:";
+    for (const auto& policy : status.policies) {
+      if (policy.count > 0) {
+        try {
+          oss << " " << QosPolicyString.at(policy.policy_id) << ", ";
+        } catch (const std::out_of_range& e) { oss << "[Unknown policy!]" << std::endl; }
+      }
+    }
+    oss << std::endl;
+    //std::cout << oss.str();
+  }
+
+  void on_offered_incompatible_qos(
+    eprosima::fastdds::dds::DataWriter* writer,
+    const eprosima::fastdds::dds::OfferedIncompatibleQosStatus& status) override {
+    std::ostringstream oss;
+    oss << "The data writer " << writer->guid() << " with topic name '"
+        << writer->get_topic()->get_name() << "' of type '" << writer->get_topic()->get_type_name()
+        << "' has offered incompatible QoS with the one requested by the reader:";
+    for (const auto& policy : status.policies) {
+      if (policy.count > 0) {
+        try {
+          oss << " " << QosPolicyString.at(policy.policy_id) << ", ";
+        } catch (const std::out_of_range& e) { oss << "[Unknown policy!]" << std::endl; }
+      }
+    }
+    oss << std::endl;
+    //std::cout << oss.str();
+  }
+
+  void on_inconsistent_topic(
+    eprosima::fastdds::dds::Topic* topic,
+    eprosima::fastdds::dds::InconsistentTopicStatus status) override {
+    // TODO: Not yet implemented by fast-dds and will never trigger (fast-dds v2.11.2)
+    std::ostringstream oss;
+    oss << "There already exist another topic with inconsistent characteristics for topic name '"
+        << topic->get_name() << "' of type '" << topic->get_type_name() << "'" << std::endl;
+    //std::cout << oss.str();
+  }
+};
 
 /**
    @brief Dynamic Publisher and Subscriber
@@ -96,6 +153,7 @@ private:
   eprosima::fastdds::dds::DomainParticipant* m_participant;
   eprosima::fastdds::dds::Publisher* m_publisher;
   eprosima::fastdds::dds::Subscriber* m_subscriber;
+  DomainListener m_listener;
   std::map<std::string, std::string> m_topic_to_type;
   std::map<std::string, eprosima::fastrtps::types::DynamicPubSubType> m_types;
   std::map<std::string, eprosima::fastdds::dds::Topic*> m_topic_name_ptr;
