@@ -112,6 +112,10 @@ class DdsFmuConan(ConanFile):
                 copy(self, "*", path.join(dep.package_folder, "licenses"),
                      path.join(self.build_folder, "licenses", dep.ref.name), keep_path=True)
 
+            if dep.ref.name == "cppfmu" and len(dep.cpp_info.srcdirs) > 0:
+                copy(self, "fmi_functions.cpp", dep.cpp_info.srcdirs[0],
+                    path.join(self.build_folder, dep.ref.name), keep_path=False)
+
         license_txt = path.join(self.build_folder, "licenses", "licenses.txt")
         save(self, license_txt,
              "Licenses for dds-fmu and dependencies are listed below.\n")

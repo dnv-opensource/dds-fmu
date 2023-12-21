@@ -40,7 +40,7 @@ endif()
 cppfmu_prepare()
 # Defines the following variables
 #   FMU_UUID_DIR, FMU_OUTPUT_DIR,     FMU_STAGING_DIR,
-#   CPPFMU_ROOT,  CPPFMU_PLATFORM_ID, CPPFMU_CONFIG_STAGING_DIR
+#   CPPFMU_PLATFORM_ID, CPPFMU_CONFIG_STAGING_DIR
 # Makes directory FMU_OUTPUT_DIR
 
 set(fmuName dds-fmu)
@@ -94,7 +94,7 @@ add_custom_target(
 # Target: build module library
 add_library(${fmuModuleTarget} MODULE
   ${fmuSourceFiles}
-  ${cppfmu_PACKAGE_FOLDER_DEBUG}${cppfmu_PACKAGE_FOLDER_RELEASE}/src/fmi_functions.cpp
+  ${CMAKE_BINARY_DIR}/cppfmu/fmi_functions.cpp
   )
 
 target_link_libraries(${fmuModuleTarget}
