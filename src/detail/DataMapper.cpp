@@ -135,7 +135,8 @@ void DataMapper::add(
 
   // We use reader indexes, they are identical to writers in this fmu
   DataMapper::IndexOffsets idx_value = std::make_tuple(
-    m_real_reader.size(), m_int_reader.size(), m_bool_reader.size(), m_string_reader.size());
+    static_cast<int32_t>(m_real_reader.size()), static_cast<int32_t>(m_int_reader.size()),
+    static_cast<int32_t>(m_bool_reader.size()), static_cast<int32_t>(m_string_reader.size()));
   m_offsets.emplace(key, idx_value);
 
   // switch on type kind must be identical to the one in SignalDistributor

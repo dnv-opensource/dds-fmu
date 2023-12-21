@@ -97,7 +97,9 @@ TEST(PubSub, UsageProcedure) {
   )~~~";
 
   // 1. load idl with types into xtypes
-  eprosima::xtypes::idl::Context context = eprosima::xtypes::idl::parse(my_idl);
+  eprosima::xtypes::idl::Context context;
+  context.preprocess = false;
+  context = eprosima::xtypes::idl::parse(my_idl, context);
 
   // 2. user requests (topic_name, type_name) to be Pub|Sub
   std::string topic_name("my_topic"), type_name("Intermediate::Complexity");

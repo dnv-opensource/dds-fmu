@@ -20,7 +20,6 @@ HelloPubSub::HelloPubSub(Permutation creator, bool pub, std::uint32_t filter_ind
     , is_publisher(pub)
     , has_filter(with_filter)
     , m_creator(creator)
-    , m_sub_listener(this)
     , m_filter_index(filter_index) {}
 
 HelloPubSub::~HelloPubSub() {
@@ -45,13 +44,8 @@ bool HelloPubSub::init() {
       eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(0, pqos);
   } else {
     pqos.name("Participant_sub");
-    eprosima::fastdds::dds::StatusMask par_mask =
-      eprosima::fastdds::dds::StatusMask::subscription_matched()
-      << eprosima::fastdds::dds::StatusMask::data_available();
-
     mp_participant =
-      eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
-        0, pqos, &m_sub_listener, par_mask);
+      eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(0, pqos);
   }
 
   if (mp_participant == nullptr) { return false; }
@@ -105,7 +99,7 @@ bool HelloPubSub::init() {
 
     // CREATE THE WRITER
     writer_ = mp_publisher->create_datawriter(
-      topic_, eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT, &m_pub_listener);
+      topic_, eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT);
     if (writer_ == nullptr) { return false; }
 
   } else {
@@ -137,16 +131,12 @@ bool HelloPubSub::init() {
     eprosima::fastdds::dds::DataReaderQos qos = eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT;
     qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
 
-    eprosima::fastdds::dds::StatusMask sub_mask =
-      eprosima::fastdds::dds::StatusMask::subscription_matched()
-      << eprosima::fastdds::dds::StatusMask::data_available();
-
     // should know topic is keyed or not at some earlier point
 
     if (filter_topic_) {
-      reader_ = mp_subscriber->create_datareader(filter_topic_, qos, &m_sub_listener, sub_mask);
+      reader_ = mp_subscriber->create_datareader(filter_topic_, qos);
     } else {
-      reader_ = mp_subscriber->create_datareader(topic_, qos, &m_sub_listener, sub_mask);
+      reader_ = mp_subscriber->create_datareader(topic_, qos);
     }
 
     if (reader_ == nullptr) { return false; }
@@ -172,44 +162,26 @@ void HelloPubSub::printInfo() {
   }
 }
 
-  bool HelloPubSub::publish(bool waitForListener) {
+  bool HelloPubSub::publish() {
     if (!is_publisher) { return false; }
-    if (m_pub_listener.firstConnected || !waitForListener || m_pub_listener.n_matched > 0) {
-      uint32_t index;
-      m_Hello->get_uint32_value(index, 0);
-      m_Hello->set_uint32_value(index + 1, 0);
-      if(index % 2) {
-        m_Hello->set_enum_value("BETA", 2);
-      } else {
-        m_Hello->set_enum_value("ALPHA", 2);
-      }
-
-      writer_->write(m_Hello.get());
-      return true;
+    uint32_t index;
+    m_Hello->get_uint32_value(index, 0);
+    m_Hello->set_uint32_value(index + 1, 0);
+    if(index % 2) {
+      m_Hello->set_enum_value("BETA", 2);
+    } else {
+      m_Hello->set_enum_value("ALPHA", 2);
     }
-    return false;
+    writer_->write(m_Hello.get());
+    return true;
   }
+
   void HelloPubSub::runPub(uint32_t samples, uint32_t sleep) {
     if (!is_publisher) { return; }
-    stop = false;
-    std::thread thread(&HelloPubSub::runThread, this, samples, sleep);
-    if (samples == 0) {
-      std::cout << "Publisher running. Please press enter to stop the Publisher at any time."
-                << std::endl;
-      std::cin.ignore();
-      stop = true;
-    } else {
-      std::cout << "Publisher running " << samples << " samples." << std::endl;
-    }
-    thread.join();
-  }
-  void HelloPubSub::runThread(uint32_t samples, uint32_t sleep) {
-    if (!is_publisher) { return; }
     for (uint32_t s = 0; s < samples; ++s) {
-      if (!publish(false)) {
-        --s;
-      } else {
-        std::string message;
+      publish();
+      std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+      std::string message;
         m_Hello->get_string_value(message, 1);
         uint32_t index;
         m_Hello->get_uint32_value(index, 0);
@@ -218,8 +190,22 @@ void HelloPubSub::printInfo() {
         m_Hello->get_enum_value(storedValue, 2);
         std::cout << "Message: " << message << " with index: " << index
                   << " and ENUM: " << storedValue << " SENT" << std::endl;
+    }
+  }
+
+  void HelloPubSub::runSub(uint32_t periods, uint32_t sleep) {
+    if (is_publisher) { return; }
+    for (uint32_t s = 0; s < periods; ++s) {
+     eprosima::fastdds::dds::SampleInfo info;
+     if (reader_->take_next_sample(m_Hello.get(), &info)
+        == eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+        if (info.valid_data) { std::cout << "Got new valid data" << std::endl; }
+        if (info.instance_state == eprosima::fastdds::dds::ALIVE_INSTANCE_STATE) {
+          m_samples_received++;
+          std::cout << "Got sample" << std::endl;
+          std::cout << std::endl;
+        }
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
     }
   }
 
@@ -262,17 +248,17 @@ std::tuple<eprosima::fastrtps::types::DynamicData*, eprosima::fastrtps::types::D
   namespace etypes = eprosima::fastrtps::types;
   namespace extypes = eprosima::xtypes;
 
-  extypes::StructType hello("HelloWorld");
-  hello.add_member(extypes::Member("index", extypes::primitive_type<uint32_t>()));
-  hello.add_member(extypes::Member("message", extypes::StringType()));
+  m_xtypes = std::unique_ptr<extypes::StructType>(new extypes::StructType("HelloWorld"));
+  m_xtypes->add_member(extypes::Member("index", extypes::primitive_type<uint32_t>()));
+  m_xtypes->add_member(extypes::Member("message", extypes::StringType()));
 
   eprosima::xtypes::EnumerationType<std::uint32_t> my_enum("MyEnum");
   my_enum.add_enumerator("ALPHA");
   my_enum.add_enumerator("BETA");
 
-  hello.add_member(extypes::Member("enumber", my_enum).key());
+  m_xtypes->add_member(extypes::Member("enumber", my_enum).key());
 
-  etypes::DynamicTypeBuilder* builder = ddsfmu::Converter::create_builder(hello);
+  etypes::DynamicTypeBuilder* builder = ddsfmu::Converter::create_builder(*m_xtypes.get());
   etypes::DynamicType_ptr dyn_type = builder->build();
   auto dyn_pubsub = new etypes::DynamicPubSubType(dyn_type);
   eprosima::fastdds::dds::TypeSupport m_type(dyn_pubsub);
@@ -283,7 +269,7 @@ std::tuple<eprosima::fastrtps::types::DynamicData*, eprosima::fastrtps::types::D
   m_type.register_type(participant);
 
   ddsfmu::Converter::register_type("HelloWorld", dyn_pubsub);
-  ddsfmu::Converter::register_xtype("HelloWorld", hello);
+  ddsfmu::Converter::register_xtype("HelloWorld", *m_xtypes.get());
 
   return std::make_tuple(etypes::DynamicDataFactory::get_instance()->create_data(dyn_type), dyn_pubsub);
 }
@@ -304,11 +290,10 @@ std::tuple<eprosima::fastrtps::types::DynamicData*, eprosima::fastrtps::types::D
   };
   )~~~";
 
-  extypes::idl::Context context;
-  context.preprocess = false;
-  context = extypes::idl::parse(my_idl, context);
+  m_context.preprocess = false;
+  m_context = extypes::idl::parse(my_idl, m_context);
 
-  auto hello = context.module().structure("HelloWorld");
+  auto hello = m_context.module().structure("HelloWorld");
 
   etypes::DynamicTypeBuilder* builder = ddsfmu::Converter::create_builder(hello);
   etypes::DynamicType_ptr dyn_type = builder->build();

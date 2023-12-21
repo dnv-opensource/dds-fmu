@@ -9,17 +9,18 @@
 
 int main(int argc, char**argv){
 
-  HelloPubSub pub(Permutation::API_XTYPES_IDL, true);
-  //HelloPubSub sub(Permutation::API_XTYPES_IDL, false, 0);
-  HelloPubSub sub2(Permutation::API_XTYPES_IDL, false, 1);
-  pub.init();
-  //sub.init();
-  sub2.init();
-
-  //sub.printInfo();
-
-  std::thread threadPub(&HelloPubSub::runThread, &pub, 5, 100);
-  threadPub.join();
+  if (argc > 1) {
+    HelloPubSub pub(Permutation::API_XTYPES_IDL, true);
+    pub.init();
+    pub.runPub(5, 100);
+  } else {
+    //HelloPubSub sub(Permutation::API_XTYPES_IDL, false, 0);
+    //sub.init();
+    HelloPubSub sub2(Permutation::API_XTYPES_IDL, false, 1);
+    sub2.init();
+    sub2.runSub(5, 100);
+    //sub.printInfo();
+  }
 
   return 0;
 }

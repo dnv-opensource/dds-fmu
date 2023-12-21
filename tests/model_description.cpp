@@ -40,7 +40,10 @@ TEST(ModelDescriptor, NameGenerator) {
 
 )~~~";
 
-  eprosima::xtypes::idl::Context context = eprosima::xtypes::idl::parse(my_idl);
+  eprosima::xtypes::idl::Context context;
+  context.preprocess = false;
+
+  context = eprosima::xtypes::idl::parse(my_idl, context);
 
   auto space_type = context.module().structure("Space::Sun");
   eprosima::xtypes::DynamicData data(space_type);

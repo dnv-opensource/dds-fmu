@@ -7,12 +7,15 @@
 
 #include "hello_pubsub.hpp"
 #include <gtest/gtest.h>
+#include <chrono>
+#include <thread>
 
 
 class KeyedDynamicType : public ::testing::Test {
 protected:
   void SetUp() override {}
   void TearDown() override {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (pub) { delete pub; }
     if (sub) { delete sub; }
   }
@@ -23,13 +26,14 @@ protected:
     sub->init();
   }
   void Run() {
-    std::thread threadPub(&HelloPubSub::runThread, pub, 5, 100);
-    threadPub.join();
+    for (std::uint16_t i = 0; i < 3; i++) {
+      pub->runPub(1,100);
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      sub->runSub(1,100);
+    }
   }
   HelloPubSub *pub, *sub;
 };
-
-
 
 TEST_F(KeyedDynamicType, APIFastDDS_XX) {
   Init(Permutation::API_FASTDDS, Permutation::API_FASTDDS);
@@ -102,7 +106,10 @@ TEST(KeyedTopics, ContentFilteredTopic) {
   pub.init();
   sub.init();
   sub2.init();
-
-  std::thread threadPub(&HelloPubSub::runThread, &pub, 5, 100);
-  threadPub.join();
+  for (std::uint16_t i = 0; i < 3; i++) {
+    pub.runPub(1,100);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    sub.runSub(1,100);
+    sub2.runSub(1,100);
+  }
 }

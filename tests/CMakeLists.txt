@@ -14,6 +14,13 @@ add_executable(unit-tests RunTests.cpp
 add_executable(hello-test hello_main.cpp
   hello_pubsub.cpp)
 
+
+if(MSVC)
+  target_compile_options(unit-tests PRIVATE /bigobj)
+  target_compile_options(hello-test PRIVATE /bigobj)
+endif()
+
+
 target_include_directories(hello-test
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
