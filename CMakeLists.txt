@@ -74,7 +74,7 @@ configure_file(
 
 configure_file(
   "${CMAKE_SOURCE_DIR}/data/templates/config.hpp.in"
-  "${CMAKE_BINARY_DIR}/temp/config.hpp"
+  "${CMAKE_BINARY_DIR}/temp/dds-fmu/config.hpp"
   @ONLY)
 
 # Target: GUID generation
@@ -104,7 +104,7 @@ target_link_libraries(${fmuModuleTarget}
 
 target_include_directories(${fmuModuleTarget}
   PRIVATE
-  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/temp>
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/temp/dds-fmu>
   )
 
 add_library(configuration OBJECT
@@ -158,6 +158,11 @@ target_link_libraries(${fmuRepackerTarget}
   configuration
   detail
   filesystem::libs
+  )
+
+target_include_directories(${fmuRepackerTarget}
+  PRIVATE
+  $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/temp>
   )
 
 # Target: stage FMU contents phase 1

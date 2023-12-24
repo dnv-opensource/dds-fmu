@@ -14,6 +14,7 @@
 #include "SignalDistributor.hpp"
 #include "auxiliaries.hpp"
 #include "model-descriptor.hpp"
+#include "dds-fmu/config.hpp"
 
 namespace fs = std::filesystem;
 
@@ -258,6 +259,7 @@ int main(int argc, const char* argv[]) {
   args::Group arguments("arguments");
   args::GlobalOptions globals(combo_parser, arguments);
   args::HelpFlag help(arguments, "help", "Display this help menu. ", {'h', "help"});
+  args::HelpFlag version(arguments, "version", "Display FMU version", {"version"});
 
   args::Command archiver(
     commands, "zip", "Create an FMU zip archive of PATH.", [&](args::Subparser& parser) {
@@ -331,6 +333,10 @@ int main(int argc, const char* argv[]) {
   try {
     combo_parser.ParseCLI(argc, argv);
   } catch (const args::Help&) {
+    if (args::get(version)) {
+      std::cout << "dds-fmu version " << ddsfmu_version() << std::endl;
+      return 0;
+    }
     std::cout << combo_parser;
     return 0;
   } catch (const args::ParseError& e) {
