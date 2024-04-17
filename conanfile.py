@@ -15,7 +15,7 @@ class DdsFmuConan(ConanFile):
     author = "Joakim Haugen"
     description = "DDS-FMU mediator"
     license = "MPL-2.0"
-    url = "https://gitlab.sintef.no/seaops/dds-fmu"
+    url = "https://gitlab.sintef.no/co-simulation/dds-fmu"
     topics = ("Co-simulation", "FMU", "DDS", "OMG-DDS")
     package_type = "shared-library"
     settings = "os", "arch", "compiler", "build_type"
@@ -37,7 +37,6 @@ class DdsFmuConan(ConanFile):
     @property
     def _compilers_minimum_version(self):
         return {
-            "Visual Studio": "15.7",
             "msvc": "14.1",
             "gcc": "8.1",
             "clang": "7",
@@ -65,14 +64,14 @@ class DdsFmuConan(ConanFile):
         cmake_layout(self)
 
     def requirements(self):
-        self.requires("cppfmu/1.0")
-        self.requires("fast-dds/2.11.1")
+        self.requires("cppfmu/1.0.0@sintef/stable")
+        self.requires("fast-dds/2.11.2")
         self.requires("stduuid/1.2.3")
         self.requires("rapidxml/1.13")
-        self.requires("xtypes/cci.20230615")
+        self.requires("eprosima-xtypes/cci.20230615@sintef/stable")
 
         if self.options.with_tools:
-            self.requires("kuba-zip/0.2.6")
+            self.requires("kuba-zip/0.3.2")
             self.requires("taywee-args/6.4.6")
 
     def validate(self):
@@ -85,8 +84,9 @@ class DdsFmuConan(ConanFile):
             )
 
     def build_requirements(self):
+        self.tool_requires("fmu-build-helper/1.0.0@sintef/testing")
         if self._with_tests:
-            self.tool_requires("fmu-compliance-checker/2.0.4")
+            self.tool_requires("fmu-compliance-checker/2.0.4@sintef/stable")
             self.test_requires("gtest/1.13.0")
         if self.options.with_doc:
             self.tool_requires("doxygen/1.9.4")
@@ -98,9 +98,11 @@ class DdsFmuConan(ConanFile):
         tc.generate()
 
         deps = CMakeDeps(self)
+        deps.build_context_activated = ["fmu-build-helper"]
+        deps.build_context_build_modules = ["fmu-build-helper"]
         if self._with_tests:
-            deps.build_context_activated = ["fmu-compliance-checker"]
-            deps.build_context_build_modules = ["fmu-compliance-checker"]
+            deps.build_context_activated.append("fmu-compliance-checker")
+            deps.build_context_build_modules.append("fmu-compliance-checker")
         deps.generate()
 
         deplist = []
