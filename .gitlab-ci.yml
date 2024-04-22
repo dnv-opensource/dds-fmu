@@ -1,0 +1,132 @@
+.commonprep:
+  script:
+    - pip install conan~=2.0 --upgrade
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+    - git config --global core.sshCommand 'ssh -i "$SSH_PRIVATE_KEY" -F /dev/null'
+    - cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
+    - conan config install $conan_config --type git -sf config
+    - conan config install $conan_config --type git -sf profiles -tf profiles
+    - conan config install $conan_config --type git -sf remotes_public
+    - conan config install tools/hooks -tf extensions/hooks
+
+stages:
+  - build
+  - deploy
+
+variables:
+  conan_config: "git@gitlab.sintef.no:co-simulation/conan-configs.git"
+
+windows:
+  stage: build
+  image: $WINDOWS_STABLE
+  tags:
+    - Windows
+  interruptible: true
+  parallel:
+    matrix:
+      -
+        TYPE: [Release, Debug]
+        PROFILE: ["msvc_192"]
+  before_script:
+    - !reference [.commonprep, script]
+    - $SKIP_TEST = "True"  # Fix error then do not skip
+    - if ($TYPE -like "Debug"){ $SKIP_TEST = "True"}
+  script:
+    - |
+      conan build -o "dds-fmu/*:with_doc=False" -b missing --update `
+      -pr:b $PROFILE -pr:h $PROFILE -s build_type=$TYPE -c tools.build:jobs=2 `
+      -c tools.build:skip_test=$SKIP_TEST .
+
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    expire_in: 1 hour
+    paths:
+      - fmus/*
+      - testoutput/*.xml
+    reports:
+      junit: testoutput/*.xml
+
+linux:
+  stage: build
+  image: conanio/${PROFILE}-ubuntu18.04
+  tags:
+    - Linux
+  interruptible: true
+  parallel:
+    matrix:
+      -
+        TYPE: [Release, Debug]
+        PROFILE: ["gcc12"]
+  before_script:
+    - sudo apt-get update && sudo apt-get install -y openssh-client texlive-binaries perl
+    - mkdir -p ~/.ssh
+    - sudo chmod 400 "$SSH_PRIVATE_KEY"
+    - sudo chown $(whoami) "$SSH_PRIVATE_KEY"
+    - touch ~/.ssh/known_hosts
+    - sudo chmod 644 ~/.ssh/known_hosts
+    - !reference [.commonprep, script]
+    - if ([[ $TYPE == "Debug" ]]); then SKIP_TEST="True"; else SKIP_TEST="False"; fi
+  script:
+    - |
+      conan build -o "dds-fmu/*:with_doc=True" -b missing --update \
+      -pr:b $PROFILE -pr:h $PROFILE -s build_type=$TYPE -c tools.build:jobs=2 \
+      -c tools.build:skip_test=$SKIP_TEST .
+    - if ([[ $TYPE == "Release" ]]); then cp -r build/Release/docs/html public/; fi
+
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - fmus/*
+      - public/*
+      - testoutput/*.xml
+    reports:
+      junit: testoutput/*.xml
+    expire_in: 1 hour
+
+fmu:
+  stage: deploy
+  image: conanio/gcc12-ubuntu18.04
+  tags:
+    - Linux
+  interruptible: true
+  parallel:
+    matrix:
+      -
+        TYPE: [Release, Debug]
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+  script:
+    - sudo apt-get update && sudo apt-get install -y curl
+    - FMU_VERSION=$(cat version.txt)
+    - FMU_NAME=${CI_PROJECT_NAME}
+    - mkdir tmp_$TYPE && cd tmp_$TYPE
+    - "the_fmus=(../fmus/*$TYPE.fmu)"
+    - fmu_count=${#the_fmus[@]}
+    - |
+      for (( i=0; i<$fmu_count; i++ )); do
+        an_fmu="${the_fmus[$i]}"
+        cmake -E tar xf $an_fmu
+      done
+    - mkdir ../combined_fmus
+    - cmake -E tar cf ../combined_fmus/$FMU_NAME-$TYPE.fmu --format=zip .
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "../combined_fmus/$FMU_NAME-$TYPE.fmu" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/$FMU_NAME/$FMU_VERSION/$FMU_NAME-$TYPE.fmu"'
+
+  artifacts:
+    when: on_success
+    name: "$CI_JOB_NAME"
+    paths:
+      - combined_fmus/*
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  image: conanio/gcc12-ubuntu18.04
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+  script:
+    - 'echo "Retrieved documentation from previous stage"'

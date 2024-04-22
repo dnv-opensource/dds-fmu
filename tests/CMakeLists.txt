@@ -48,9 +48,8 @@ target_link_libraries(unit-tests
 
 gtest_discover_tests(unit-tests
   PROPERTIES ENVIRONMENT MY_VARIABLE=something
-  TEST_SUFFIX "_$<CONFIGURATION>"
-  EXTRA_ARGS "--gtest_output=xml:${CMAKE_BINARY_DIR}/testoutput")
-
+  TEST_SUFFIX "_$<CONFIG>"
+  XML_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/testoutput/")
 
 add_custom_target(test-resources
   COMMAND "${CMAKE_COMMAND}" "-E" "copy_directory" "${CMAKE_SOURCE_DIR}/data/test_resources" "${CMAKE_CURRENT_BINARY_DIR}/resources"

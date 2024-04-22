@@ -1,25 +1,32 @@
+[[https://co-simulation.pages.sintef.no/dds-fmu][https://img.shields.io/badge/Docs-HTML-blue.svg?style=flat-square&logo=googledocs&logoColor=ffffff]]
+[[https://gitlab.sintef.no/co-simulation/dds-fmu/-/packages][https://img.shields.io/badge/Artifacts-FMU-red.svg?style=flat-square&color=c8102e&labelColor=ffffff&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAgCAYAAABgrToAAAAACXBIWXMAABcRAAAXEQHKJvM/AAAA6klEQVRYw2NkIACM7T3+w9hnD+5gZKAzYCLWcQMFmAaz4xgYGBhYcDhuAxLX8OzBHRcGWwj6I6W7C4MyigcLIORAx8HuwAEHjKTmVuSyEJde9PKSWHXY1DNR23HocsSqw1fMNGIRr4fSCxkYGB4QaXAjkj6i1MDU4auhCAWx49mDOw6QWv2hO46QGnxJgoWSBIzH5xMZGBjyCeklJm2SnIuJSTdnD+4oIKWBgc9MlsFYtJCdi0cL6lEHjjpw1IHDsblFTl08GoKjDhx14FAAg2Xog/GEgB6GQyw+XGJkYGBgwCY3KBw4iIAAAEeRaCNcUO12AAAAAElFTkSuQmCC]]
+[[https://gitlab.sintef.no/co-simulation/dds-fmu][https://img.shields.io/badge/Gitlab-Code-gray.svg?style=flat-square&color=e24329&logo=gitlab]]
+[[https://www.sintef.no/ocean][https://img.shields.io/badge/SINTEF-Ocean-white.svg?style=flat-square&labelColor=023366&color=023366&logo=data:image/png;base64,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]]
+[[https://prosjektbanken.forskningsradet.no/en][https://img.shields.io/badge/Research%20Council%20of%20Norway-Grant:%20309660-gray.svg?style=flat-square&labelColor=ffffff&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAAAAABXZoBIAAAAnElEQVR4AczJERDEMBSE4V8Ctc5Uz+XczjFerUNd4j5xPKpGQnWt2/nUYnuTCbV5c3wLb9/Oh37kXzET2zO7aRqHfEEHZ+1EywVH2GovzeIdfW0AvxXdkSLt+FR0hE+HWVrrfMOzQ68CRQF4dEg9OIBXhy0DwGxjUQQWE1dJBwQT9zrOJBPVYuJiomuYvsMeZZwCwsKskYM/geEBAKDGccZO9+2TAAAAAElFTkSuQmCC]]
+
 * Development
 
-  You will need [[https://conan.io/][conan 2]]. The compiler profile should specify =compiler.cppstd=17=. There
-  are conan packages not available in =conancenter=, you will need to build them yourself.
-  They are available as recipes, which are located in [[https://gitlab.sintef.no/seaops/equipment][seaops/equipment]] under
-  tools/recipes, and [[https://gitlab.sintef.no/cppfmu/cppfmu][cppfmu/cppfmu]]. The following packages should be built: =cppfmu=,
-  =fmilibrary= (to appear on CCI), =fmu-compliance-checker=, =xtypes=.
-
+  You will need [[https://conan.io/][conan 2]] and a compiler with =C++17= support. =gcc 12= and =msvc 19.2= are
+  known to work. The conan compiler profile should specify at least
+  =compiler.cppstd=17=. This project uses conan packages that are not available in
+  =conancenter=. You can add a remote with the missing packages with: =conan remote add
+  https://artifactory.smd.sintef.no/artifactory/api/conan/conan-local=.
   #+begin_src bash
     cd dds-fmu
-    conan install . -u -b missing -o dds-fmu/*:with_doc=True -c tools.build:skip_test=False
     conan build . -o dds-fmu/*:with_doc=True -c tools.build:skip_test=False
   #+end_src
 
-  The created FMU is located in =build/Release/fmus/= on Linux.
+  The created FMU is located in =build/$<CONFIG>/fmus/= or =build/fmus= on single and
+  multi-configuration generators, respectively.
+
+  The documentation is generated with =doxygen=, which is installed with =conan=. You may
+  additionally need =perl= and =bibtex= (=textlive-binaries=) executables to process
+  citations in the documentation.
 
 * Known issues
 
   + Executable permission for =repacker= tool is lost with the bundled zip tool
     + On Linux, the user will need to use =chmod= on the =repacker= tool.
-  + There is no support for building multi-configuration in the same build folder
-    (e.g. debug and release with Microsoft Visual Compiler)
   + Several complex types are not yet supported
     + *Unsupported*: sequence (=std::vector=), map, and union
   + =@key= /IDL annotations/ are not fully supported
