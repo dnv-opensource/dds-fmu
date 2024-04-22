@@ -1,4 +1,6 @@
 build/
+fmus/
+testoutput/
 CMakeUserPresets.json
 docs/index.org
 SeaopsInterface.idl
@@ -7,3 +9,4 @@ _minted-readme/
 docs/pdf/readme.tex
 docs/pdf/readme.md
 docs/pdf/svg-*
+*.fmu

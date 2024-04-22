@@ -84,12 +84,15 @@ class DdsFmuConan(ConanFile):
             )
 
     def build_requirements(self):
-        self.tool_requires("fmu-build-helper/1.0.0@sintef/testing")
+        self.tool_requires("cmake/[>=3.18.0 <4]")
+        self.tool_requires("fmu-build-helper/1.0.0@sintef/stable")
         if self._with_tests:
             self.tool_requires("fmu-compliance-checker/2.0.4@sintef/stable")
             self.test_requires("gtest/1.13.0")
         if self.options.with_doc:
             self.tool_requires("doxygen/1.9.4")
+            if self.settings.os == "Windows":
+                self.tool_requires("strawberryperl/5.32.1.1")
 
     def generate(self):
         tc = CMakeToolchain(self)
@@ -120,13 +123,23 @@ class DdsFmuConan(ConanFile):
 
         license_txt = path.join(self.build_folder, "licenses", "licenses.txt")
         save(self, license_txt,
-             "Licenses for dds-fmu and dependencies are listed below.\n")
+             "Licenses for `dds-fmu` and its dependencies are listed below.\n\n")
 
-        save(self, license_txt, f"{self.name}: {self.license}\n\n", append=True)
+        cols1 = 20
+        cols2 = 30
+        save(self, license_txt, f"| Library{' '*(cols1-7)}"
+             f"| License{' '*(cols2-7)}|\n|{'-'*(cols1+1)}|{'-'*(cols2+1)}|\n", append=True)
+        save(self, license_txt, f"| {self.name}{' '*(max(cols1-len(self.name),0))}|"
+             f" {self.license}{' '*(max(cols2-len(self.license),0))}|\n", append=True)
         copy(self, "LICENSE", self.recipe_folder, path.join(self.build_folder, "licenses"))
 
         for dep, lic in sorted(deplist):
-            save(self, license_txt, f"{dep}: {lic}\n", append=True)
+            len_lic_str = len(lic) if type(lic) is str else cols2-2
+            save(self, license_txt, f"| {dep}{' '*(max(cols1-len(dep),0))}|"
+                 f" {lic}{' '*(max(cols2-len_lic_str,0))}|\n", append=True)
+
+        license_md = path.join(self.build_folder, "gen_md", "licenses.md")
+        save(self, license_md, f"# Licenses {{#sec_licenses}}\n{load(self, license_txt)}")
 
     def build(self):
         cmake = CMake(self)

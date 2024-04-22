@@ -3,7 +3,7 @@
 -   **dds-fmu main rationale**: Integrate DDS-based software in FMI simulations.
 -   **Core feature**: Incorporates DDS signals in FMI simulations in a simple manner.
 -   **No need for code compilation**: Just 1) decompress the FMU; 2) configure it; 3) zip it back to an FMU.
--   For **Quick start**: Jump to @ref sec_quickstart.
+-   **Getting started**: Jump to @ref sec_gettingstarted.
 
 ![img](images/diagram.png "System overview for DDS-FMU.")
 
@@ -15,6 +15,18 @@ DDS can be used as a communication middleware for components in a software syste
 
 `dds-fmu` implements the latter approach and is inspired by eProsima's Integration Service @cite eprosima-integration-service-2023. `dds-fmu` is **extensible**: the user can create a customised FMU by providing new IDL files and mappings between DDS pub/sub types and FMI inputs/outputs. `dds-fmu` is **configurable**: it comes bundled with all necessary tools to generate `modelDescription.xml`, which is consistent with the custom configuration. `dds-fmu` customisation has no need for a code compiler and no new binary files are created.
 
+# Getting started with the FMU binary {#sec_gettingstarted}
+
+`dds-fmu` can be downloaded from [dds-fmu package
+repository](https://gitlab.sintef.no/co-simulation/dds-fmu/-/packages). The FMU comes with
+`linux64` and `win64` binaries. Your system will need: **Linux**: `GLibc >= 2.27`,
+e.g. Ubuntu 18.04 or newer; **Windows**: [Microsoft Visual C++ Runtime libraries
+2019](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170). These
+are typically already installed on a development computer. If you prefer to build the
+binaries yourself, the source code is available at SINTEF's hosted GitLab
+[co-simulation/dds-fmu](https://gitlab.sintef.no/co-simulation/dds-fmu). The
+repository README provides build instructions and requirements.
+
 # Usage {#sec_quickstart}
 
 A typical workflow can be summarised with these main steps:
@@ -25,6 +37,7 @@ A typical workflow can be summarised with these main steps:
 -   [ ] Make bundled tool executable (Linux): `chmod +x resources/tools/linux64/repacker`
 -   Create a new FMU: `resources/tools/linux64/repacker create -v -o dds-fmu.fmu /to/path/with/`
 
+For `repacker` command line options, see `repacker --help`.
 
 ## Configuration {#sec_configuration}
 
@@ -172,3 +185,9 @@ There are some things the user should be aware of to avoid unnecessary troublesh
     - `@key` partially supported: primitive types, string and enumerations. This excludes directly on structs, or array-like members.
     - `@optional` and `@id` is supported by the IDL parser via a patch, but ignored by our implementation
 -   FMI 3.0 support
+
+# License
+
+  The FMU is licensed under [MPL-2.0](https://opensource.org/license/mpl-2-0). Licenses
+  for transitive dependencies are located in the `documentation/licenses` folder of the
+  FMU. An overview is found at @ref sec_licenses.
