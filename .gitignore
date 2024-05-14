@@ -10,3 +10,5 @@ docs/pdf/readme.tex
 docs/pdf/readme.md
 docs/pdf/svg-*
 *.fmu
+/.idea
+/cmake-build-*

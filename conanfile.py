@@ -15,7 +15,7 @@ class DdsFmuConan(ConanFile):
     author = "Joakim Haugen"
     description = "DDS-FMU mediator"
     license = "MPL-2.0"
-    url = "https://gitlab.sintef.no/co-simulation/dds-fmu"
+    url = "https://github.com/dnv-opensource/dds-fmu"
     topics = ("Co-simulation", "FMU", "DDS", "OMG-DDS")
     package_type = "shared-library"
     settings = "os", "arch", "compiler", "build_type"
