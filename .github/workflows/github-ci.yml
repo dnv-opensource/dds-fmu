@@ -120,7 +120,7 @@ jobs:
             FMU_NAME=${{ github.event.repository.name }}
             mkdir tmp_${{ matrix.TYPE }} && cd tmp_${{ matrix.TYPE }}
             the_fmus=(../fmus/*${{ matrix.TYPE }}.fmu)
-            echo "AAA " $the_fmus
+            ls fmus/
             fmu_count=${#the_fmus[@]}
             for (( i=0; i<$fmu_count; i++ )); do 
               an_fmu="${the_fmus[$i]}" 
