@@ -111,13 +111,14 @@ jobs:
         - name: Download artifacts
           uses: actions/download-artifact@v4
           with:
+            path: fmus/
             pattern: "*-${{ matrix.TYPE }}"
         - name: Build an FMU
           run: |
             FMU_VERSION=$(cat version.txt)
             FMU_NAME=${{ github.event.repository.name }}
             mkdir tmp_${{ matrix.TYPE }} && cd tmp_${{ matrix.TYPE }}
-            the_fmus=(../build/**/*${{ matrix.TYPE }}.fmu)
+            the_fmus=(../fmus/build/**/*${{ matrix.TYPE }}.fmu)
             fmu_count=${#the_fmus[@]}
             for (( i=0; i<$fmu_count; i++ )); do 
               an_fmu="${the_fmus[$i]}" 
