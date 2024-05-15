@@ -117,6 +117,8 @@ jobs:
           run: |
             FMU_VERSION=$(cat version.txt)
             FMU_NAME=${{ github.event.repository.name }}
+            ls fmus
+            ls fmus/**
             mkdir tmp_${{ matrix.TYPE }} && cd tmp_${{ matrix.TYPE }}
             the_fmus=(../fmus/build/**/*${{ matrix.TYPE }}.fmu)
             fmu_count=${#the_fmus[@]}
