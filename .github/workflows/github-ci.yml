@@ -147,4 +147,5 @@ jobs:
         - name: Release
           uses: softprops/action-gh-release@v2
           with:
+            tag_name: test
             files: "combined_fmus/${{ github.event.repository.name }}-Release.fmu"
