@@ -144,11 +144,11 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             pattern: "${{ github.event.repository.name }}-Release"
-        - run : |
+        - run: |
             shopt -s globstar
             ls ${{ github.event.repository.name }}-Release/**
         - name: Release
           uses: softprops/action-gh-release@v2
           with:
             tag_name: test
-            files: ""${{ github.event.repository.name }}-Release/${{ github.event.repository.name }}-Release.fmu"
+            files: "${{ github.event.repository.name }}-Release/${{ github.event.repository.name }}-Release.fmu"
