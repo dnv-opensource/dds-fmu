@@ -1,6 +1,6 @@
 name: Github CI
 
-on: [push, workflow_dispatch, release]
+on: [push, workflow_dispatch]
 
 env:
   conan_config: "https://gitlab.sintef.no/co-simulation/conan-configs.git"
