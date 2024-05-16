@@ -161,13 +161,10 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             pattern: "linux-Release"
-        - run: |
-            shopt -s globstar
-            ls linux-Release/**
         - name: Upload pages artifact
           uses: actions/upload-pages-artifact@v2
           with:
-            path: "linux-Release/public/*"
+            path: "linux-Release/public/"
         - name: Deploy to GitHub Pages
           id: document-deployment
           uses: actions/deploy-pages@v4
