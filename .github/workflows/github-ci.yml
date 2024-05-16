@@ -59,7 +59,7 @@ jobs:
             TYPE: [Release]
             PROFILE: ["gcc12"]
       env:
-        TARGET: ${{ runner.os }}-${{ matrix.TYPE }}
+        TARGET: "${{ runner.os }}-${{ matrix.TYPE }}"
       steps:
         - uses: actions/checkout@v4
 
