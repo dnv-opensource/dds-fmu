@@ -170,11 +170,7 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: github-pages
-        - run: |
-            shopt -s globstar
-            ls
-            echo "========="
-            ls public/
+            path: public/
         - name: Publish documentation
           uses: peaceiris/actions-gh-pages@v4
           with:
