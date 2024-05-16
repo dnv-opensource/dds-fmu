@@ -162,7 +162,7 @@ jobs:
           with:
             pattern: "linux-Release"
         - name: Upload pages artifact
-          uses: actions/upload-pages-artifact@v4
+          uses: actions/upload-pages-artifact@v2
           with:
             path: "linux-Release/public/*"
         - name: Deploy to GitHub Pages
