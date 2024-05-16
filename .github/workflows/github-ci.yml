@@ -161,7 +161,7 @@ jobs:
 #            files: "${{ github.event.repository.name }}.fmu"
 
     docs:
-      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+#      if: ${{ startsWith(github.ref, 'refs/tags/') }}
       needs: [linux]
       runs-on: ubuntu-22.04
       steps:
