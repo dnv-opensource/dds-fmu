@@ -32,7 +32,7 @@ jobs:
         - name: Setting variables
           run: |
             if ("${{ matrix.TYPE }}" -like "Debug") { echo "SKIP_TEST=True" >> "$GITHUB_ENV" }
-            
+
         - name: Conan build
           run: |
             conan config install "${{ env.conan_config }}" --type git -sf profiles -tf profiles
@@ -56,8 +56,10 @@ jobs:
       runs-on: ubuntu-22.04
       strategy:
           matrix:
-            TYPE: [Release, Debug]
+            TYPE: [Debug, Release]
             PROFILE: ["gcc12"]
+      env:
+        TARGET: "${{ github.job }}-${{ matrix.TYPE }}"
       steps:
         - uses: actions/checkout@v4
 
@@ -66,7 +68,7 @@ jobs:
           with:
             path: |
               ~/.conan2
-            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu
+            key: ${{ env.TARGET }}-dds-fmu
 
         - name: Install Conan
           id: conan
@@ -93,12 +95,19 @@ jobs:
         - name: Upload artifacts
           uses: actions/upload-artifact@v4
           with:
-            name: "${{ github.job }}-${{ matrix.TYPE }}"
+            name: "${{ env.TARGET }}"
             path: | 
               build/${{ matrix.TYPE }}/fmus/*
-              public/*
               testoutput/*.xml
             retention-days: 1
+
+        - name: Upload pages artifact
+          if: env.TARGET == 'linux-Release'
+          uses: actions/upload-artifact@v4
+          with:
+            name: github-pages
+            path: public
+
 
     fmu:
       needs: [linux, windows]
@@ -121,9 +130,9 @@ jobs:
             mkdir tmp_${{ matrix.TYPE }} && cd tmp_${{ matrix.TYPE }}
             the_fmus=(../fmus/**/*${{ matrix.TYPE }}.fmu)
             fmu_count=${#the_fmus[@]}
-            for (( i=0; i<$fmu_count; i++ )); do 
-              an_fmu="${the_fmus[$i]}" 
-              cmake -E tar xf $an_fmu 
+            for (( i=0; i<$fmu_count; i++ )); do
+              an_fmu="${the_fmus[$i]}"
+              cmake -E tar xf $an_fmu
             done
             mkdir ../combined_fmus
             cmake -E tar cf ../combined_fmus/$FMU_NAME-${{ matrix.TYPE }}.fmu --format=zip .
@@ -151,3 +160,22 @@ jobs:
           uses: softprops/action-gh-release@v2
           with:
             files: "${{ github.event.repository.name }}.fmu"
+
+    docs:
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      needs: [fmu]
+      runs-on: ubuntu-22.04
+      steps:
+        - name: Download artifacts
+          uses: actions/download-artifact@v4
+          with:
+            name: github-pages
+            path: public/
+        - name: Publish documentation
+          uses: peaceiris/actions-gh-pages@v4
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            force_orphan: true
+
+
+
