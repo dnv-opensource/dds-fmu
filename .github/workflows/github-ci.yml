@@ -105,7 +105,8 @@ jobs:
           if: env.TARGET == 'linux-Release'
           uses: actions/upload-pages-artifact@v2
           with:
-            path: public/*
+            path: public/
+
 
 #    fmu:
 #      needs: [linux, windows]
