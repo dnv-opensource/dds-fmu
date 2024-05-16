@@ -165,10 +165,6 @@ jobs:
 #      if: ${{ startsWith(github.ref, 'refs/tags/') }}
       needs: [linux]
       runs-on: ubuntu-22.04
-      permissions:
-        id-token: write
-        contents: read
-        pages: write
       steps:
         - name: Download artifacts
           uses: actions/download-artifact@v4
