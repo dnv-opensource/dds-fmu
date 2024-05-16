@@ -58,6 +58,8 @@ jobs:
           matrix:
             TYPE: [Release]
             PROFILE: ["gcc12"]
+      env:
+        TARGET: ${{ runner.os }}-${{ matrix.TYPE }}
       steps:
         - uses: actions/checkout@v4
 
@@ -66,7 +68,7 @@ jobs:
           with:
             path: |
               ~/.conan2
-            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu
+            key: ${{ env.TARGET }}-dds-fmu
 
         - name: Install Conan
           id: conan
@@ -93,12 +95,17 @@ jobs:
         - name: Upload artifacts
           uses: actions/upload-artifact@v4
           with:
-            name: "${{ github.job }}-${{ matrix.TYPE }}"
+            name: "${{ env.TARGET }}"
             path: | 
               build/${{ matrix.TYPE }}/fmus/*
-              public/*
               testoutput/*.xml
             retention-days: 1
+
+        - name: Upload pages artifact
+          if: env.TARGET == 'linux-Release'
+          uses: actions/upload-pages-artifact@v2
+          with:
+            path: public/*
 
 #    fmu:
 #      needs: [linux, windows]
@@ -160,14 +167,6 @@ jobs:
         id-token: write
         contents: read
       steps:
-        - name: Download artifacts
-          uses: actions/download-artifact@v4
-          with:
-            pattern: "linux-Release"
-        - name: Upload pages artifact
-          uses: actions/upload-pages-artifact@v2
-          with:
-            path: "linux-Release/public/"
         - name: Deploy to GitHub Pages
           id: document-deployment
           uses: actions/deploy-pages@v4
