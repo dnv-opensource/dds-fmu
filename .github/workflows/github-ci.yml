@@ -31,7 +31,11 @@ jobs:
 
         - name: Setting variables
           run: |
-            if ("${{ matrix.TYPE }}" -like "Debug") { echo "SKIP_TEST=True" >> $env:GITHUB_ENV }
+            if ("${{ matrix.TYPE }}" -like "Debug") { 
+              echo "SKIP_TEST=True" >> $GITHUB_ENV 
+            } else { 
+              echo "SKIP_TEST=False" >> $GITHUB_ENV 
+            }
 
         - name: Conan build
           run: |
