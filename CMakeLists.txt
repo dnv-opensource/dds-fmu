@@ -98,6 +98,8 @@ add_library(configuration OBJECT
   "${CMAKE_SOURCE_DIR}/src/configuration/model-descriptor.cpp"
   )
 
+target_compile_options(configuration PRIVATE /bigobj)
+
 target_link_libraries(configuration
   PUBLIC
   eprosima::xtypes
