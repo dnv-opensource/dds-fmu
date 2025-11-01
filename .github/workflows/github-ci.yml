@@ -74,7 +74,7 @@ jobs:
           id: conan
           uses: turtlebrowser/get-conan@main
           with:
-            version: 2.3.0
+            version: 2.22.1
 
         - name: Installing pre-requisites
           run: |
