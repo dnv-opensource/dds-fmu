@@ -5,6 +5,19 @@
     <domainId>0</domainId>
     <rtps>
       <name>dds-fmu</name>
+      <!-- boilerplate for DDS Router -->
+      <!-- <participantID>0</participantID> -->
+      <!-- <builtin> -->
+      <!--   <initialPeersList> -->
+      <!--     <locator> -->
+      <!--       <udpv4> -->
+      <!--         <address>123.123.123.123</address> -->
+      <!--         <port>7400</port>  -->
+      <!--         <!-- https://fast-dds.docs.eprosima.com/en/stable/fastdds/discovery/simple.html#initial-peers --> -->
+      <!--       </udpv4> -->
+      <!--     </locator> -->
+      <!--   </initialPeersList> -->
+      <!-- </builtin> -->
     </rtps>
     <!--builtin>
       <metatrafficUnicastLocatorList/> should contain one locator with null address and null port

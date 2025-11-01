@@ -82,7 +82,10 @@ std::vector<std::filesystem::path>
     // std::cout << added: " << fmu_root / "modelDescription.xml" << std::endl;
   }
 
-  std::sort(uuid_files.begin(), uuid_files.end());
+  std::sort(uuid_files.begin(), uuid_files.end(),
+          [](const std::filesystem::path& a, const std::filesystem::path& b) {
+              return a.string() < b.string();
+          });
 
   return uuid_files;
 }
