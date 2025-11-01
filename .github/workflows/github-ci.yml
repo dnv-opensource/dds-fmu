@@ -82,7 +82,7 @@ jobs:
 
         - name: Installing pre-requisites
           run: |
-            sudo apt update && sudo apt install -y openssh-client texlive-binaries perl
+            sudo apt update && sudo apt install -y openssh-client texlive-binaries perl libbsd-dev
             if ([[ ${{ matrix.TYPE }} == "Debug" ]]); \
               then echo "SKIP_TEST=True" >> "$GITHUB_ENV"; \
               else echo "SKIP_TEST=False" >> "$GITHUB_ENV"; fi
