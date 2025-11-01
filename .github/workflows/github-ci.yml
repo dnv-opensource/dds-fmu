@@ -21,7 +21,7 @@ jobs:
           with:
             path: |
               ~/.conan2
-            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu
+            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu-${{ hashFiles('**/conanfile.py') }}
 
         - name: Install Conan
           id: conan
@@ -72,7 +72,7 @@ jobs:
           with:
             path: |
               ~/.conan2
-            key: ${{ env.TARGET }}-dds-fmu
+            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu-${{ hashFiles('**/conanfile.py') }}
 
         - name: Install Conan
           id: conan
