@@ -32,9 +32,9 @@ jobs:
         - name: Setting variables
           run: |
             if ("${{ matrix.TYPE }}" -like "Debug") { 
-              echo "SKIP_TEST=True" >> $GITHUB_ENV 
+              echo "SKIP_TEST=True" >> $env:GITHUB_ENV 
             } else { 
-              echo "SKIP_TEST=False" >> $GITHUB_ENV 
+              echo "SKIP_TEST=False" >> $env:GITHUB_ENV 
             }
 
         - name: Conan build
@@ -43,7 +43,7 @@ jobs:
             conan config install "${{ env.conan_config }}" --type git -sf remotes_public
             conan build -o "dds-fmu/*:with_doc=False" -b missing --update `
               -pr:b ${{ matrix.PROFILE }} -pr:h ${{ matrix.PROFILE }} -s build_type=${{ matrix.TYPE }} `
-              -c tools.build:jobs=2 -c tools.build:skip_test=$SKIP_TEST .
+              -c tools.build:jobs=2 -c tools.build:skip_test=$env:SKIP_TEST .
 
         - name: Upload artifacts
           uses: actions/upload-artifact@v4
