@@ -113,4 +113,5 @@ TEST(KeyedTopics, ContentFilteredTopic) {
     sub.runSub(1,100);
     sub2.runSub(1,100);
   }
+  ddsfmu::Converter::clear_data_structures();
 }
