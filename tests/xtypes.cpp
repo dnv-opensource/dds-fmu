@@ -65,6 +65,7 @@ TEST(XTypes, BasicUsage) {
   // nested
   my_space["universe"][0]["my_inner"]["my_uint32"] = 23u;
   my_space["universe"][1]["my_inner"]["my_uint32"] = 24u;
+  ddsfmu::Converter::clear_data_structures();
 }
 
 TEST(XTypes, Annotations) {
@@ -101,6 +102,7 @@ TEST(XTypes, Annotations) {
     << "my_uint32 is @key"; // false, true
   EXPECT_EQ(inner.member(1).is_optional(), inner2.member(1).is_optional())
     << "yes is @optional"; // false, true
+  ddsfmu::Converter::clear_data_structures();
 }
 
 
@@ -171,6 +173,7 @@ TEST(XTypes, DdsEnum) {
   ASSERT_NE(participant, nullptr);
 
   participant->register_type(dyntype_sup);
+  ddsfmu::Converter::clear_data_structures();
 }
 
 
@@ -193,4 +196,5 @@ TEST(XTypes, FloatingTypes) {
   context = eprosima::xtypes::idl::parse(my_idl, context);
   EXPECT_TRUE(context.success) << "IDL parsing successful";
 
+  ddsfmu::Converter::clear_data_structures();
 }

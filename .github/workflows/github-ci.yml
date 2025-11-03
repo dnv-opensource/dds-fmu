@@ -21,17 +21,21 @@ jobs:
           with:
             path: |
               ~/.conan2
-            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu
+            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu-${{ hashFiles('**/conanfile.py') }}
 
         - name: Install Conan
           id: conan
           uses: turtlebrowser/get-conan@main
           with:
-            version: 2.3.0
+            version: 2.22.1
 
         - name: Setting variables
           run: |
-            if ("${{ matrix.TYPE }}" -like "Debug") { echo "SKIP_TEST=True" >> "$GITHUB_ENV" }
+            if ("${{ matrix.TYPE }}" -like "Debug") { 
+              echo "SKIP_TEST=True" >> $env:GITHUB_ENV 
+            } else { 
+              echo "SKIP_TEST=False" >> $env:GITHUB_ENV 
+            }
 
         - name: Conan build
           run: |
@@ -39,7 +43,7 @@ jobs:
             conan config install "${{ env.conan_config }}" --type git -sf remotes_public
             conan build -o "dds-fmu/*:with_doc=False" -b missing --update `
               -pr:b ${{ matrix.PROFILE }} -pr:h ${{ matrix.PROFILE }} -s build_type=${{ matrix.TYPE }} `
-              -c tools.build:jobs=2 -c tools.build:skip_test=$SKIP_TEST .
+              -c tools.build:jobs=2 -c tools.build:skip_test=$env:SKIP_TEST .
 
         - name: Upload artifacts
           uses: actions/upload-artifact@v4
@@ -68,20 +72,20 @@ jobs:
           with:
             path: |
               ~/.conan2
-            key: ${{ env.TARGET }}-dds-fmu
+            key: ${{ runner.os }}-${{ matrix.TYPE }}-dds-fmu-${{ hashFiles('**/conanfile.py') }}
 
         - name: Install Conan
           id: conan
           uses: turtlebrowser/get-conan@main
           with:
-            version: 2.3.0
+            version: 2.22.1
 
         - name: Installing pre-requisites
           run: |
-            sudo apt update && sudo apt install -y openssh-client texlive-binaries perl
+            sudo apt update && sudo apt install -y openssh-client texlive-binaries perl libbsd-dev
             if ([[ ${{ matrix.TYPE }} == "Debug" ]]); \
               then echo "SKIP_TEST=True" >> "$GITHUB_ENV"; \
-              else export "SKIP_TEST=False" >> "$GITHUB_ENV"; fi
+              else echo "SKIP_TEST=False" >> "$GITHUB_ENV"; fi
 
         - name: Conan build
           run: |
@@ -89,7 +93,7 @@ jobs:
             conan config install $conan_config --type git -sf remotes_public
             conan build -o "dds-fmu/*:with_doc=True" -b missing --update \
               -pr:b ${{ matrix.PROFILE }} -pr:h ${{ matrix.PROFILE }} -s build_type=${{ matrix.TYPE }} \
-              -c tools.build:jobs=2 -c tools.build:skip_test=$SKIP_TEST .
+              -c tools.build:jobs=2 -c tools.build:skip_test=$SKIP_TEST -b expat/* .
             if ([[ ${{ matrix.TYPE }} == "Release" ]]); then cp -r build/Release/docs/html public/; fi
 
         - name: Upload artifacts

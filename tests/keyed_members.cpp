@@ -18,6 +18,7 @@ protected:
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     if (pub) { delete pub; }
     if (sub) { delete sub; }
+    ddsfmu::Converter::clear_data_structures();
   }
   void Init(Permutation creator_pub, Permutation creator_sub) {
     pub = new HelloPubSub(creator_pub, true);
