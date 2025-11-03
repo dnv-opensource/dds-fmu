@@ -93,7 +93,7 @@ jobs:
             conan config install $conan_config --type git -sf remotes_public
             conan build -o "dds-fmu/*:with_doc=True" -b missing --update \
               -pr:b ${{ matrix.PROFILE }} -pr:h ${{ matrix.PROFILE }} -s build_type=${{ matrix.TYPE }} \
-              -c tools.build:jobs=2 -c tools.build:skip_test=$SKIP_TEST -b expat/*.
+              -c tools.build:jobs=2 -c tools.build:skip_test=$SKIP_TEST -b expat/* .
             if ([[ ${{ matrix.TYPE }} == "Release" ]]); then cp -r build/Release/docs/html public/; fi
 
         - name: Upload artifacts

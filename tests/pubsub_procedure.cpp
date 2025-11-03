@@ -256,4 +256,5 @@ TEST(PubSub, UsageProcedure) {
 
   participant->delete_topic(topic);
   eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(participant);
+  ddsfmu::Converter::clear_data_structures();
 }
